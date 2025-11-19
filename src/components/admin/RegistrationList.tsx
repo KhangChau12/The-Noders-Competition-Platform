@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import Table, { TableColumn } from '../ui/Table';
-import Badge from '../ui/Badge';
-import Button from '../ui/Button';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
 import Modal from '../ui/Modal';
 
 interface Registration {
@@ -130,9 +130,9 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
       align: 'center',
       render: (value) => {
         const variantMap = {
-          pending: 'warning' as const,
+          pending: 'yellow' as const,
           approved: 'success' as const,
-          rejected: 'error' as const,
+          rejected: 'red' as const,
         };
 
         return (
@@ -158,7 +158,7 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
         return (
           <div className="flex items-center justify-center gap-2">
             <Button
-              variant="success"
+              variant="primary"
               size="sm"
               onClick={() => handleApprove(row)}
               disabled={actionLoading}
@@ -193,7 +193,7 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
           </p>
         </div>
         {pendingCount > 0 && (
-          <Badge variant="warning" className="text-base px-4 py-2">
+          <Badge variant="yellow" className="text-base px-4 py-2">
             {pendingCount} Pending
           </Badge>
         )}

@@ -69,12 +69,12 @@ export default function SubmitPage() {
       setCompetition(compData);
 
       // Get registration
-      const { data: regData } = await supabase
+      const { data: regData } = (await supabase
         .from('registrations')
         .select('*')
         .eq('user_id', user.id)
         .eq('competition_id', competitionId)
-        .single();
+        .single()) as { data: any };
 
       setRegistration(regData);
 
@@ -84,12 +84,12 @@ export default function SubmitPage() {
       }
 
       // Get submissions
-      const { data: submissionsData } = await supabase
+      const { data: submissionsData } = (await supabase
         .from('submissions')
         .select('*')
         .eq('user_id', user.id)
         .eq('competition_id', competitionId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })) as { data: any };
 
       setSubmissions(submissionsData || []);
 
@@ -201,12 +201,14 @@ export default function SubmitPage() {
       setIsSubmitting(false);
 
       // Refresh submissions
-      const { data: submissionsData } = await supabase
+      if (!userId) return;
+
+      const { data: submissionsData } = (await supabase
         .from('submissions')
         .select('*')
         .eq('user_id', userId)
         .eq('competition_id', competitionId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })) as { data: any };
 
       setSubmissions(submissionsData || []);
 

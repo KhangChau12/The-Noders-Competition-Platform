@@ -24,14 +24,16 @@ const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({
     ? ['registration', 'public_test', 'ended']
     : ['registration', 'public_test', 'private_test', 'ended'];
 
-  const phaseLabels = {
+  const phaseLabels: Record<string, string> = {
+    upcoming: 'Upcoming',
     registration: 'Registration',
     public_test: 'Public Test',
     private_test: 'Private Test',
     ended: 'Ended',
   };
 
-  const phaseVariants = {
+  const phaseVariants: Record<string, any> = {
+    upcoming: 'secondary' as const,
     registration: 'registration' as const,
     public_test: 'public' as const,
     private_test: 'private' as const,

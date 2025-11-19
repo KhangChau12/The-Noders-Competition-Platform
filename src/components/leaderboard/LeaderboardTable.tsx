@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Table, { TableColumn } from '../ui/Table';
-import Badge from '../ui/Badge';
+import { Badge } from '../ui/Badge';
 
 interface LeaderboardEntry {
   rank: number;
@@ -83,7 +83,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <div>
               <p className="font-semibold text-text-primary">{name}</p>
               {row.isCurrentUser && (
-                <Badge variant="primary" className="text-xs mt-1">
+                <Badge variant="blue" className="text-xs mt-1">
                   You
                 </Badge>
               )}

@@ -15,27 +15,27 @@ export default async function ProfilePage() {
   }
 
   // Get user profile
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('*')
     .eq('id', user.id)
-    .single();
+    .single()) as { data: any };
 
   // Get user's competitions count
   const { count: competitionsCount } = await supabase
     .from('registrations')
-    .select('*', { count: 'only', head: true })
+    .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('status', 'approved');
 
   // Get user's submissions count
   const { count: submissionsCount } = await supabase
     .from('submissions')
-    .select('*', { count: 'only', head: true })
+    .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
   // Get best scores
-  const { data: bestScores } = await supabase
+  const { data: bestScores } = (await supabase
     .from('submissions')
     .select(`
       score,
@@ -46,7 +46,7 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .eq('is_best_score', true)
     .order('score', { ascending: false })
-    .limit(5);
+    .limit(5)) as { data: any };
 
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -65,13 +65,13 @@ export default async function ProfilePage() {
               <div className="flex flex-col items-center mb-6">
                 <div className="w-24 h-24 bg-gradient-brand rounded-full flex items-center justify-center mb-4">
                   <span className="text-white font-bold text-3xl">
-                    {profile?.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                    {profile?.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <h2 className="text-xl font-bold text-center mb-1">
                   {profile?.full_name || 'Anonymous User'}
                 </h2>
-                <Badge variant={profile?.role === 'admin' ? 'error' : 'primary'}>
+                <Badge variant={profile?.role === 'admin' ? 'red' : 'blue'}>
                   {profile?.role === 'admin' ? 'Admin' : 'User'}
                 </Badge>
               </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import FileUpload from '../ui/FileUpload';
-import Button from '../ui/Button';
+import { Button } from '../ui/Button';
 import Modal from '../ui/Modal';
 
 interface SubmissionFormProps {

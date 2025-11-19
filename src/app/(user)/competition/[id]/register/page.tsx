@@ -10,12 +10,12 @@ async function registerForCompetition(competitionId: string, userId: string) {
   const supabase = await createClient();
 
   // Check if already registered
-  const { data: existingRegistration } = await supabase
+  const { data: existingRegistration } = (await supabase
     .from('registrations')
     .select('*')
     .eq('competition_id', competitionId)
     .eq('user_id', userId)
-    .single();
+    .single()) as { data: any };
 
   if (existingRegistration) {
     return { error: 'You have already registered for this competition' };

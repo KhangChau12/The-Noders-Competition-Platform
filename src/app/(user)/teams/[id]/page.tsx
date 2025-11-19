@@ -16,7 +16,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   }
 
   // Get team details
-  const { data: team } = await supabase
+  const { data: team } = (await supabase
     .from('teams')
     .select(`
       *,
@@ -27,14 +27,14 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
       )
     `)
     .eq('id', params.id)
-    .single();
+    .single()) as { data: any };
 
   if (!team) {
     redirect('/teams');
   }
 
   // Get team members
-  const { data: members } = await supabase
+  const { data: members } = (await supabase
     .from('team_members')
     .select(`
       *,
@@ -45,7 +45,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
       )
     `)
     .eq('team_id', params.id)
-    .order('joined_at', { ascending: true });
+    .order('joined_at', { ascending: true })) as { data: any };
 
   const isLeader = team.leader_id === user.id;
   const isMember = members?.some((m: any) => m.user_id === user.id);
@@ -76,7 +76,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold">{team.name}</h1>
                   {isLeader && (
-                    <Badge variant="warning" className="flex items-center gap-1">
+                    <Badge variant="yellow" className="flex items-center gap-1">
                       <Crown className="w-3 h-3" />
                       Leader
                     </Badge>

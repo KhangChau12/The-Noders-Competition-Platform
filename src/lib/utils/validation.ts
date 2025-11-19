@@ -85,7 +85,7 @@ export async function validateCSVFile(
         }
 
         // Check column count (must be exactly 2)
-        const columns = Object.keys(data[0]);
+        const columns = Object.keys(data[0] as object);
         if (columns.length !== 2) {
           errors.push(`CSV must have exactly 2 columns (id, prediction). Found ${columns.length} columns`);
           resolve({ valid: false, errors });

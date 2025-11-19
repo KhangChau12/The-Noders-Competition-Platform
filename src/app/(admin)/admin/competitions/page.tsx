@@ -39,21 +39,21 @@ export default async function AdminCompetitionsPage() {
   }
 
   // Fetch all competitions with stats
-  const { data: competitions } = await supabase
+  const { data: competitions } = (await supabase
     .from('competitions')
     .select('*')
     .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })) as { data: any };
 
   // Fetch registration counts for each competition
-  const { data: registrationsData } = await supabase
+  const { data: registrationsData } = (await supabase
     .from('registrations')
-    .select('competition_id, status');
+    .select('competition_id, status')) as { data: any };
 
   // Fetch submission counts for each competition
-  const { data: submissionsData } = await supabase
+  const { data: submissionsData } = (await supabase
     .from('submissions')
-    .select('competition_id');
+    .select('competition_id')) as { data: any };
 
   // Process counts
   const registrationCounts: Record<string, { approved: number; pending: number; total: number }> = {};
@@ -152,7 +152,7 @@ export default async function AdminCompetitionsPage() {
               <Calendar className="w-5 h-5 text-success" />
             </div>
             <div className="text-3xl font-bold text-success">
-              {competitionsWithStats?.filter((c) => c.phase === 'public_test' || c.phase === 'private_test').length || 0}
+              {competitionsWithStats?.filter((c: any) => c.phase === 'public_test' || c.phase === 'private_test').length || 0}
             </div>
           </Card>
 
@@ -162,7 +162,7 @@ export default async function AdminCompetitionsPage() {
               <Users className="w-5 h-5 text-warning" />
             </div>
             <div className="text-3xl font-bold text-warning">
-              {competitionsWithStats?.filter((c) => c.phase === 'registration').length || 0}
+              {competitionsWithStats?.filter((c: any) => c.phase === 'registration').length || 0}
             </div>
           </Card>
 

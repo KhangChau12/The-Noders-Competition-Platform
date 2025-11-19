@@ -54,14 +54,14 @@ export default async function DashboardPage() {
     .eq('user_id', user.id);
 
   // Fetch best rank (from best scores in leaderboard)
-  const { data: bestSubmission } = await supabase
+  const { data: bestSubmission } = (await supabase
     .from('submissions')
     .select('score, competition_id')
     .eq('user_id', user.id)
     .eq('is_best_score', true)
     .order('score', { ascending: false })
     .limit(1)
-    .single();
+    .single()) as { data: any };
 
   // Calculate best rank if user has submissions
   let bestRank = null;
@@ -77,19 +77,19 @@ export default async function DashboardPage() {
   }
 
   // Fetch competitions not yet registered for (recommendations)
-  const { data: allCompetitions } = await supabase
+  const { data: allCompetitions } = (await supabase
     .from('competitions')
     .select('*')
     .is('deleted_at', null)
     .gte('registration_end', new Date().toISOString())
     .order('created_at', { ascending: false })
-    .limit(6);
+    .limit(6)) as { data: any };
 
   const registeredIds = new Set(
     registrations?.map((r: any) => r.competition?.id).filter(Boolean) || []
   );
   const recommendedCompetitions = allCompetitions?.filter(
-    (comp) => !registeredIds.has(comp.id)
+    (comp: any) => !registeredIds.has(comp.id)
   );
 
   // Separate competitions by status

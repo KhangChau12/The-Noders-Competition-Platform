@@ -26,11 +26,11 @@ export default async function HeaderWithAuth() {
 
   if (authUser) {
     // Fetch full user profile
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = (await supabase
       .from('users')
       .select('id, email, full_name, avatar_url, role')
       .eq('id', authUser.id)
-      .single();
+      .single()) as { data: any; error: any };
 
     if (profile) {
       user = {
@@ -46,7 +46,8 @@ export default async function HeaderWithAuth() {
       console.error('User profile not found in database:', error);
 
       // Try to insert the user into the database
-      const { error: insertError } = await supabase.from('users').insert({
+      // @ts-ignore - Supabase types need regeneration
+      const { error: insertError } = await (supabase.from('users') as any).insert({
         id: authUser.id,
         email: authUser.email!,
         role: 'user',
@@ -56,11 +57,11 @@ export default async function HeaderWithAuth() {
 
       if (!insertError) {
         // Successfully created, now fetch again
-        const { data: newProfile } = await supabase
+        const { data: newProfile } = (await supabase
           .from('users')
           .select('id, email, full_name, avatar_url, role')
           .eq('id', authUser.id)
-          .single();
+          .single()) as { data: any };
 
         if (newProfile) {
           user = {

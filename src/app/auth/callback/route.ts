@@ -26,11 +26,11 @@ export async function GET(request: NextRequest) {
 
       if (data.session) {
         // Get user role to determine redirect
-        const { data: userProfile } = await supabase
+        const { data: userProfile } = (await supabase
           .from('users')
           .select('role')
           .eq('id', data.session.user.id)
-          .single();
+          .single()) as { data: { role: string } | null };
 
         // Redirect based on role
         if (userProfile?.role === 'admin') {

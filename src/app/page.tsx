@@ -73,12 +73,12 @@ export default async function HomePage() {
     .limit(3);
 
   // Fetch all competitions for preview
-  const { data: allCompetitions } = await supabase
+  const { data: allCompetitions } = (await supabase
     .from('competitions')
     .select('*')
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(6);
+    .limit(6)) as { data: any };
 
   // Fetch statistics
   const { count: totalCompetitions } = await supabase
@@ -97,7 +97,7 @@ export default async function HomePage() {
 
   // Get participants and submissions count for each competition
   const competitionsWithStats = await Promise.all(
-    (featuredCompetitions || []).map(async (competition) => {
+    (featuredCompetitions || []).map(async (competition: any) => {
       const { count: participants } = await supabase
         .from('registrations')
         .select('*', { count: 'exact', head: true })
@@ -263,7 +263,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {allCompetitions.slice(0, 6).map((competition) => (
+              {allCompetitions?.slice(0, 6).map((competition: any) => (
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
