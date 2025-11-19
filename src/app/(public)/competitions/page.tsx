@@ -111,7 +111,7 @@ export default function CompetitionsPage() {
 
         // Count participants per competition
         const participantCounts = (registrationsData || []).reduce(
-          (acc, reg) => {
+          (acc, reg: any) => {
             acc[reg.competition_id] = (acc[reg.competition_id] || 0) + 1;
             return acc;
           },
@@ -127,7 +127,7 @@ export default function CompetitionsPage() {
             .eq('user_id', userId);
 
           userRegistrations = (userRegsData || []).reduce(
-            (acc, reg) => {
+            (acc, reg: any) => {
               acc[reg.competition_id] = reg.status;
               return acc;
             },
@@ -137,7 +137,7 @@ export default function CompetitionsPage() {
 
         // Process competitions with phase and stats
         const now = new Date();
-        const processedCompetitions: CompetitionWithStats[] = competitionsData.map((comp) => {
+        const processedCompetitions: CompetitionWithStats[] = competitionsData.map((comp: any) => {
           const phase = getCompetitionPhase(comp, now);
           const countdown = getCountdown(comp, phase, now);
 

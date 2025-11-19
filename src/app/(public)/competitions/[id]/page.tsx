@@ -86,12 +86,12 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   const { data: { user } } = await supabase.auth.getUser();
 
   // Fetch competition with full details
-  const { data: competition, error: competitionError } = await supabase
+  const { data: competition, error: competitionError } = (await supabase
     .from('competitions')
     .select('*')
     .eq('id', id)
     .is('deleted_at', null)
-    .single();
+    .single()) as { data: any; error: any };
 
   if (competitionError || !competition) {
     notFound();
@@ -106,12 +106,12 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   let submissionCount = { daily: 0, total: 0 };
 
   if (user) {
-    const { data: regData } = await supabase
+    const { data: regData } = (await supabase
       .from('registrations')
       .select('*')
       .eq('competition_id', id)
       .eq('user_id', user.id)
-      .single();
+      .single()) as { data: any };
 
     registration = regData;
 
@@ -432,7 +432,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                 Top Participants
               </h3>
 
-              {leaderboard?.length > 0 ? (
+              {leaderboard && leaderboard.length > 0 ? (
                 <div className="space-y-3">
                   {leaderboard?.slice(0, 5).map((entry: any, index: number) => (
                     <div

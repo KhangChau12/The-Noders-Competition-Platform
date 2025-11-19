@@ -22,15 +22,12 @@ async function registerForCompetition(competitionId: string, userId: string) {
   }
 
   // Create registration
-  const { data, error } = await supabase
-    .from('registrations')
-    .insert({
-      competition_id: competitionId,
-      user_id: userId,
-      status: 'pending'
-    })
-    .select()
-    .single();
+  // @ts-ignore - Supabase types need regeneration
+  const { data, error } = await supabase.from('registrations').insert({
+    competition_id: competitionId,
+    user_id: userId,
+    status: 'pending'
+  }).select().single();
 
   if (error) {
     return { error: error.message };
@@ -49,11 +46,11 @@ export default async function RegisterPage({ params }: { params: { id: string } 
   }
 
   // Get competition details
-  const { data: competition } = await supabase
+  const { data: competition } = (await supabase
     .from('competitions')
     .select('*')
     .eq('id', params.id)
-    .single();
+    .single()) as { data: any };
 
   if (!competition) {
     redirect('/competitions');
@@ -67,12 +64,12 @@ export default async function RegisterPage({ params }: { params: { id: string } 
   const isRegistrationOpen = now >= registrationStart && now <= registrationEnd;
 
   // Check existing registration
-  const { data: existingRegistration } = await supabase
+  const { data: existingRegistration } = (await supabase
     .from('registrations')
     .select('*')
     .eq('competition_id', params.id)
     .eq('user_id', user.id)
-    .single();
+    .single()) as { data: any };
 
   // Handle registration submission
   async function handleRegister(formData: FormData) {
