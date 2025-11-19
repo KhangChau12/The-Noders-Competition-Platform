@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác Nhận Email - The Noders Competition Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0F172A;
+            color: #E2E8F0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #1E293B;
+        }
+        .header {
+            background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 20px;
+            font-weight: 700;
+            color: #F1F5F9;
+            margin-bottom: 20px;
+        }
+        .message {
+            color: #CBD5E1;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s ease;
+        }
+        .verify-button:hover {
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4);
+            transform: translateY(-2px);
+        }
+        .alternative-link {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #334155;
+            border-radius: 8px;
+            border-left: 4px solid #2563EB;
+        }
+        .alternative-link-title {
+            font-weight: 600;
+            color: #F1F5F9;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .link-text {
+            color: #06B6D4;
+            word-break: break-all;
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .info-box {
+            background-color: #334155;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .info-box-title {
+            font-weight: 600;
+            color: #F1F5F9;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .info-box-text {
+            color: #94A3B8;
+            font-size: 13px;
+        }
+        .footer {
+            background-color: #0F172A;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #334155;
+        }
+        .footer-text {
+            color: #64748B;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .footer-links {
+            margin-top: 15px;
+        }
+        .footer-link {
+            color: #06B6D4;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #334155, transparent);
+            margin: 30px 0;
+        }
+        .icon {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-bottom: 20px;
+            line-height: 60px;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">The Noders Competition Platform</div>
+            <div class="header-subtitle">Nền tảng thi đấu AI & Machine Learning</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">Chào mừng bạn đến với The Noders! 🎉</div>
+
+            <div class="message">
+                Cảm ơn bạn đã đăng ký tài khoản tại The Noders Competition Platform.
+                Để hoàn tất quá trình đăng ký và bắt đầu tham gia các cuộc thi AI/ML hấp dẫn,
+                vui lòng xác nhận địa chỉ email của bạn bằng cách nhấn vào nút bên dưới.
+            </div>
+
+            <!-- Verify Button -->
+            <div class="button-container">
+                <a href="{{VERIFICATION_URL}}" class="verify-button">
+                    Xác Nhận Email
+                </a>
+            </div>
+
+            <!-- Alternative Link -->
+            <div class="alternative-link">
+                <div class="alternative-link-title">Nếu nút không hoạt động, vui lòng copy và paste link sau vào trình duyệt:</div>
+                <a href="{{VERIFICATION_URL}}" class="link-text">{{VERIFICATION_URL}}</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <div class="info-box-title">⏰ Lưu ý quan trọng:</div>
+                <div class="info-box-text">
+                    Link xác nhận này sẽ hết hạn sau <strong style="color: #F1F5F9;">24 giờ</strong>.
+                    Nếu bạn không thực hiện yêu cầu này, tài khoản của bạn sẽ không được kích hoạt.
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-box-title">🔒 Bảo mật:</div>
+                <div class="info-box-text">
+                    Nếu bạn không thực hiện đăng ký tài khoản này, vui lòng bỏ qua email này.
+                    Không ai có thể truy cập vào tài khoản của bạn mà không có sự xác nhận từ email này.
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="message">
+                Sau khi xác nhận email, bạn sẽ có thể:
+            </div>
+            <div class="info-box">
+                <div class="info-box-text">
+                    ✓ Tham gia các cuộc thi AI & Machine Learning<br>
+                    ✓ Nộp bài và nhận phản hồi ngay lập tức<br>
+                    ✓ Xem bảng xếp hạng và cạnh tranh với cộng đồng<br>
+                    ✓ Tham gia đội nhóm và hợp tác cùng các thành viên khác<br>
+                    ✓ Theo dõi tiến độ và phân tích kết quả của bạn
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                Email này được gửi từ The Noders Competition Platform<br>
+                Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.
+            </div>
+            <div class="footer-links">
+                <a href="https://thenodersptnk.com" class="footer-link">Website</a>
+                <a href="mailto:thenodersptnk@gmail.com" class="footer-link">Email</a>
+            </div>
+            <div style="margin-top: 20px; color: #475569; font-size: 12px;">
+                © 2025 The Noders PTNK. All rights reserved.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -9,6 +10,7 @@ import { signUp } from './actions';
 import { validatePassword } from '@/lib/utils/validation';
 
 export default function SignupPage() {
+  const router = useRouter();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,8 +48,8 @@ export default function SignupPage() {
       setError(result.error);
       setIsLoading(false);
     } else if (result?.success) {
-      setSuccess(result.message || 'Account created! Check your email to verify.');
-      setIsLoading(false);
+      // Redirect to verify-email page with email as query param
+      router.push(`/verify-email?email=${encodeURIComponent(result.email || '')}`);
     }
   };
 

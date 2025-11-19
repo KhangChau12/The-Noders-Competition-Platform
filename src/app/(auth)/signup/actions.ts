@@ -37,5 +37,6 @@ export async function signUp(formData: FormData) {
   return {
     success: true,
     message: 'Check your email to verify your account',
+    email,
   };
 }
