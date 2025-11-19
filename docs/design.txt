@@ -1,0 +1,577 @@
+================================================================================
+                    THE NODERS PTNK - DESIGN IDENTITY GUIDE
+================================================================================
+Hướng dẫn thiết kế cho các dự án web của câu lạc bộ The Noders PTNK
+Phiên bản: 1.0 | Cập nhật: 17/11/2025
+================================================================================
+
+
+================================================================================
+1. DESIGN PHILOSOPHY (Triết lý thiết kế)
+================================================================================
+
+Core Values:
+------------
+- Tech-First Aesthetic: Thiết kế hướng đến công nghệ, AI, và developer
+- Modern Minimalism: Tối giản, hiện đại, tập trung vào nội dung
+- Dark Mode Identity: Chủ đạo là dark theme (phù hợp với coding culture)
+- Performance Matters: Ưu tiên trải nghiệm nhanh, mượt mà
+- Accessible by Default: Thiết kế cho mọi người dùng
+
+
+================================================================================
+2. BRAND COLORS (Màu nhận diện)
+================================================================================
+
+Primary Identity Colors:
+------------------------
+Primary Blue: #2563EB      // Màu chính của brand - xanh dương chuyên nghiệp
+Accent Cyan: #06B6D4       // Màu nhấn - xanh cyan nổi bật
+
+→ Đây là 2 màu CORE định danh The Noders PTNK
+→ Sử dụng gradient blue-to-cyan cho các element quan trọng
+→ Tạo sự nhất quán visual identity giữa các dự án
+
+Dark Theme Foundation:
+----------------------
+Background: #0F172A        // Navy đậm - nền chính
+Surface: #1E293B           // Navy nhạt - card, panel, surface
+Border: #334155            // Xám xanh - viền mỏng
+
+Text Hierarchy:
+---------------
+Primary: #F8FAFC           // Trắng mềm - text chính
+Secondary: #CBD5E1         // Xám sáng - text phụ
+Tertiary: #94A3B8          // Xám nhạt - caption, metadata
+
+Semantic Colors:
+----------------
+Success: #059669           // Xanh lá
+Warning: #D97706           // Cam
+Error: #DC2626             // Đỏ
+Info: #2563EB              // Xanh (giống primary)
+
+
+================================================================================
+3. TYPOGRAPHY (Kiểu chữ)
+================================================================================
+
+Font System:
+------------
+Primary Font: Nunito (Google Fonts)
+→ Dùng cho: UI text, body content, headings
+→ Weights: 300 (Light), 400 (Regular), 600 (Semibold), 700 (Bold), 800 (Extrabold)
+→ Tính cách: Friendly, modern, easy to read
+
+Display Font: Shrikhand (Google Fonts)
+→ Dùng cho: Brand name, hero titles (tùy chọn)
+→ Weight: 400
+→ Tính cách: Bold, memorable, distinctive
+
+Monospace Font: JetBrains Mono
+→ Dùng cho: Code, technical data, tech badges
+→ Tính cách: Developer-friendly, clear
+
+Typography Scale:
+-----------------
+Sử dụng hệ thống modular scale:
+- Body text: 16px (base)
+- Small text: 14px (metadata)
+- Headings: 24px → 48px → 72px (tùy mức độ)
+- Scale responsive: Mobile nhỏ hơn 20-30% so với desktop
+
+Principles:
+-----------
+- Line height: 1.5 cho body, 1.25 cho headings
+- Letter spacing: Tight cho large headings, normal cho body
+- Contrast: Bold headings, regular body
+- Hierarchy: Rõ ràng giữa h1, h2, h3, body
+
+
+================================================================================
+4. SPACING & LAYOUT (Khoảng cách & Bố cục)
+================================================================================
+
+Spacing System:
+---------------
+Base unit: 4px (hoặc 8px tùy framework)
+
+Common values:
+- Extra tight: 4px-8px (gap trong badges, buttons)
+- Tight: 12px-16px (gap giữa elements liền kề)
+- Normal: 24px-32px (padding cards, spacing sections)
+- Loose: 48px-80px (section spacing, hero padding)
+
+→ Luôn dùng bội số của base unit để tạo rhythm
+
+Container Widths:
+-----------------
+- Content: 672px-768px (đọc content thoải mái)
+- Standard: 1152px-1280px (layout chính)
+- Breakout: 100% (full width sections)
+
+Responsive Breakpoints:
+-----------------------
+- Mobile: < 640px
+- Tablet: 640px - 1024px
+- Desktop: > 1024px
+- Wide: > 1280px
+
+Layout Principles:
+------------------
+- Mobile-first approach
+- Center content với max-width
+- Padding responsive: Mobile nhỏ hơn desktop
+- Grid: 1 column mobile → 2-3 columns desktop
+
+
+================================================================================
+5. VISUAL STYLE (Phong cách thị giác)
+================================================================================
+
+Border Radius:
+--------------
+- Small: 6px-8px (buttons, badges)
+- Medium: 12px (cards, inputs)
+- Large: 16px-20px (modals, large cards)
+- Full: 9999px (pills, avatars)
+
+Shadows:
+--------
+Elevation system:
+- Level 1: Subtle shadow (cards at rest)
+- Level 2: Medium shadow (hover cards)
+- Level 3: Large shadow (modals, dropdowns)
+
+Glow effects:
+- Blue glow: Thêm primary-blue với opacity 10-30% vào shadow
+- Dùng cho: Active states, hover effects, tech elements
+
+Borders:
+--------
+- Thickness: 1px (standard), 2px (emphasis)
+- Color: Luôn dùng border color (#334155) chứ không phải white/black
+- Hover: Chuyển sang primary-blue
+
+Gradients:
+----------
+Brand gradient: Blue → Cyan (left to right hoặc 135deg)
+Dùng cho:
+- Active navigation items
+- Call-to-action buttons
+- Important headings (gradient text)
+- Decorative backgrounds (với opacity thấp)
+
+Glass Morphism:
+---------------
+Background: Surface color với 80% opacity
+Backdrop: Blur 10px-20px
+Border: Subtle border với opacity 50%
+Dùng cho: Headers, modals, floating panels
+
+
+================================================================================
+6. INTERACTIONS & ANIMATIONS (Tương tác & Chuyển động)
+================================================================================
+
+Hover States:
+-------------
+Cards:
+- Lift up (translate Y -4px đến -8px)
+- Border color → primary-blue
+- Subtle shadow tăng
+
+Buttons:
+- Background color nhạt hơn/đậm hơn
+- Scale nhẹ (optional)
+
+Links:
+- Text color → primary-blue
+- Underline (optional)
+
+Animation Timing:
+-----------------
+- Ultra fast: 150ms (color changes)
+- Fast: 200-250ms (hover effects) ← Most common
+- Medium: 300-400ms (transforms, shadows)
+- Slow: 500ms+ (page transitions, complex animations)
+
+Easing:
+- ease-out: Cho entries (fade in, slide in)
+- ease-in: Cho exits (fade out)
+- ease-in-out: Cho hovers, toggles
+
+Principles:
+-----------
+- Subtle over flashy (chuyển động tinh tế, không làm phiền)
+- Purposeful (mỗi animation phải có lý do)
+- Performance (chỉ animate transform và opacity nếu có thể)
+- Consistent timing (dùng cùng duration cho cùng loại action)
+
+
+================================================================================
+7. COMPONENTS GUIDELINES (Hướng dẫn components)
+================================================================================
+
+Buttons:
+--------
+Variants:
+- Primary: Solid blue background, white text (main CTA)
+- Secondary: Surface background, border, primary text
+- Ghost: Transparent, hover shows background
+- Danger: Red background (destructive actions)
+
+States: Default, Hover, Active, Disabled, Loading
+
+Cards:
+------
+Structure:
+- Background: Surface color
+- Border: 1px border color
+- Padding: 24px-32px
+- Radius: 12px
+
+Hover: Border → blue, subtle shadow, optional lift
+
+Badges:
+-------
+- Small, rounded (full radius)
+- Colored background (20% opacity) + matching text color
+- Monospace font cho tech badges
+
+Forms:
+------
+Inputs:
+- Height: 40px-44px
+- Padding: 12px-16px horizontal
+- Border: 1px border color
+- Focus: 2px ring primary-blue, border transparent
+
+Labels:
+- Above input, 14px, medium weight
+- Color: text-primary
+
+Error:
+- Border + ring → error color
+- Helper text below, 12px, error color
+
+Modals:
+-------
+- Centered overlay
+- Backdrop: Black 50% opacity + blur
+- Card: Max-width responsive
+- Close: X button top-right, ESC key
+
+Navigation:
+-----------
+Desktop:
+- Horizontal menu
+- Active: Gradient background hoặc bottom border
+- Sticky header với backdrop blur
+
+Mobile:
+- Hamburger menu
+- Slide-in drawer
+- Full-screen overlay hoặc push content
+
+
+================================================================================
+8. DESIGN PATTERNS (Mẫu thiết kế)
+================================================================================
+
+Hero Section:
+-------------
+- Large heading (48px-72px)
+- Gradient text effect (optional)
+- Subtitle (18px-20px, secondary color)
+- CTA buttons
+- Background: Decorative elements (neural network, gradients)
+
+Content Sections:
+-----------------
+Structure:
+- Section heading (centered hoặc left-aligned)
+- Description text
+- Content grid (1-3 columns)
+- Consistent vertical spacing (80px)
+
+Project/Card Grid:
+------------------
+- Responsive: 1 col mobile → 2-3 cols desktop
+- Gap: 24px-32px
+- Cards: Image, title, description, tags, actions
+- Hover effects
+
+Tech Badges:
+------------
+- Display công nghệ sử dụng
+- Colored với brand colors của từng tech
+- Small, rounded, monospace font
+- Group theo categories (optional)
+
+Loading States:
+---------------
+- Skeleton screens (placeholder với shimmer animation)
+- Spinner (circular, primary-blue)
+- Progress bars (cho file uploads, multi-step)
+- Maintain layout (tránh content jump)
+
+Empty States:
+-------------
+- Icon (large, muted color)
+- Message (clear, helpful)
+- Action button (nếu có hành động cụ thể)
+
+
+================================================================================
+9. AI/TECH AESTHETIC (Phong cách AI/Công nghệ)
+================================================================================
+
+Neural Network Theme:
+---------------------
+Visual elements gợi nhớ đến AI, machine learning:
+- Connected nodes (circles với lines)
+- Animated particles
+- Grid patterns
+- Circuit board aesthetics
+- Glowing effects
+
+Implementation:
+- Background decorations (subtle, không át nội dung)
+- SVG graphics
+- Slow animations (3-8 seconds)
+- Low opacity (10-30%)
+
+Tech-Forward Elements:
+----------------------
+- Monospace fonts cho technical content
+- Terminal/code aesthetics
+- Data visualization (charts, graphs)
+- Colored tech badges
+- Glowing accents (blue/cyan glow)
+
+Developer Vibe:
+---------------
+- Dark theme (coding environment)
+- Syntax-highlighting inspired colors
+- Clean, functional design
+- Performance-focused
+- Keyboard navigation friendly
+
+
+================================================================================
+10. ACCESSIBILITY (Khả năng tiếp cận)
+================================================================================
+
+Color Contrast:
+---------------
+- Text/background: Minimum 4.5:1 ratio
+- Large text: Minimum 3:1 ratio
+- Interactive elements: Minimum 3:1 ratio
+
+→ Test với tools: WebAIM Contrast Checker
+
+Keyboard Navigation:
+--------------------
+- Tất cả interactive elements: Tab-accessible
+- Focus indicators: Visible ring (2px, primary-blue)
+- ESC key: Close modals/dropdowns
+- Enter/Space: Activate buttons
+
+Semantic HTML:
+--------------
+- Proper heading hierarchy (h1 → h2 → h3)
+- <button> cho actions, <a> cho links
+- <nav>, <main>, <section>, <article> cho structure
+- Form labels với for attribute
+
+ARIA:
+-----
+- aria-label cho icon-only buttons
+- aria-hidden="true" cho decorative elements
+- aria-live cho dynamic content
+- role attributes khi cần
+
+Alternative Text:
+-----------------
+- Tất cả images: Descriptive alt text
+- Decorative images: alt=""
+- Icons with meaning: aria-label
+
+
+================================================================================
+11. RESPONSIVE DESIGN (Thiết kế responsive)
+================================================================================
+
+Mobile-First Approach:
+----------------------
+- Thiết kế cho mobile trước
+- Progressive enhancement cho desktop
+- Touch-friendly (buttons min 44x44px)
+
+Breakpoint Strategy:
+--------------------
+Design 3 layouts chính:
+- Mobile (320px - 640px): 1 column, stack elements
+- Tablet (640px - 1024px): 2 columns, condensed nav
+- Desktop (1024px+): 3 columns, full nav
+
+Typography:
+- Mobile: Smaller sizes (60-70% desktop)
+- Line length: 50-75 characters max
+
+Images:
+- Responsive: 100% width với max-width
+- Art direction: Crop khác nhau cho mobile/desktop
+- Lazy loading
+
+Navigation:
+- Mobile: Hamburger menu
+- Desktop: Horizontal menu
+- Breakpoint: ~768px
+
+
+================================================================================
+12. PERFORMANCE (Hiệu năng)
+================================================================================
+
+Principles:
+-----------
+- Fast loading: < 3s for FCP
+- Smooth interactions: 60fps animations
+- Small bundle size: Code splitting
+- Optimized images: WebP, lazy loading
+
+Best Practices:
+---------------
+- Minimize CSS/JS
+- Use system fonts fallback
+- Lazy load images below fold
+- Preload critical fonts
+- Avoid layout shifts (CLS)
+- Only animate transform + opacity
+
+
+================================================================================
+13. IMPLEMENTATION NOTES (Ghi chú triển khai)
+================================================================================
+
+Recommended Tech Stack:
+-----------------------
+- Framework: Next.js, React, Vue (tùy chọn)
+- Styling: Tailwind CSS (hoặc CSS-in-JS)
+- Icons: Lucide, Heroicons, hoặc Font Awesome
+- Fonts: Google Fonts
+- Charts: Recharts, Chart.js (nếu cần)
+
+CSS Architecture:
+-----------------
+- Utility-first (Tailwind) hoặc BEM methodology
+- CSS variables cho colors, spacing
+- Scoped styles cho components
+- Global styles cho resets, typography
+
+Component Library:
+------------------
+Tạo base components có thể tái sử dụng:
+- Button (variants, sizes, states)
+- Card (variants, padding options)
+- Badge (colors, sizes)
+- Input (với label, error states)
+- Modal (sizes, animations)
+
+Organize theo Atomic Design hoặc Feature-based
+
+
+================================================================================
+14. DESIGN TOKENS (Token thiết kế)
+================================================================================
+
+Tóm tắt giá trị cần nhớ:
+
+COLORS:
+Primary Blue: #2563EB
+Accent Cyan: #06B6D4
+Background: #0F172A
+Surface: #1E293B
+Border: #334155
+Text: #F8FAFC, #CBD5E1, #94A3B8
+
+SPACING:
+Base unit: 4px hoặc 8px
+Card padding: 24px-32px
+Section spacing: 80px
+Gap: 16px-24px
+
+TYPOGRAPHY:
+Primary: Nunito
+Display: Shrikhand
+Mono: JetBrains Mono
+Base size: 16px
+Scale: 14px, 16px, 20px, 24px, 32px, 48px, 72px
+
+EFFECTS:
+Border radius: 12px (cards)
+Shadow: Subtle với blue glow
+Transition: 200ms ease-out
+Backdrop blur: 10px
+
+
+================================================================================
+15. DO'S AND DON'TS
+================================================================================
+
+✓ DO:
+-----
+✓ Giữ dark theme làm chủ đạo
+✓ Dùng primary-blue và accent-cyan cho brand identity
+✓ Tạo gradient blue-to-cyan cho elements quan trọng
+✓ Implement hover effects tinh tế
+✓ Test responsive kỹ lưỡng
+✓ Add loading states
+✓ Optimize performance
+✓ Dùng semantic HTML
+✓ Support keyboard navigation
+✓ Maintain consistent spacing
+✓ Thêm neural network hoặc tech aesthetic elements
+
+✗ DON'T:
+--------
+✗ Không làm light theme (trừ khi có requirement đặc biệt)
+✗ Tránh dùng quá nhiều màu ngoài palette
+✗ Không skip heading hierarchy
+✗ Tránh animations quá nhanh hoặc quá chậm
+✗ Không quên states: hover, focus, disabled, loading
+✗ Tránh hardcode values (dùng design tokens)
+✗ Không bỏ qua mobile responsive
+✗ Tránh poor color contrast
+✗ Không làm quá phức tạp (keep it simple)
+
+
+================================================================================
+KẾT LUẬN
+================================================================================
+
+The Noders PTNK Design Identity:
+---------------------------------
+🔵 Blue & Cyan: Màu nhận diện chính
+🌙 Dark Theme: Phù hợp với developer culture
+🤖 Tech Aesthetic: Neural networks, AI, modern tech
+⚡ Performance: Fast, smooth, optimized
+♿ Accessible: Inclusive design cho mọi người
+
+Mục tiêu:
+---------
+Tạo sự nhất quán visual identity giữa các dự án web của câu lạc bộ,
+giúp users nhận diện ngay "đây là sản phẩm của The Noders PTNK"
+thông qua màu sắc, typography, và phong cách thiết kế.
+
+Linh hoạt:
+----------
+Guideline này là FOUNDATION, không phải rulebook cứng nhắc.
+Mỗi dự án có thể điều chỉnh phù hợp với mục đích riêng,
+nhưng luôn giữ core identity: Blue-Cyan + Dark Theme + Tech Vibe.
+
+Happy designing! 🚀
+
+================================================================================

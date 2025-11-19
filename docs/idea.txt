@@ -1,0 +1,357 @@
+# AI COMPETITION PLATFORM - SPECIFICATION
+
+## 1. TỔNG QUAN
+Web platform để tổ chức các kì thi AI/Machine Learning, hỗ trợ submission CSV và tự động chấm điểm.
+
+Tech stack: Vercel + Supabase + TypeScript/TSX
+
+---
+
+## 2. QUẢN LÝ TÀI KHOẢN
+
+### 2.1 Admin Account
+- Có quyền tạo và quản lý kì thi
+- Approve/reject user registrations
+- Xem analytics và insights chi tiết
+- Quản lý datasets và answer keys
+
+### 2.2 User Account
+- Đăng ký qua email verification (Supabase Auth)
+- Đăng ký tham gia các kì thi
+- Nộp bài và xem submission history
+- Xem leaderboard và competition details
+- Có thể tham gia individual hoặc team
+
+---
+
+## 3. QUẢN LÝ KÌ THI
+
+### 3.1 Tạo Kì Thi (Admin)
+Admin cần nhập các thông tin sau:
+
+**Thông tin cơ bản:**
+- Tên kì thi
+- Mô tả đề bài (text description, design đẹp với typography tốt)
+- Tiêu chí chấm điểm (hiện tại: F1 Score)
+
+**Timeline:**
+- Thời gian đăng ký (registration phase)
+- Thời gian public test
+- Thời gian private test (optional - tùy loại kì thi)
+- Thời gian kết thúc
+
+**Datasets:**
+- Link dataset cho user download (file không có labels)
+- Upload public_test_ans.csv (file có labels - server lưu)
+- Upload private_test_ans.csv (file có labels - server lưu, nếu có)
+
+**Submission Rules:**
+- Giới hạn số lần nộp bài mỗi ngày (vd: 5 lần/ngày)
+- Giới hạn tổng số lần nộp (vd: 50 lần/kì thi)
+- Max file size (vd: 10MB)
+
+**Competition Type:**
+- Loại có 4 status: Đang đăng ký → Public Test → Private Test → Kết thúc
+- Loại có 3 status: Đang đăng ký → Test → Kết thúc
+
+**Team Settings:**
+- Individual competition hoặc Team competition
+- Nếu Team: Team size min/max (vd: 1-3 người)
+
+### 3.2 Loại Kì Thi
+**Type 1 (4 phases):**
+1. Registration phase - Chấp nhận đăng ký
+2. Public test phase - User nộp bài với public test set
+3. Private test phase - User nộp bài với private test set
+4. Ended - Hiển thị final leaderboard
+
+**Type 2 (3 phases):**
+1. Registration phase - Chấp nhận đăng ký
+2. Test phase - User nộp bài với 1 test set duy nhất
+3. Ended - Hiển thị final leaderboard
+
+---
+
+## 4. ĐĂNG KÝ VÀ THAM GIA
+
+### 4.1 Individual Registration
+- User đăng ký vào kì thi (status: pending)
+- Admin xem danh sách và approve/reject
+- User được approve → có thể nộp bài
+
+### 4.2 Team Registration
+- User tạo team hoặc join team đã có
+- Team leader đăng ký team vào kì thi
+- Admin approve team (không phải từng thành viên)
+- Tất cả thành viên trong team được phép nộp bài
+- **QUAN TRỌNG:** Giới hạn số lần nộp áp dụng cho cả team, không phải từng người
+  - Vd: Limit 5 lần/ngày → team 3 người vẫn chỉ được nộp 5 lần/ngày total
+  - Submission quota được chia sẻ giữa các thành viên
+
+---
+
+## 5. NỘP BÀI VÀ CHẤM ĐIỂM
+
+### 5.1 File Format
+**Answer key format (admin upload):**
+```csv
+id,Overall
+1393,8
+1394,9
+1395,6
+```
+- Cột 1: id (ID của sample)
+- Cột 2: Tên cột không quan trọng, chứa label/giá trị dự đoán
+
+**User submission format:** Giống hệt answer key format
+
+### 5.2 Validation Rules
+Trước khi chấm điểm, validate:
+1. File phải là CSV format
+2. Số hàng (rows) phải khớp với answer key
+3. Số cột phải = 2 (id + label)
+4. Tất cả IDs trong answer key phải có trong submission
+5. Không có duplicate IDs
+6. File size < 10MB
+
+**Nếu validation FAIL:**
+- Báo lỗi chi tiết cho user
+- KHÔNG trừ lần nộp
+- Yêu cầu nộp lại
+
+**Nếu validation PASS:**
+- Tính F1 score
+- Trừ 1 lần nộp
+- Lưu vào submission history
+- Cập nhật leaderboard (nếu điểm cao hơn best score)
+
+### 5.3 Scoring
+- Metric: F1 Score
+- So sánh predictions với answer key theo ID
+- Công thức:
+  ```
+  Precision = TP / (TP + FP)
+  Recall = TP / (TP + FN)
+  F1 = 2 * (Precision * Recall) / (Precision + Recall)
+  ```
+
+### 5.4 Submission History
+User có thể xem tất cả submissions của mình:
+```
+Submission #  | Time          | Phase    | Score   | Status
+#5           | 2h ago        | Public   | 0.8532  | Best ⭐
+#4           | 5h ago        | Public   | 0.8421  | -
+#3           | 1 day ago     | Public   | 0.7891  | -
+```
+
+---
+
+## 6. LEADERBOARD
+
+### 6.1 Scoring Logic
+- **Public test:** Lấy điểm CAO NHẤT (best score) của user/team
+- **Private test:** Lấy điểm CAO NHẤT (best score) của user/team
+- Mỗi phase có leaderboard riêng
+
+### 6.2 Display
+**Individual Competition:**
+- 1 leaderboard duy nhất (individual ranking)
+
+**Team Competition:**
+- Team leaderboard (primary)
+- Personal leaderboard (secondary - để xem contribution của từng thành viên)
+
+### 6.3 Refresh Mechanism
+- KHÔNG realtime (tránh quá tải server)
+- Load dữ liệu lần đầu
+- Có nút "Reload" để user fetch lại nếu muốn
+
+---
+
+## 7. USER INTERFACE
+
+### 7.1 Competitions Browse Page (Logged in User)
+Trang chính để user xem và chọn kì thi để đăng ký:
+
+**Display:**
+- List tất cả competitions với cards/table view
+- Mỗi competition hiển thị:
+  - Tên kì thi
+  - Status badge (Registering/Ongoing/Ended)
+  - Phase hiện tại
+  - Countdown timer (nếu đang active)
+  - Số lượng participants
+  - Registration status của user (Not registered / Pending / Approved / Registered)
+
+**Filter & Search:**
+- Filter by status: All / Registering / Ongoing / Ended
+- Filter by registration status: All / Can register / Already registered
+- Search by competition name
+- Sort by: Latest / Ending soon / Most participants
+
+**Actions:**
+- Click vào competition → xem detail page
+- Button "Register" (nếu đang open registration và chưa đăng ký)
+- Badge "Pending approval" (nếu đã đăng ký nhưng chưa được approve)
+- Badge "Registered" (nếu đã được approve)
+
+### 7.2 Competition Detail Page
+User phải thấy rõ:
+- **Countdown timer:** Còn bao lâu đến deadline (phase tiếp theo hoặc kết thúc)
+- **Current phase indicator:** Đang ở phase nào (Registration/Public/Private/Ended)
+- **Registration status:**
+  - "Not registered" với button "Register now"
+  - "Pending approval" với pending badge
+  - "Registered" với green checkmark
+- **Submission quota** (chỉ hiện nếu đã registered):
+  - Đã nộp: X/Y (total)
+  - Hôm nay: X/Y (daily)
+- **Competition description** (typography đẹp, dễ đọc)
+- **Dataset download link** (chỉ hiện nếu đã được approve)
+- **Submit button** (disable nếu hết quota hoặc chưa được approve)
+- **Tabs:**
+  - Overview (description, timeline, rules)
+  - Leaderboard (public/private)
+  - My Submissions (nếu đã registered)
+  - Discussion (future feature)
+
+### 7.3 Public Page (Chưa đăng nhập)
+Trang landing page cho anonymous users:
+- Hero section giới thiệu platform
+- List competitions đang mở đăng ký (featured)
+- List tất cả competitions (ongoing, upcoming, ended)
+- Filter/search competitions
+- Xem leaderboard của các kì thi (read-only)
+- Xem competition details (read-only, không thấy dataset links)
+- CTA buttons: "Sign up" / "Login"
+
+---
+
+## 8. ADMIN DASHBOARD & ANALYTICS
+
+### 8.1 Competition Management
+- List tất cả competitions
+- Edit/Delete competitions
+- View registrations (approve/reject)
+
+### 8.2 Analytics (QUAN TRỌNG - phải informative và insightful)
+Cho mỗi kì thi, admin cần xem:
+
+**Overview Metrics:**
+- Tổng số registrations
+- Tổng số users/teams được approve
+- Tổng số submissions
+- Average submissions per user/team
+
+**Submission Timeline:**
+- Chart: Số lượng submissions theo thời gian (by day/hour)
+- Identify peak times
+
+**Score Distribution:**
+- Histogram: Phân bố điểm số
+- Mean, median, std dev
+- Top 10% threshold
+
+**User Engagement:**
+- Active users (đã nộp ít nhất 1 bài)
+- Inactive users (đăng ký nhưng chưa nộp)
+- Submission frequency distribution
+
+**Leaderboard Dynamics:**
+- Top 10 competitors progression over time
+- Score improvement trends
+
+**Validation Errors:**
+- Top common validation errors
+- Error rate over time
+
+### 8.3 Data Export
+- Export leaderboard as CSV
+- Export all submissions với metadata
+- Export analytics reports
+
+---
+
+## 9. TECHNICAL NOTES
+
+### 9.1 Backend (Supabase)
+**Database Tables:**
+- users (Supabase Auth)
+- competitions
+- teams
+- team_members
+- registrations
+- test_datasets (answer keys)
+- submissions
+- leaderboard_cache
+
+**Storage:**
+- User submission files
+- Admin answer key files
+- Problem statement assets
+
+**Edge Functions:**
+- F1 score calculation
+- File validation
+- Leaderboard computation
+
+### 9.2 Frontend (Vercel + TSX)
+- Next.js App Router
+- TypeScript
+- TailwindCSS (styling)
+- Recharts/Visx (analytics charts)
+- Papa Parse (CSV parsing)
+
+### 9.3 Features NOT Included (v1)
+- Real-time leaderboard updates
+- Discussion forum
+- Code execution/notebooks
+- API submissions
+- Multiple scoring metrics (chỉ F1 trong v1)
+
+---
+
+## 10. USER FLOWS
+
+### 10.1 Admin Flow
+1. Login với admin account
+2. Create competition (nhập tất cả info)
+3. Monitor registrations → approve/reject
+4. Competition auto transitions giữa các phases (theo schedule)
+5. View analytics dashboard
+6. View/export leaderboard
+
+### 10.2 Individual User Flow
+1. Sign up với email verification
+2. Browse competitions
+3. Register cho competition
+4. Đợi admin approve
+5. Download dataset
+6. Submit solutions (validate → score → update leaderboard)
+7. View submission history & leaderboard
+8. Improve model → submit lại
+
+### 10.3 Team User Flow
+1. Sign up với email verification
+2. Create team HOẶC join existing team
+3. Team leader register team cho competition
+4. Đợi admin approve team
+5. Team members collaborate (ở ngoài platform)
+6. Bất kỳ thành viên nào cũng có thể submit (dùng chung quota)
+7. View team leaderboard & personal contributions
+8. Improve model → submit lại
+
+---
+
+## 11. EDGE CASES & RULES
+
+- User có thể rời team giữa competition? → NO, sau khi registered thì lock team
+- Admin có thể thay đổi timeline sau khi competition bắt đầu? → YES, nhưng phải có warning
+- Submission trong khoảng phase transition? → Queue và process trong phase mới
+- User submit file với IDs thừa (không có trong answer key)? → ACCEPT nhưng ignore IDs thừa
+- Private leaderboard khi nào visible? → Sau khi competition ended
+- Tie-breaking trong leaderboard? → Theo thời gian submit sớm hơn
+
+---
+
+END OF SPECIFICATION

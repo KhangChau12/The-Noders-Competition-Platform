@@ -1,0 +1,41 @@
+{
+  "name": "competition-platform",
+  "version": "1.0.0",
+  "description": "AI Competition Platform - The Noders PTNK",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.3",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "autoprefixer": "^10.4.16",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.300.0",
+    "next": "^14.0.4",
+    "papaparse": "^5.4.1",
+    "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.2",
+    "recharts": "^2.10.3",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.0.4"
+  }
+}
