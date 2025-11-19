@@ -31,11 +31,11 @@ export default async function AdminDashboardPage() {
   }
 
   // Check admin role
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .single()) as { data: { role: string } | null };
 
   if (profile?.role !== 'admin') {
     redirect('/dashboard');
@@ -54,7 +54,7 @@ export default async function AdminDashboardPage() {
     .select('*')
     .is('deleted_at', null);
 
-  const activeCompetitions = competitions?.filter((comp) => {
+  const activeCompetitions = competitions?.filter((comp: any) => {
     const publicTestEnd = new Date(comp.public_test_end);
     const privateTestEnd = comp.private_test_end
       ? new Date(comp.private_test_end)

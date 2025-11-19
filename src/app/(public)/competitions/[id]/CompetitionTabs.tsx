@@ -41,6 +41,8 @@ export default function CompetitionTabs({
   }, [activeTab]);
 
   const fetchUserSubmissions = async () => {
+    if (!userId) return;
+
     setLoading(true);
     const supabase = createClient();
 

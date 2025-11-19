@@ -16,24 +16,22 @@ export async function approveRegistration(registrationId: string) {
   }
 
   // Check admin role
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .single()) as { data: { role: string } | null };
 
   if (profile?.role !== 'admin') {
     return { error: 'Unauthorized - Admin access required' };
   }
 
   // Update registration status
-  const { error } = await supabase
-    .from('registrations')
-    .update({
-      status: 'approved',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', registrationId);
+  // @ts-ignore - Supabase types need regeneration
+  const { error } = await supabase.from('registrations').update({
+    status: 'approved',
+    updated_at: new Date().toISOString(),
+  }).eq('id', registrationId);
 
   if (error) {
     return { error: error.message };
@@ -56,24 +54,22 @@ export async function rejectRegistration(registrationId: string) {
   }
 
   // Check admin role
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .single()) as { data: { role: string } | null };
 
   if (profile?.role !== 'admin') {
     return { error: 'Unauthorized - Admin access required' };
   }
 
   // Update registration status
-  const { error } = await supabase
-    .from('registrations')
-    .update({
-      status: 'rejected',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', registrationId);
+  // @ts-ignore - Supabase types need regeneration
+  const { error } = await supabase.from('registrations').update({
+    status: 'rejected',
+    updated_at: new Date().toISOString(),
+  }).eq('id', registrationId);
 
   if (error) {
     return { error: error.message };

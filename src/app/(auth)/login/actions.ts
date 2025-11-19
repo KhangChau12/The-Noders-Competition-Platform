@@ -30,11 +30,11 @@ export async function signIn(formData: FormData) {
   }
 
   // Fetch user role to determine redirect
-  const { data: user } = await supabase
+  const { data: user } = (await supabase
     .from('users')
     .select('role')
     .eq('id', data.user.id)
-    .single();
+    .single()) as { data: { role: string } | null };
 
   // If redirect parameter exists and is safe, use it
   if (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {

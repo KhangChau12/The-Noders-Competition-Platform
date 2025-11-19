@@ -28,11 +28,11 @@ export default async function AdminCompetitionsPage() {
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .single()) as { data: { role: string } | null };
 
   if (profile?.role !== 'admin') {
     redirect('/dashboard');
@@ -106,7 +106,7 @@ export default async function AdminCompetitionsPage() {
     }
   };
 
-  const competitionsWithStats = competitions?.map((comp) => ({
+  const competitionsWithStats = competitions?.map((comp: any) => ({
     ...comp,
     phase: getPhase(comp),
     registrationCount: registrationCounts[comp.id] || { approved: 0, pending: 0, total: 0 },
