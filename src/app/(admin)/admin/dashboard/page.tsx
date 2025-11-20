@@ -79,12 +79,12 @@ export default async function AdminDashboardPage() {
     .select('*', { count: 'exact', head: true });
 
   // Fetch pending registrations
-  const { data: pendingRegistrations } = (await supabase
+  const { data: pendingRegistrations, error: regError } = (await supabase
     .from('registrations')
     .select(
       `
       *,
-      user:users (
+      user:users!registrations_user_id_fkey (
         id,
         full_name,
         email
@@ -97,7 +97,10 @@ export default async function AdminDashboardPage() {
     `
     )
     .eq('status', 'pending')
-    .order('created_at', { ascending: false })) as { data: any };
+    .order('registered_at', { ascending: false })) as { data: any; error: any };
+
+  // Debug log
+  console.log('Pending registrations:', pendingRegistrations, 'Error:', regError);
 
   // Fetch total submissions
   const { count: totalSubmissions } = await supabase
@@ -192,17 +195,17 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Pending Registrations */}
-        {pendingRegistrations && pendingRegistrations.length > 0 && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <AlertCircle className="w-6 h-6 text-warning" />
-                Pending Registrations
-              </h2>
-              <Badge variant="yellow">{pendingRegistrations.length} pending</Badge>
-            </div>
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <AlertCircle className="w-6 h-6 text-warning" />
+              Pending Registrations
+            </h2>
+            <Badge variant="yellow">{pendingRegistrations?.length || 0} pending</Badge>
+          </div>
 
-            <Card className="overflow-hidden">
+          <Card className="overflow-hidden">
+            {pendingRegistrations && pendingRegistrations.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-bg-tertiary border-b border-border-default">
@@ -242,7 +245,7 @@ export default async function AdminDashboardPage() {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-sm text-text-secondary">
-                          {new Date(registration.created_at).toLocaleDateString('en-US', {
+                          {new Date(registration.registered_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
@@ -258,9 +261,17 @@ export default async function AdminDashboardPage() {
                   </tbody>
                 </table>
               </div>
-            </Card>
-          </div>
-        )}
+            ) : (
+              <div className="p-12 text-center">
+                <AlertCircle className="w-12 h-12 mx-auto mb-3 text-text-tertiary opacity-50" />
+                <p className="text-text-secondary">No pending registrations</p>
+                {regError && (
+                  <p className="text-sm text-error mt-2">Error: {regError.message}</p>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
 
         {/* Recent Submissions & Quick Actions */}
         <div className="grid md:grid-cols-2 gap-6">
