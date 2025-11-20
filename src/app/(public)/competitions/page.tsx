@@ -103,16 +103,15 @@ export default function CompetitionsPage() {
           return;
         }
 
-        // Fetch participant counts
-        const { data: registrationsData } = await supabase
-          .from('registrations')
-          .select('competition_id, status')
-          .eq('status', 'approved');
+        // Fetch participant counts from public view (bypasses RLS)
+        const { data: participantCountsData } = await supabase
+          .from('competition_participant_counts')
+          .select('competition_id, participant_count');
 
-        // Count participants per competition
-        const participantCounts = (registrationsData || []).reduce(
-          (acc, reg: any) => {
-            acc[reg.competition_id] = (acc[reg.competition_id] || 0) + 1;
+        // Map to competition IDs
+        const participantCounts = (participantCountsData || []).reduce(
+          (acc, item: any) => {
+            acc[item.competition_id] = item.participant_count;
             return acc;
           },
           {} as Record<string, number>

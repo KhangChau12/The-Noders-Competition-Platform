@@ -95,15 +95,22 @@ export default async function HomePage() {
     .from('submissions')
     .select('*', { count: 'exact', head: true });
 
+  // Fetch participant counts from public view (bypasses RLS)
+  const { data: participantCountsData } = await supabase
+    .from('competition_participant_counts')
+    .select('competition_id, participant_count');
+
+  const participantCountsMap = (participantCountsData || []).reduce(
+    (acc, item: any) => {
+      acc[item.competition_id] = item.participant_count;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   // Get participants and submissions count for each competition
   const competitionsWithStats = await Promise.all(
     (featuredCompetitions || []).map(async (competition: any) => {
-      const { count: participants } = await supabase
-        .from('registrations')
-        .select('*', { count: 'exact', head: true })
-        .eq('competition_id', competition.id)
-        .eq('status', 'approved');
-
       const { count: submissions } = await supabase
         .from('submissions')
         .select('*', { count: 'exact', head: true })
@@ -112,7 +119,7 @@ export default async function HomePage() {
       return {
         competition,
         stats: {
-          participants: participants || 0,
+          participants: participantCountsMap[competition.id] || 0,
           submissions: submissions || 0,
           daysRemaining: getDaysRemaining(competition),
         },
