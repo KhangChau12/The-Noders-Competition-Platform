@@ -63,26 +63,46 @@ export default function CompetitionTabs({
     setLoading(true);
     const supabase = createClient();
 
-    const { data, error } = await supabase
+    // Fetch all valid submissions and compute best scores client-side
+    const { data: allSubs } = await supabase
       .from('submissions')
       .select(`
         id,
         score,
         submitted_at,
         user_id,
-        users:user_id (
+        team_id,
+        phase,
+        validation_status,
+        users!submissions_user_id_fkey (
+          id,
           full_name,
           email
+        ),
+        teams!submissions_team_id_fkey (
+          id,
+          name
         )
       `)
       .eq('competition_id', competition.id)
-      .eq('is_best_score', true)
       .eq('validation_status', 'valid')
+      .eq('phase', 'public')
       .order('score', { ascending: false })
-      .limit(100);
+      .order('submitted_at', { ascending: true });
 
-    if (!error && data) {
-      setLeaderboard(data);
+    if (allSubs) {
+      // Get unique users with their best scores
+      const userBestScores = new Map();
+      allSubs.forEach((sub: any) => {
+        const userId = sub.user_id || sub.team_id;
+        if (!userId) return;
+
+        if (!userBestScores.has(userId)) {
+          userBestScores.set(userId, sub);
+        }
+      });
+
+      setLeaderboard(Array.from(userBestScores.values()).slice(0, 100));
     }
     setLoading(false);
   };

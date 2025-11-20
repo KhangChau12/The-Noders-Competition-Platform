@@ -93,6 +93,5 @@ export async function updateCompetition(id: string, formData: FormData) {
 
   revalidatePath('/admin/competitions');
   revalidatePath(`/competitions/${id}`);
-  revalidatePath(`/competition/${id}`);
   return { success: true };
 }

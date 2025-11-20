@@ -67,21 +67,10 @@ export async function submitSolution(competitionId: string, formData: FormData) 
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('competition_id', competitionId)
-    .gte('created_at', todayStart.toISOString());
+    .gte('submitted_at', todayStart.toISOString());
 
-  if ((dailyCount || 0) >= competition.daily_submission_limit) {
+  if ((dailyCount || 0) >= (competition.daily_submission_limit || 5)) {
     return { error: 'Daily submission limit reached' };
-  }
-
-  // Check total submission limit
-  const { count: totalCount } = await supabase
-    .from('submissions')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('competition_id', competitionId);
-
-  if ((totalCount || 0) >= competition.total_submission_limit) {
-    return { error: 'Total submission limit reached' };
   }
 
   // Get the file
@@ -95,10 +84,10 @@ export async function submitSolution(competitionId: string, formData: FormData) 
     return { error: 'Only CSV files are allowed' };
   }
 
-  // Validate file size (max 10MB)
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  // Validate file size
+  const maxSize = (competition.max_file_size_mb || 10) * 1024 * 1024;
   if (file.size > maxSize) {
-    return { error: 'File size exceeds 10MB limit' };
+    return { error: `File size exceeds ${competition.max_file_size_mb || 10}MB limit` };
   }
 
   // Read file content for basic validation
@@ -126,16 +115,27 @@ export async function submitSolution(competitionId: string, formData: FormData) 
   // For now, generate a random score between 0 and 1
   const mockScore = Math.random();
 
+  // Map phase names to database values
+  const phaseValue = currentPhase === 'public_test' ? 'public' : 'private';
+
   // Create submission record
   // @ts-ignore - Supabase types need regeneration
-  const { data: submission, error: submissionError } = (await supabase.from('submissions').insert({
-    user_id: user.id,
-    competition_id: competitionId,
-    file_path: uploadData.path,
-    score: mockScore,
-    phase: currentPhase,
-    is_best_score: false, // Will be updated by trigger
-  }).select().single()) as { data: any; error: any };
+  const { data: submission, error: submissionError } = (await supabase
+    .from('submissions')
+    .insert({
+      user_id: user.id,
+      competition_id: competitionId,
+      submitted_by: user.id,
+      file_path: uploadData.path,
+      file_name: file.name,
+      file_size_bytes: file.size,
+      score: mockScore,
+      phase: phaseValue,
+      validation_status: 'valid',
+      is_best_score: false, // Will be updated by trigger
+    })
+    .select()
+    .single()) as { data: any; error: any };
 
   if (submissionError) {
     // Clean up uploaded file if submission creation fails
@@ -144,7 +144,7 @@ export async function submitSolution(competitionId: string, formData: FormData) 
   }
 
   revalidatePath(`/competitions/${competitionId}`);
-  revalidatePath(`/competition/${competitionId}/submit`);
+  revalidatePath(`/competitions/${competitionId}/submit`);
 
   return {
     success: true,
@@ -152,66 +152,4 @@ export async function submitSolution(competitionId: string, formData: FormData) 
     score: mockScore,
     submissionId: submission.id,
   };
-}
-
-export async function registerForCompetition(competitionId: string) {
-  const supabase = await createClient();
-
-  // Check authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'Not authenticated' };
-  }
-
-  // Check if competition exists
-  const { data: competition, error: compError } = (await supabase
-    .from('competitions')
-    .select('*')
-    .eq('id', competitionId)
-    .is('deleted_at', null)
-    .single()) as { data: any; error: any };
-
-  if (compError || !competition) {
-    return { error: 'Competition not found' };
-  }
-
-  // Check if registration is still open
-  const now = new Date();
-  const registrationEnd = new Date(competition.registration_end);
-
-  if (now > registrationEnd) {
-    return { error: 'Registration period has ended' };
-  }
-
-  // Check if already registered
-  const { data: existingRegistration } = (await supabase
-    .from('registrations')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('competition_id', competitionId)
-    .single()) as { data: any };
-
-  if (existingRegistration) {
-    return { error: 'You are already registered for this competition' };
-  }
-
-  // Create registration
-  // @ts-ignore - Supabase types need regeneration
-  const { error: regError } = await supabase.from('registrations').insert({
-    user_id: user.id,
-    competition_id: competitionId,
-    status: 'pending',
-  });
-
-  if (regError) {
-    return { error: regError.message };
-  }
-
-  revalidatePath(`/competitions/${competitionId}`);
-  revalidatePath('/dashboard');
-
-  return { success: true, message: 'Registration submitted for approval' };
 }

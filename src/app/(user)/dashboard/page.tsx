@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import CompetitionCard from '@/components/competition/CompetitionCard';
 import Link from 'next/link';
 import {
   Trophy,
@@ -14,6 +15,88 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
+
+type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
+
+type Competition = {
+  id: string;
+  title: string;
+  description: string;
+  competition_type: '3-phase' | '4-phase';
+  participation_type: 'individual' | 'team';
+  registration_start: string;
+  registration_end: string;
+  public_test_start: string;
+  public_test_end: string;
+  private_test_start: string | null;
+  private_test_end: string | null;
+  scoring_metric: string;
+};
+
+type CompetitionWithStats = Competition & {
+  phase: CompetitionPhase;
+  participant_count: number;
+  registration_status?: 'not_registered' | 'pending' | 'approved' | 'rejected';
+  countdown?: {
+    days: number;
+    hours: number;
+    minutes: number;
+    label: string;
+  };
+};
+
+// Helper function to determine competition phase
+function getCompetitionPhase(comp: Competition, now: Date): CompetitionPhase {
+  const regStart = new Date(comp.registration_start);
+  const regEnd = new Date(comp.registration_end);
+  const publicStart = new Date(comp.public_test_start);
+  const publicEnd = new Date(comp.public_test_end);
+  const privateStart = comp.private_test_start ? new Date(comp.private_test_start) : null;
+  const privateEnd = comp.private_test_end ? new Date(comp.private_test_end) : null;
+
+  if (now < regStart) return 'upcoming';
+  if (now >= regStart && now <= regEnd) return 'registration';
+  if (now > regEnd && now <= publicEnd) return 'public_test';
+  if (privateStart && privateEnd && now > publicEnd && now <= privateEnd) return 'private_test';
+  return 'ended';
+}
+
+// Helper function to get countdown
+function getCountdown(
+  comp: Competition,
+  phase: CompetitionPhase,
+  now: Date
+): { days: number; hours: number; minutes: number; label: string } | undefined {
+  if (phase === 'ended') return undefined;
+
+  let targetDate: Date;
+  let label: string;
+
+  if (phase === 'upcoming') {
+    targetDate = new Date(comp.registration_start);
+    label = 'Registration starts in';
+  } else if (phase === 'registration') {
+    targetDate = new Date(comp.registration_end);
+    label = 'Registration ends in';
+  } else if (phase === 'public_test') {
+    targetDate = new Date(comp.public_test_end);
+    label = 'Public test ends in';
+  } else if (phase === 'private_test' && comp.private_test_end) {
+    targetDate = new Date(comp.private_test_end);
+    label = 'Private test ends in';
+  } else {
+    return undefined;
+  }
+
+  const diff = targetDate.getTime() - now.getTime();
+  if (diff < 0) return undefined;
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  return { days, hours, minutes, label };
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -38,8 +121,11 @@ export default async function DashboardPage() {
         description,
         competition_type,
         participation_type,
+        registration_start,
         registration_end,
+        public_test_start,
         public_test_end,
+        private_test_start,
         private_test_end,
         scoring_metric
       )
@@ -97,6 +183,64 @@ export default async function DashboardPage() {
     (r: any) => r.status === 'approved' && r.competition
   );
   const pendingCompetitions = registrations?.filter((r: any) => r.status === 'pending');
+
+  // Fetch participant counts
+  const { data: registrationsData } = await supabase
+    .from('registrations')
+    .select('competition_id, status')
+    .eq('status', 'approved');
+
+  const participantCounts = (registrationsData || []).reduce(
+    (acc, reg: any) => {
+      acc[reg.competition_id] = (acc[reg.competition_id] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  // Process competitions with phase and stats
+  const now = new Date();
+  const processActiveCompetitions = (regs: any[]): CompetitionWithStats[] => {
+    return regs
+      .map((reg: any) => {
+        const comp = reg.competition as Competition;
+        if (!comp) return null;
+
+        const phase = getCompetitionPhase(comp, now);
+        const countdown = getCountdown(comp, phase, now);
+
+        return {
+          ...comp,
+          phase,
+          participant_count: participantCounts[comp.id] || 0,
+          registration_status: reg.status as 'approved' | 'pending' | 'rejected',
+          countdown,
+        };
+      })
+      .filter(Boolean) as CompetitionWithStats[];
+  };
+
+  const processRecommendedCompetitions = (comps: any[]): CompetitionWithStats[] => {
+    return comps.map((comp: Competition) => {
+      const phase = getCompetitionPhase(comp, now);
+      const countdown = getCountdown(comp, phase, now);
+
+      return {
+        ...comp,
+        phase,
+        participant_count: participantCounts[comp.id] || 0,
+        registration_status: 'not_registered' as const,
+        countdown,
+      };
+    });
+  };
+
+  const processedActiveCompetitions = activeCompetitions
+    ? processActiveCompetitions(activeCompetitions)
+    : [];
+  const processedRecommendedCompetitions = recommendedCompetitions
+    ? processRecommendedCompetitions(recommendedCompetitions)
+    : [];
 
   return (
     <div className="min-h-screen px-4 py-8">
@@ -164,58 +308,17 @@ export default async function DashboardPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeCompetitions.map((registration: any) => {
-                const comp = registration.competition;
-                if (!comp) return null;
-
-                // Determine current phase
-                const now = new Date();
-                const regEnd = new Date(comp.registration_end);
-                const publicEnd = new Date(comp.public_test_end);
-                const privateEnd = comp.private_test_end
-                  ? new Date(comp.private_test_end)
-                  : null;
-
-                let phase = 'ended';
-                let phaseVariant: any = 'ended';
-                if (now < regEnd) {
-                  phase = 'Registration';
-                  phaseVariant = 'registration';
-                } else if (now < publicEnd) {
-                  phase = 'Public Test';
-                  phaseVariant = 'public';
-                } else if (privateEnd && now < privateEnd) {
-                  phase = 'Private Test';
-                  phaseVariant = 'private';
-                } else {
-                  phase = 'Ended';
-                }
-
-                return (
-                  <Link key={registration.id} href={`/competitions/${comp.id}`}>
-                    <Card className="p-6 hover:border-border-focus transition-all h-full flex flex-col">
-                      <div className="flex items-center gap-2 mb-4 flex-wrap">
-                        <Badge variant={phaseVariant}>{phase}</Badge>
-                        <Badge variant="green">Registered</Badge>
-                      </div>
-
-                      <h3 className="text-xl font-bold mb-2 line-clamp-2">{comp.title}</h3>
-
-                      <p className="text-text-secondary text-sm mb-4 line-clamp-2 flex-grow">
-                        {comp.description}
-                      </p>
-
-                      <div className="flex items-center justify-between text-sm text-text-tertiary pt-4 border-t border-border-default">
-                        <span className="flex items-center gap-1">
-                          <Trophy className="w-4 h-4" />
-                          {comp.scoring_metric || 'F1 Score'}
-                        </span>
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
-                    </Card>
-                  </Link>
-                );
-              })}
+              {processedActiveCompetitions.map((competition) => (
+                <CompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  phase={competition.phase}
+                  stats={{ participants: competition.participant_count }}
+                  countdown={competition.countdown}
+                  registrationStatus={competition.registration_status}
+                  showRegistrationBadge={true}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -270,41 +373,20 @@ export default async function DashboardPage() {
             </h2>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedCompetitions.slice(0, 3).map((comp: any) => (
-                <Link key={comp.id} href={`/competitions/${comp.id}`}>
-                  <Card className="p-6 hover:border-border-focus transition-all h-full flex flex-col">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Badge variant="registration">Open for Registration</Badge>
-                    </div>
-
-                    <h3 className="text-xl font-bold mb-2 line-clamp-2">{comp.title}</h3>
-
-                    <p className="text-text-secondary text-sm mb-4 line-clamp-3 flex-grow">
-                      {comp.description}
-                    </p>
-                  </Card>
-                </Link>
+              {processedRecommendedCompetitions.slice(0, 3).map((competition) => (
+                <CompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  phase={competition.phase}
+                  stats={{ participants: competition.participant_count }}
+                  countdown={competition.countdown}
+                  registrationStatus={competition.registration_status}
+                  showRegistrationBadge={false}
+                />
               ))}
             </div>
           </div>
         )}
-
-        {/* Empty State */}
-        {(!activeCompetitions || activeCompetitions.length === 0) &&
-          (!pendingCompetitions || pendingCompetitions.length === 0) && (
-            <Card className="p-12 text-center">
-              <Trophy className="w-16 h-16 mx-auto mb-4 text-text-tertiary" />
-              <h3 className="text-xl font-bold mb-2">No Competitions Yet</h3>
-              <p className="text-text-secondary mb-6">
-                Start your AI journey by registering for a competition
-              </p>
-              <Link href="/competitions">
-                <Button variant="primary" size="lg">
-                  Browse Competitions
-                </Button>
-              </Link>
-            </Card>
-          )}
       </div>
     </div>
   );

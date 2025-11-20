@@ -141,8 +141,9 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     }
   }
 
-  // Fetch leaderboard preview (top 10)
-  const { data: leaderboard } = await supabase
+  // Fetch leaderboard preview (top 10) - showing public test scores
+  // For each user, get their best score
+  const { data: allSubmissions } = (await supabase
     .from('submissions')
     .select(`
       id,
@@ -150,21 +151,37 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
       submitted_at,
       user_id,
       team_id,
-      users:user_id (
+      phase,
+      validation_status,
+      users!submissions_user_id_fkey (
+        id,
         full_name,
         email
       ),
-      teams:team_id (
+      teams!submissions_team_id_fkey (
+        id,
         name,
         leader_id
       )
     `)
     .eq('competition_id', id)
-    .eq('is_best_score', true)
     .eq('validation_status', 'valid')
+    .eq('phase', 'public')
     .order('score', { ascending: false })
-    .order('submitted_at', { ascending: true })
-    .limit(10);
+    .order('submitted_at', { ascending: true })) as { data: any; error: any };
+
+  // Get unique users with their best scores
+  const userBestScores = new Map();
+  allSubmissions?.forEach((sub: any) => {
+    const userId = sub.user_id || sub.team_id;
+    if (!userId) return;
+
+    if (!userBestScores.has(userId)) {
+      userBestScores.set(userId, sub);
+    }
+  });
+
+  const leaderboard = Array.from(userBestScores.values()).slice(0, 10);
 
   // Check if user can submit
   const canDownloadDataset = registration?.status === 'approved';
@@ -260,7 +277,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                       <span className="text-text-secondary">Not registered</span>
                     </div>
                     {currentPhase === 'registration' && (
-                      <Link href={`/competition/${id}/register`}>
+                      <Link href={`/competitions/${id}/register`}>
                         <Button variant="primary" size="md">
                           Register Now
                         </Button>
@@ -356,7 +373,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                   )}
 
                   {canSubmit ? (
-                    <Link href={`/competition/${id}/submit`} className="flex-1">
+                    <Link href={`/competitions/${id}/submit`} className="flex-1">
                       <Button
                         variant="primary"
                         size="lg"
@@ -472,15 +489,11 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
               <ul className="space-y-2 text-sm text-text-secondary">
                 <li className="flex items-start gap-2">
                   <span className="text-primary-blue mt-1">•</span>
-                  <span>Maximum {competition.daily_submission_limit} submissions per day</span>
+                  <span>Maximum {competition.daily_submission_limit || 5} submissions per day</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-blue mt-1">•</span>
-                  <span>Maximum {competition.total_submission_limit} submissions total</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary-blue mt-1">•</span>
-                  <span>Maximum file size: {competition.max_file_size_mb}MB</span>
+                  <span>Maximum file size: {competition.max_file_size_mb || 10}MB</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary-blue mt-1">•</span>

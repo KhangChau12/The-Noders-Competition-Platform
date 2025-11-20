@@ -47,9 +47,19 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     };
   };
 
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(calculateTimeRemaining());
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: false,
+  });
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    setTimeRemaining(calculateTimeRemaining());
+
     const timer = setInterval(() => {
       const newTime = calculateTimeRemaining();
       setTimeRemaining(newTime);
@@ -61,6 +71,56 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
     return () => clearInterval(timer);
   }, [targetDate, onComplete]);
+
+  // Prevent hydration mismatch by not rendering timer until mounted
+  if (!isMounted) {
+    return (
+      <div className={`${className}`}>
+        {label && (
+          <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide text-center mb-4">
+            {label}
+          </h3>
+        )}
+        <div className="flex items-center justify-center gap-3 sm:gap-4">
+          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
+            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
+              --
+            </span>
+            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
+              Days
+            </span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
+          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
+            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
+              --
+            </span>
+            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
+              Hours
+            </span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
+          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
+            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
+              --
+            </span>
+            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
+              Minutes
+            </span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
+          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
+            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
+              --
+            </span>
+            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
+              Seconds
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const formatNumber = (num: number): string => {
     return num.toString().padStart(2, '0');
