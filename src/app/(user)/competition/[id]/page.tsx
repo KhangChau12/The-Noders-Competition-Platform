@@ -454,7 +454,8 @@ export default async function CompetitionPage({ params }: CompetitionPageProps) 
                   })}
                 </div>
 
-                {!isCurrentUser && userRank && userRank > 10 && (
+                {/* Show user's position if not in top 10 */}
+                {!leaderboard?.some((entry: any) => entry.user_id === user.id) && userRank && userRank > 10 && (
                   <div className="mt-4 pt-4 border-t border-border-default">
                     <div className="flex items-center justify-between p-3 bg-primary-blue/10 border border-primary-blue/30 rounded-lg">
                       <div className="flex items-center gap-3">
