@@ -49,10 +49,10 @@ export default async function AdminDashboardPage() {
 
   // Fetch active competitions (currently in public or private test phase)
   const now = new Date().toISOString();
-  const { data: competitions } = await supabase
+  const { data: competitions } = (await supabase
     .from('competitions')
     .select('*')
-    .is('deleted_at', null);
+    .is('deleted_at', null)) as { data: any };
 
   const activeCompetitions = competitions?.filter((comp: any) => {
     const publicTestEnd = new Date(comp.public_test_end);
@@ -79,7 +79,7 @@ export default async function AdminDashboardPage() {
     .select('*', { count: 'exact', head: true });
 
   // Fetch pending registrations
-  const { data: pendingRegistrations } = await supabase
+  const { data: pendingRegistrations } = (await supabase
     .from('registrations')
     .select(
       `
@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
     `
     )
     .eq('status', 'pending')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })) as { data: any };
 
   // Fetch total submissions
   const { count: totalSubmissions } = await supabase
@@ -105,7 +105,7 @@ export default async function AdminDashboardPage() {
     .select('*', { count: 'exact', head: true });
 
   // Fetch recent submissions
-  const { data: recentSubmissions } = await supabase
+  const { data: recentSubmissions } = (await supabase
     .from('submissions')
     .select(
       `
@@ -119,7 +119,7 @@ export default async function AdminDashboardPage() {
     `
     )
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(5)) as { data: any };
 
   return (
     <div className="min-h-screen px-4 py-8">
@@ -347,28 +347,66 @@ export default async function AdminDashboardPage() {
                 <CheckCircle2 className="w-5 h-5 text-success" />
                 Active Competitions
               </h3>
-              {activeCompetitions && activeCompetitions.length > 0 ? (
+              {competitions && competitions.length > 0 ? (
                 <div className="space-y-2">
-                  {activeCompetitions.slice(0, 3).map((comp: any) => (
-                    <Link
-                      key={comp.id}
-                      href={`/admin/competitions/${comp.id}`}
-                      className="block"
-                    >
-                      <div className="p-3 bg-bg-tertiary rounded border border-border-default hover:border-border-focus transition-colors">
-                        <div className="font-medium text-sm mb-1">{comp.title}</div>
-                        <div className="text-xs text-text-tertiary">
-                          Ends:{' '}
-                          {new Date(
-                            comp.private_test_end || comp.public_test_end
-                          ).toLocaleDateString()}
+                  {competitions.slice(0, 5).map((comp: any) => {
+                    // Determine phase for each competition
+                    const nowDate = new Date();
+                    const regStart = new Date(comp.registration_start);
+                    const regEnd = new Date(comp.registration_end);
+                    const publicEnd = new Date(comp.public_test_end);
+                    const privateEnd = comp.private_test_end ? new Date(comp.private_test_end) : null;
+
+                    let phase = 'ended';
+                    let phaseColor = 'text-text-tertiary';
+
+                    if (nowDate < regStart) {
+                      phase = 'upcoming';
+                      phaseColor = 'text-text-tertiary';
+                    } else if (nowDate < regEnd) {
+                      phase = 'registration';
+                      phaseColor = 'text-warning';
+                    } else if (nowDate < publicEnd) {
+                      phase = 'public test';
+                      phaseColor = 'text-primary-blue';
+                    } else if (privateEnd && nowDate < privateEnd) {
+                      phase = 'private test';
+                      phaseColor = 'text-accent-cyan';
+                    } else {
+                      phase = 'ended';
+                      phaseColor = 'text-text-tertiary';
+                    }
+
+                    return (
+                      <Link
+                        key={comp.id}
+                        href={`/competitions/${comp.id}`}
+                        className="block"
+                      >
+                        <div className="p-3 bg-bg-tertiary rounded border border-border-default hover:border-primary-blue/50 transition-colors">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="font-medium text-sm flex-1">{comp.title}</div>
+                            <Badge variant={
+                              phase === 'registration' ? 'yellow' :
+                              phase === 'public test' ? 'blue' :
+                              phase === 'private test' ? 'purple' :
+                              phase === 'upcoming' ? 'secondary' : 'outline'
+                            } className="text-xs flex-shrink-0">
+                              {phase}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-text-tertiary">
+                            {phase === 'ended' ? 'Ended' : `Ends: ${new Date(
+                              privateEnd || publicEnd
+                            ).toLocaleDateString()}`}
+                          </div>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-sm text-text-tertiary">No active competitions</p>
+                <p className="text-sm text-text-tertiary">No competitions yet</p>
               )}
             </div>
           </Card>
