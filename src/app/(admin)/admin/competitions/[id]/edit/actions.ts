@@ -56,34 +56,31 @@ export async function updateCompetition(id: string, formData: FormData) {
     return { error: 'Please fill in all required fields' };
   }
 
-  // Build update object
-  const updateData: any = {
-    title,
-    description,
-    problem_statement: problemStatement || description,
-    participation_type: participationType,
-    registration_start: new Date(registrationStart).toISOString(),
-    registration_end: new Date(registrationEnd).toISOString(),
-    public_test_start: new Date(publicTestStart).toISOString(),
-    public_test_end: new Date(publicTestEnd).toISOString(),
-    private_test_start: privateTestStart
-      ? new Date(privateTestStart).toISOString()
-      : null,
-    private_test_end: privateTestEnd
-      ? new Date(privateTestEnd).toISOString()
-      : null,
-    dataset_url: datasetUrl || null,
-    sample_submission_url: sampleSubmissionUrl || null,
-    daily_submission_limit: dailySubmissionLimit || 5,
-    max_file_size_mb: maxFileSizeMb || 10,
-    updated_at: new Date().toISOString(),
-  };
-
   // Update competition
-  // @ts-ignore - Supabase types need regeneration
   const { error } = await supabase
     .from('competitions')
-    .update(updateData)
+    // @ts-expect-error - Supabase types need regeneration
+    .update({
+      title,
+      description,
+      problem_statement: problemStatement || description,
+      participation_type: participationType,
+      registration_start: new Date(registrationStart).toISOString(),
+      registration_end: new Date(registrationEnd).toISOString(),
+      public_test_start: new Date(publicTestStart).toISOString(),
+      public_test_end: new Date(publicTestEnd).toISOString(),
+      private_test_start: privateTestStart
+        ? new Date(privateTestStart).toISOString()
+        : null,
+      private_test_end: privateTestEnd
+        ? new Date(privateTestEnd).toISOString()
+        : null,
+      dataset_url: datasetUrl || null,
+      sample_submission_url: sampleSubmissionUrl || null,
+      daily_submission_limit: dailySubmissionLimit || 5,
+      max_file_size_mb: maxFileSizeMb || 10,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id);
 
   if (error) {

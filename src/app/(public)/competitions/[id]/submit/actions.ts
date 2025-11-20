@@ -119,9 +119,9 @@ export async function submitSolution(competitionId: string, formData: FormData) 
   const phaseValue = currentPhase === 'public_test' ? 'public' : 'private';
 
   // Create submission record
-  // @ts-ignore - Supabase types need regeneration
   const { data: submission, error: submissionError } = (await supabase
     .from('submissions')
+    // @ts-expect-error - Supabase types need regeneration
     .insert({
       user_id: user.id,
       competition_id: competitionId,
