@@ -86,10 +86,15 @@ export default async function HomePage() {
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null);
 
-  const { count: totalParticipants } = await supabase
+  // Count unique participants (distinct user_ids)
+  const { data: registrationsData } = await supabase
     .from('registrations')
-    .select('*', { count: 'exact', head: true })
+    .select('user_id')
     .eq('status', 'approved');
+
+  const totalParticipants = registrationsData
+    ? new Set(registrationsData.map(r => r.user_id)).size
+    : 0;
 
   const { count: totalSubmissions } = await supabase
     .from('submissions')
@@ -196,21 +201,27 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* Quick Stats */}
-            <div className="mt-16 grid grid-cols-2 gap-8 max-w-lg mx-auto">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono">
+            {/* Quick Stats - Professional Cards */}
+            <div className="mt-16 grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <div className="bg-bg-surface/80 backdrop-blur-sm border border-border-default rounded-2xl p-6 hover:border-accent-cyan/50 transition-all">
+                <div className="flex items-center justify-center mb-3">
+                  <Trophy className="w-8 h-8 text-accent-cyan" />
+                </div>
+                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono text-center">
                   {totalCompetitions || 0}
                 </div>
-                <div className="text-sm text-text-tertiary mt-2">
-                  Kỳ thi đang diễn ra
+                <div className="text-sm text-text-secondary mt-2 text-center font-medium">
+                  Kỳ thi
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono">
+              <div className="bg-bg-surface/80 backdrop-blur-sm border border-border-default rounded-2xl p-6 hover:border-primary-blue/50 transition-all">
+                <div className="flex items-center justify-center mb-3">
+                  <Users className="w-8 h-8 text-primary-blue" />
+                </div>
+                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono text-center">
                   {totalParticipants || 0}+
                 </div>
-                <div className="text-sm text-text-tertiary mt-2">
+                <div className="text-sm text-text-secondary mt-2 text-center font-medium">
                   Thí sinh tham gia
                 </div>
               </div>

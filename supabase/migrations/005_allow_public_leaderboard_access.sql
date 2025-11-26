@@ -23,8 +23,11 @@ GRANT SELECT ON public.submissions TO anon;
 GRANT SELECT ON public.submissions TO authenticated;
 
 -- Allow anonymous users to view users table for leaderboard names
--- But only specific fields needed for leaderboard
-CREATE POLICY IF NOT EXISTS "Public can view user profiles for leaderboard"
+-- Drop existing policy if exists
+DROP POLICY IF EXISTS "Public can view user profiles for leaderboard" ON public.users;
+
+-- Create policy for public user profile viewing
+CREATE POLICY "Public can view user profiles for leaderboard"
 ON public.users
 FOR SELECT
 TO anon, authenticated
@@ -35,7 +38,11 @@ GRANT SELECT ON public.users TO anon;
 GRANT SELECT ON public.users TO authenticated;
 
 -- Allow anonymous users to view teams for team competitions
-CREATE POLICY IF NOT EXISTS "Public can view teams for leaderboard"
+-- Drop existing policy if exists
+DROP POLICY IF EXISTS "Public can view teams for leaderboard" ON public.teams;
+
+-- Create policy for public team viewing
+CREATE POLICY "Public can view teams for leaderboard"
 ON public.teams
 FOR SELECT
 TO anon, authenticated

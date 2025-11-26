@@ -183,6 +183,15 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
   const leaderboard = Array.from(userBestScores.values()).slice(0, 10);
 
+  // Fetch participant count from view (bypasses RLS)
+  const { data: participantData } = (await supabase
+    .from('competition_participant_counts')
+    .select('participant_count')
+    .eq('competition_id', id)
+    .single()) as { data: { participant_count: number } | null };
+
+  const participantCount = participantData?.participant_count || 0;
+
   // Check if user can submit
   const canDownloadDataset = registration?.status === 'approved';
   const dailyLimitReached = submissionCount.daily >= competition.daily_submission_limit;
@@ -243,7 +252,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
             </div>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5" />
-              <span>{leaderboard?.length || 0} participants</span>
+              <span>{participantCount} participants</span>
             </div>
           </div>
         </div>
