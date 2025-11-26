@@ -87,10 +87,10 @@ export default async function HomePage() {
     .is('deleted_at', null);
 
   // Count unique participants (distinct user_ids)
-  const { data: registrationsData } = await supabase
+  const { data: registrationsData } = (await supabase
     .from('registrations')
     .select('user_id')
-    .eq('status', 'approved');
+    .eq('status', 'approved')) as { data: { user_id: string }[] | null };
 
   const totalParticipants = registrationsData
     ? new Set(registrationsData.map(r => r.user_id)).size
