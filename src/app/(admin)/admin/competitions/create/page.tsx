@@ -196,6 +196,25 @@ export default function CreateCompetitionPage() {
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="scoringMetric" className="block text-sm font-medium mb-2">
+                  Scoring Metric *
+                </label>
+                <select
+                  id="scoringMetric"
+                  name="scoringMetric"
+                  defaultValue="f1_score"
+                  className="w-full px-4 py-3 bg-bg-surface border border-border-default rounded-lg focus:outline-none focus:border-border-focus text-text-primary"
+                  required
+                >
+                  <option value="f1_score">F1 Score</option>
+                  <option value="accuracy">Accuracy</option>
+                </select>
+                <p className="text-xs text-text-tertiary mt-1">
+                  Metric used to evaluate submissions. Higher scores rank better.
+                </p>
+              </div>
+
               {/* Team size settings - only show for team competitions */}
               {participationType === 'team' && (
                 <div className="grid md:grid-cols-2 gap-6 p-4 bg-accent-cyan/5 border border-accent-cyan/20 rounded-lg">
@@ -547,19 +566,6 @@ export default function CreateCompetitionPage() {
                 </div>
               </div>
 
-              {/* Info box about F1 Score */}
-              <div className="p-4 bg-primary-blue/10 border border-primary-blue/30 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Trophy className="w-5 h-5 text-primary-blue flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-primary-blue mb-1">Scoring Method</p>
-                    <p className="text-xs text-text-secondary">
-                      Submissions are automatically evaluated using <span className="font-bold text-primary-blue">F1 Score</span> metric.
-                      Higher scores rank better on the leaderboard.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </Card>
 

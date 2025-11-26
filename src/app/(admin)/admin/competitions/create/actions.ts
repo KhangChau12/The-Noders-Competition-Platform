@@ -32,6 +32,7 @@ export async function createCompetition(formData: FormData) {
   const problemStatement = formData.get('problemStatement') as string;
   const competitionType = formData.get('competitionType') as string;
   const participationType = formData.get('participationType') as string;
+  const scoringMetric = formData.get('scoringMetric') as string;
   const registrationStart = formData.get('registrationStart') as string;
   const registrationEnd = formData.get('registrationEnd') as string;
   const publicTestStart = formData.get('publicTestStart') as string;
@@ -163,7 +164,7 @@ export async function createCompetition(formData: FormData) {
       max_team_size: maxTeamSize,
       dataset_url: datasetUrl || null,
       sample_submission_url: sampleSubmissionUrl || null,
-      scoring_metric: 'F1 Score', // Always F1 Score
+      scoring_metric: scoringMetric || 'f1_score',
       created_by: user.id,
     })
     .select()

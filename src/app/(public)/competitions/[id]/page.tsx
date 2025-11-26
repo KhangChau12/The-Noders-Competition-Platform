@@ -276,10 +276,10 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                       <XCircle className="w-5 h-5 text-text-tertiary" />
                       <span className="text-text-secondary">Not registered</span>
                     </div>
-                    {currentPhase === 'registration' && (
+                    {currentPhase !== 'ended' && (
                       <Link href={`/competitions/${id}/register`}>
                         <Button variant="primary" size="md">
-                          Register Now
+                          {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
                         </Button>
                       </Link>
                     )}

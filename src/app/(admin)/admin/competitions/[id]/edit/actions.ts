@@ -30,6 +30,7 @@ export async function updateCompetition(id: string, formData: FormData) {
   const description = formData.get('description') as string;
   const problemStatement = formData.get('problemStatement') as string;
   const participationType = formData.get('participationType') as string;
+  const scoringMetric = formData.get('scoringMetric') as string;
 
   const registrationStart = formData.get('registrationStart') as string;
   const registrationEnd = formData.get('registrationEnd') as string;
@@ -65,6 +66,7 @@ export async function updateCompetition(id: string, formData: FormData) {
       description,
       problem_statement: problemStatement || description,
       participation_type: participationType,
+      scoring_metric: scoringMetric || 'f1_score',
       registration_start: new Date(registrationStart).toISOString(),
       registration_end: new Date(registrationEnd).toISOString(),
       public_test_start: new Date(publicTestStart).toISOString(),
