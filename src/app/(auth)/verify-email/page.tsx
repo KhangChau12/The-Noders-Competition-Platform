@@ -31,12 +31,12 @@ export default function VerifyEmailPage({
 
           {/* Heading */}
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Kiểm Tra Email Của Bạn
+            Check Your Email
           </h1>
 
           {/* Message */}
           <div className="text-text-secondary text-lg mb-6 max-w-xl mx-auto leading-relaxed">
-            Chúng tôi đã gửi một email xác nhận đến
+            We've sent a confirmation email to
             {email && (
               <div className="mt-2 mb-2">
                 <span className="inline-block px-4 py-2 bg-bg-elevated rounded-lg font-mono text-primary-blue font-semibold">
@@ -44,7 +44,7 @@ export default function VerifyEmailPage({
                 </span>
               </div>
             )}
-            Vui lòng kiểm tra hộp thư đến và nhấn vào link xác nhận để kích hoạt tài khoản của bạn.
+            Please check your inbox and click the confirmation link to activate your account.
           </div>
 
           {/* Divider */}
@@ -52,7 +52,7 @@ export default function VerifyEmailPage({
 
           {/* Instructions */}
           <div className="text-left max-w-xl mx-auto mb-8">
-            <h2 className="text-xl font-bold mb-4 text-center">Các Bước Tiếp Theo</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Next Steps</h2>
 
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -60,9 +60,9 @@ export default function VerifyEmailPage({
                   1
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Mở email của bạn</h3>
+                  <h3 className="font-semibold mb-1">Open your email</h3>
                   <p className="text-text-tertiary text-sm">
-                    Kiểm tra hộp thư đến (hoặc thư mục spam/junk nếu không thấy)
+                    Check your inbox (or spam/junk folder if you don't see it)
                   </p>
                 </div>
               </div>
@@ -72,9 +72,9 @@ export default function VerifyEmailPage({
                   2
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Nhấn vào link xác nhận</h3>
+                  <h3 className="font-semibold mb-1">Click the confirmation link</h3>
                   <p className="text-text-tertiary text-sm">
-                    Tìm email từ The Noders và nhấn vào nút "Xác Nhận Email"
+                    Find the email from The Noders and click "Verify Email" button
                   </p>
                 </div>
               </div>
@@ -84,9 +84,9 @@ export default function VerifyEmailPage({
                   3
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Bắt đầu tham gia</h3>
+                  <h3 className="font-semibold mb-1">Start competing</h3>
                   <p className="text-text-tertiary text-sm">
-                    Sau khi xác nhận, bạn có thể đăng nhập và tham gia các cuộc thi
+                    After verification, you can log in and join competitions
                   </p>
                 </div>
               </div>
@@ -102,12 +102,12 @@ export default function VerifyEmailPage({
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold mb-2 text-warning">Không nhận được email?</h3>
+                <h3 className="font-semibold mb-2 text-warning">Didn't receive the email?</h3>
                 <ul className="text-text-tertiary text-sm space-y-1">
-                  <li>• Kiểm tra thư mục spam hoặc junk mail</li>
-                  <li>• Đảm bảo bạn đã nhập đúng địa chỉ email</li>
-                  <li>• Chờ vài phút, email có thể bị trễ</li>
-                  <li>• Thử gửi lại email xác nhận (nút bên dưới)</li>
+                  <li>• Check your spam or junk mail folder</li>
+                  <li>• Make sure you entered the correct email address</li>
+                  <li>• Wait a few minutes, the email might be delayed</li>
+                  <li>• Try resending the verification email (button below)</li>
                 </ul>
               </div>
             </div>
@@ -118,25 +118,25 @@ export default function VerifyEmailPage({
             <Link href="/login">
               <Button variant="outline" size="lg" className="gap-2">
                 <ArrowLeft className="w-5 h-5" />
-                Quay lại đăng nhập
+                Back to Login
               </Button>
             </Link>
             <Link href="/signup">
               <Button variant="primary" size="lg" className="gap-2">
                 <RefreshCcw className="w-5 h-5" />
-                Gửi lại email xác nhận
+                Resend Verification Email
               </Button>
             </Link>
           </div>
 
           {/* Help Text */}
           <div className="mt-8 text-sm text-text-tertiary">
-            Cần hỗ trợ?{' '}
+            Need help?{' '}
             <a
               href="mailto:thenodersptnk@gmail.com"
               className="text-primary-blue hover:underline font-semibold"
             >
-              Liên hệ với chúng tôi
+              Contact us
             </a>
           </div>
 
@@ -147,7 +147,7 @@ export default function VerifyEmailPage({
 
         {/* Additional Info */}
         <div className="mt-6 text-center text-sm text-text-tertiary">
-          <p>Link xác nhận sẽ hết hạn sau 24 giờ vì lý do bảo mật</p>
+          <p>The verification link will expire after 24 hours for security reasons</p>
         </div>
       </div>
     </div>

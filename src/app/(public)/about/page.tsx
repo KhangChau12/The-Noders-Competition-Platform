@@ -16,7 +16,7 @@ export default function AboutPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-bg-elevated rounded-full border border-border-default mb-8 animate-fadeInDown">
               <Sparkles className="w-4 h-4 text-primary-blue" />
               <span className="text-sm font-semibold bg-gradient-brand bg-clip-text text-transparent">
-                Nền tảng thi đấu AI hàng đầu Việt Nam
+                Vietnam's Leading AI Competition Platform
               </span>
             </div>
 
@@ -31,20 +31,20 @@ export default function AboutPage() {
             </h1>
 
             <p className="text-lg md:text-xl text-text-secondary max-w-3xl mx-auto mb-8 animate-fadeInUp delay-100">
-              Nền tảng tổ chức cuộc thi AI & Machine Learning với hệ thống chấm điểm tự động,
-              bảng xếp hạng theo thời gian thực và môi trường cạnh tranh công bằng, chuyên nghiệp
+              AI & Machine Learning competition platform with automatic scoring system,
+              real-time leaderboards and a fair, professional competitive environment
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp delay-200">
               <Link href="/signup">
                 <Button variant="primary" size="lg" className="group">
-                  Bắt Đầu Ngay
+                  Get Started
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/competitions">
                 <Button variant="outline" size="lg">
-                  Khám Phá Cuộc Thi
+                  Explore Competitions
                 </Button>
               </Link>
             </div>
@@ -65,11 +65,11 @@ export default function AboutPage() {
               <div className="w-14 h-14 bg-gradient-brand rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary-blue/30">
                 <Target className="w-7 h-7 text-white" />
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold mb-4">Sứ Mệnh</h2>
+              <h2 className="text-2xl lg:text-3xl font-bold mb-4">Mission</h2>
               <p className="text-text-secondary text-lg leading-relaxed">
-                Xây dựng một môi trường cạnh tranh công bằng, minh bạch và chuyên nghiệp
-                để phát triển kỹ năng AI/ML của cộng đồng. Chúng tôi tin rằng mỗi người đều
-                có tiềm năng để trở thành chuyên gia AI với sự hỗ trợ và công cụ phù hợp.
+                Build a fair, transparent and professional competitive environment
+                to develop the AI/ML skills of the community. We believe everyone
+                has the potential to become an AI expert with the right support and tools.
               </p>
             </Card>
 
@@ -78,20 +78,20 @@ export default function AboutPage() {
               <div className="w-14 h-14 bg-gradient-to-r from-accent-cyan to-primary-blue rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-accent-cyan/30">
                 <Rocket className="w-7 h-7 text-white" />
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold mb-4">Tầm Nhìn</h2>
+              <h2 className="text-2xl lg:text-3xl font-bold mb-4">Vision</h2>
               <p className="text-text-secondary text-lg leading-relaxed">
-                Trở thành nền tảng thi đấu AI hàng đầu Việt Nam, nơi các tài năng trẻ có thể
-                thử thách bản thân, học hỏi từ cộng đồng và phát triển sự nghiệp trong lĩnh vực
-                Artificial Intelligence và Machine Learning.
+                Become Vietnam's leading AI competition platform, where young talents can
+                challenge themselves, learn from the community and develop their careers in
+                Artificial Intelligence and Machine Learning.
               </p>
             </Card>
           </div>
 
           {/* Core Values */}
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Giá Trị Cốt Lõi</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Core Values</h2>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Những nguyên tắc định hướng cách chúng tôi xây dựng và vận hành nền tảng
+              The principles that guide how we build and operate the platform
             </p>
           </div>
 
@@ -103,11 +103,11 @@ export default function AboutPage() {
                 <Trophy className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-primary-blue transition-colors">
-                Cuộc Thi Chuyên Nghiệp
+                Professional Competitions
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Hệ thống tổ chức cuộc thi AI/ML với nhiều giai đoạn, quy trình rõ ràng
-                và tiêu chuẩn quốc tế
+                AI/ML competition system with multiple phases, clear processes
+                and international standards
               </p>
             </Card>
 
@@ -117,11 +117,11 @@ export default function AboutPage() {
                 <Zap className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-accent-cyan transition-colors">
-                Chấm Điểm Tự Động
+                Automatic Scoring
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Hệ thống chấm điểm tự động với F1 Score, xác thực CSV file
-                và phản hồi ngay lập tức
+                Automatic scoring system with F1 Score, CSV file validation
+                and instant feedback
               </p>
             </Card>
 
@@ -131,11 +131,11 @@ export default function AboutPage() {
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-success transition-colors">
-                Bảng Xếp Hạng Thời Gian Thực
+                Real-Time Leaderboards
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Bảng xếp hạng công khai và riêng tư với cơ chế chống gian lận
-                và cập nhật theo thời gian thực
+                Public and private leaderboards with anti-cheating mechanisms
+                and real-time updates
               </p>
             </Card>
 
@@ -145,11 +145,11 @@ export default function AboutPage() {
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-warning transition-colors">
-                Thi Đấu Đội Nhóm
+                Team Competition
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Hỗ trợ thi đấu cá nhân và theo đội với quản lý thành viên
-                linh hoạt và hiệu quả
+                Support for individual and team competitions with flexible
+                and effective member management
               </p>
             </Card>
 
@@ -159,11 +159,11 @@ export default function AboutPage() {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-error transition-colors">
-                Bảo Mật Cao
+                High Security
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Hệ thống bảo mật với xác thực email, phân quyền người dùng
-                và mã hóa dữ liệu
+                Security system with email verification, user permissions
+                and data encryption
               </p>
             </Card>
 
@@ -173,11 +173,11 @@ export default function AboutPage() {
                 <Award className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-phase-registration transition-colors">
-                Phân Tích Chi Tiết
+                Detailed Analytics
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Dashboard phân tích chi tiết với thống kê, biểu đồ
-                và insights cho admin và người tham gia
+                Detailed analytics dashboard with statistics, charts
+                and insights for admins and participants
               </p>
             </Card>
           </div>
@@ -188,9 +188,9 @@ export default function AboutPage() {
       <section className="py-20 bg-bg-elevated/50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Định Dạng Cuộc Thi</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Competition Format</h2>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Nền tảng hỗ trợ hai định dạng cuộc thi linh hoạt phù hợp với mọi nhu cầu
+              Platform supports two flexible competition formats suitable for all needs
             </p>
           </div>
 
@@ -202,8 +202,8 @@ export default function AboutPage() {
                   <span className="text-white font-bold text-lg">3</span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Cuộc Thi 3 Giai Đoạn</h3>
-                  <p className="text-sm text-primary-blue font-semibold">Phù hợp cho cuộc thi ngắn hạn</p>
+                  <h3 className="text-2xl font-bold mb-2">3-Phase Competition</h3>
+                  <p className="text-sm text-primary-blue font-semibold">Suitable for short-term competitions</p>
                 </div>
               </div>
 
@@ -213,9 +213,9 @@ export default function AboutPage() {
                     <span className="text-phase-registration font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-registration">Giai Đoạn Đăng Ký</h4>
+                    <h4 className="font-bold mb-1 text-phase-registration">Registration Phase</h4>
                     <p className="text-text-secondary text-sm">
-                      Thời gian để người tham gia đăng ký cuộc thi, tìm hiểu đề bài và chuẩn bị
+                      Time for participants to register, understand the problem and prepare
                     </p>
                   </div>
                 </div>
@@ -225,10 +225,10 @@ export default function AboutPage() {
                     <span className="text-phase-public font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-public">Giai Đoạn Thi Đấu Công Khai</h4>
+                    <h4 className="font-bold mb-1 text-phase-public">Public Competition Phase</h4>
                     <p className="text-text-secondary text-sm">
-                      Thời gian thi đấu chính với bảng xếp hạng công khai theo thời gian thực.
-                      Người tham gia submit dự đoán và nhận điểm ngay lập tức
+                      Main competition time with real-time public leaderboard.
+                      Participants submit predictions and receive scores instantly
                     </p>
                   </div>
                 </div>
@@ -238,9 +238,9 @@ export default function AboutPage() {
                     <span className="text-phase-ended font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-ended">Kết Thúc</h4>
+                    <h4 className="font-bold mb-1 text-phase-ended">Ended</h4>
                     <p className="text-text-secondary text-sm">
-                      Cuộc thi kết thúc, kết quả được công bố và xếp hạng cuối cùng được xác định
+                      Competition ends, results are announced and final rankings are determined
                     </p>
                   </div>
                 </div>
@@ -254,8 +254,8 @@ export default function AboutPage() {
                   <span className="text-white font-bold text-lg">4</span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Cuộc Thi 4 Giai Đoạn</h3>
-                  <p className="text-sm text-accent-cyan font-semibold">Phù hợp cho cuộc thi chuyên nghiệp, chống overfitting</p>
+                  <h3 className="text-2xl font-bold mb-2">4-Phase Competition</h3>
+                  <p className="text-sm text-accent-cyan font-semibold">Suitable for professional competitions, prevents overfitting</p>
                 </div>
               </div>
 
@@ -265,9 +265,9 @@ export default function AboutPage() {
                     <span className="text-phase-registration font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-registration">Giai Đoạn Đăng Ký</h4>
+                    <h4 className="font-bold mb-1 text-phase-registration">Registration Phase</h4>
                     <p className="text-text-secondary text-sm">
-                      Thời gian để người tham gia đăng ký cuộc thi, tìm hiểu đề bài và chuẩn bị
+                      Time for participants to register, understand the problem and prepare
                     </p>
                   </div>
                 </div>
@@ -277,9 +277,9 @@ export default function AboutPage() {
                     <span className="text-phase-public font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-public">Giai Đoạn Public Test</h4>
+                    <h4 className="font-bold mb-1 text-phase-public">Public Test Phase</h4>
                     <p className="text-text-secondary text-sm">
-                      Thi đấu với bảng xếp hạng công khai. Người tham gia submit và nhận phản hồi ngay lập tức
+                      Compete with public leaderboard. Participants submit and receive instant feedback
                     </p>
                   </div>
                 </div>
@@ -289,10 +289,10 @@ export default function AboutPage() {
                     <span className="text-phase-private font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-private">Giai Đoạn Private Test</h4>
+                    <h4 className="font-bold mb-1 text-phase-private">Private Test Phase</h4>
                     <p className="text-text-secondary text-sm">
-                      Giai đoạn quan trọng nhất! Bảng xếp hạng riêng tư được tính trên tập dữ liệu mới.
-                      Điểm số không được công khai để chống overfitting và đánh giá khả năng tổng quát hóa
+                      Most important phase! Private leaderboard calculated on new dataset.
+                      Scores are not public to prevent overfitting and evaluate generalization
                     </p>
                   </div>
                 </div>
@@ -302,9 +302,9 @@ export default function AboutPage() {
                     <span className="text-phase-ended font-bold text-sm">4</span>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-1 text-phase-ended">Kết Thúc</h4>
+                    <h4 className="font-bold mb-1 text-phase-ended">Ended</h4>
                     <p className="text-text-secondary text-sm">
-                      Kết quả private test được công bố, xếp hạng cuối cùng được xác định dựa trên điểm private test
+                      Private test results are announced, final rankings determined based on private test scores
                     </p>
                   </div>
                 </div>
@@ -324,10 +324,10 @@ export default function AboutPage() {
                 Powered by modern technologies
               </span>
             </div>
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Công Nghệ Sử Dụng</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Technology Stack</h2>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Chúng tôi sử dụng những công nghệ hiện đại nhất để đảm bảo hiệu suất,
-              bảo mật và trải nghiệm người dùng tốt nhất
+              We use the most modern technologies to ensure performance,
+              security and the best user experience
             </p>
           </div>
 
@@ -368,25 +368,25 @@ export default function AboutPage() {
               </div>
 
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                Sẵn Sàng Thử Thách Bản Thân?
+                Ready to Challenge Yourself?
               </h2>
 
               <p className="text-text-secondary text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-                Tham gia cộng đồng AI/ML của chúng tôi ngay hôm nay.
-                Khám phá các cuộc thi hấp dẫn, cạnh tranh với những người chơi giỏi nhất
-                và nâng cao kỹ năng của bạn
+                Join our AI/ML community today.
+                Explore exciting competitions, compete with the best players
+                and improve your skills
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/signup">
                   <Button variant="primary" size="lg" className="group">
-                    Đăng Ký Miễn Phí
+                    Sign Up Free
                     <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Link href="/competitions">
                   <Button variant="outline" size="lg">
-                    Xem Các Cuộc Thi
+                    View Competitions
                   </Button>
                 </Link>
               </div>
@@ -402,9 +402,9 @@ export default function AboutPage() {
       {/* Contact Section - Redesigned */}
       <section className="py-16 bg-bg-elevated/30">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-4">Liên Hệ Với Chúng Tôi</h2>
+          <h2 className="text-2xl lg:text-3xl font-bold mb-4">Contact Us</h2>
           <p className="text-text-secondary mb-8 text-lg">
-            Bạn có câu hỏi hoặc cần hỗ trợ? Đừng ngại liên hệ với chúng tôi
+            Have questions or need support? Don't hesitate to contact us
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -434,7 +434,7 @@ export default function AboutPage() {
           </div>
 
           <p className="text-text-tertiary text-sm mt-6">
-            Truy cập website của chúng tôi để tìm hiểu thêm về The Noders PTNK
+            Visit our website to learn more about The Noders PTNK
           </p>
         </div>
       </section>

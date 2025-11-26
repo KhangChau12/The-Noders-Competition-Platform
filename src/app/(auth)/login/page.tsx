@@ -53,10 +53,10 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="font-bold text-3xl mb-2 text-text-primary">
-            Chào mừng trở lại
+            Welcome Back
           </h1>
           <p className="text-text-secondary">
-            Đăng nhập để tiếp tục tham gia các kỳ thi
+            Sign in to continue competing
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-semibold mb-2 text-text-primary">
-              Địa chỉ Email
+              Email Address
             </label>
             <Input
               id="email"
@@ -82,13 +82,13 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-semibold mb-2 text-text-primary">
-              Mật khẩu
+              Password
             </label>
             <Input
               id="password"
               name="password"
               type="password"
-              placeholder="Nhập mật khẩu của bạn"
+              placeholder="Enter your password"
               required
             />
           </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
               href="/reset-password"
               className="text-primary-blue hover:text-accent-cyan transition-colors font-medium"
             >
-              Quên mật khẩu?
+              Forgot password?
             </Link>
           </div>
 
@@ -109,18 +109,18 @@ export default function LoginPage() {
             className="w-full"
             loading={isLoading}
           >
-            Đăng nhập
+            Sign In
           </Button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-border-default text-center">
           <p className="text-sm text-text-secondary">
-            Chưa có tài khoản?{' '}
+            Don't have an account?{' '}
             <Link
               href="/signup"
               className="text-primary-blue hover:text-accent-cyan transition-colors font-bold"
             >
-              Đăng ký ngay
+              Sign up now
             </Link>
           </p>
         </div>

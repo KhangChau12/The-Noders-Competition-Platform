@@ -100,9 +100,9 @@ export const EmptyCompetitions: React.FC<{ showAction?: boolean }> = ({ showActi
         />
       </svg>
     }
-    title="Không tìm thấy cuộc thi"
-    description="Hiện tại chưa có cuộc thi nào. Hãy quay lại sau hoặc tạo cuộc thi mới."
-    actionLabel={showAction ? 'Tạo cuộc thi' : undefined}
+    title="No Competitions Found"
+    description="There are no competitions at the moment. Check back later or create a new competition."
+    actionLabel={showAction ? 'Create Competition' : undefined}
     actionHref={showAction ? '/admin/competitions/create' : undefined}
   />
 );
@@ -124,8 +124,8 @@ export const EmptySubmissions: React.FC = () => (
         />
       </svg>
     }
-    title="Chưa có bài nộp"
-    description="Bạn chưa nộp bài cho cuộc thi này. Upload file CSV để bắt đầu."
+    title="No Submissions Yet"
+    description="You haven't submitted for this competition yet. Upload your CSV file to get started."
   />
 );
 
@@ -146,11 +146,11 @@ export const EmptyTeams: React.FC = () => (
         />
       </svg>
     }
-    title="Chưa có nhóm"
-    description="Bạn chưa tham gia nhóm nào. Tạo nhóm mới hoặc tham gia nhóm có sẵn."
-    actionLabel="Tạo nhóm"
+    title="No Teams Yet"
+    description="You haven't joined any teams. Create a new team or join an existing one."
+    actionLabel="Create Team"
     actionHref="/teams/create"
-    secondaryActionLabel="Tìm nhóm"
+    secondaryActionLabel="Find Teams"
     secondaryActionHref="/teams"
   />
 );
@@ -172,8 +172,8 @@ export const EmptyLeaderboard: React.FC = () => (
         />
       </svg>
     }
-    title="Bảng xếp hạng trống"
-    description="Chưa có ai nộp bài cho cuộc thi này. Hãy là người đầu tiên!"
+    title="Leaderboard Empty"
+    description="No one has submitted for this competition yet. Be the first!"
   />
 );
 
@@ -194,7 +194,7 @@ export const EmptyNotifications: React.FC = () => (
         />
       </svg>
     }
-    title="Không có thông báo"
-    description="Bạn đã xem hết tất cả thông báo."
+    title="No Notifications"
+    description="You're all caught up. No new notifications."
   />
 );

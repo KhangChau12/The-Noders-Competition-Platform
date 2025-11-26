@@ -63,10 +63,10 @@ export default function SignupPage() {
             </svg>
           </div>
           <h1 className="font-bold text-3xl mb-2 text-text-primary">
-            Tham gia ngay
+            Join Now
           </h1>
           <p className="text-text-secondary">
-            Tạo tài khoản để bắt đầu thi đấu
+            Create an account to start competing
           </p>
         </div>
 
@@ -85,13 +85,13 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="fullName" className="block text-sm font-semibold mb-2 text-text-primary">
-              Họ và tên
+              Full Name
             </label>
             <Input
               id="fullName"
               name="fullName"
               type="text"
-              placeholder="Nguyễn Văn A"
+              placeholder="John Doe"
               required
               disabled={isLoading || !!success}
             />
@@ -99,7 +99,7 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-semibold mb-2 text-text-primary">
-              Địa chỉ Email
+              Email Address
             </label>
             <Input
               id="email"
@@ -113,13 +113,13 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-semibold mb-2 text-text-primary">
-              Mật khẩu
+              Password
             </label>
             <Input
               id="password"
               name="password"
               type="password"
-              placeholder="Tối thiểu 8 ký tự"
+              placeholder="Minimum 8 characters"
               required
               disabled={isLoading || !!success}
             />
@@ -127,13 +127,13 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-semibold mb-2 text-text-primary">
-              Xác nhận mật khẩu
+              Confirm Password
             </label>
             <Input
               id="confirmPassword"
               name="confirmPassword"
               type="password"
-              placeholder="Nhập lại mật khẩu"
+              placeholder="Re-enter password"
               required
               disabled={isLoading || !!success}
             />
@@ -147,14 +147,14 @@ export default function SignupPage() {
               className="w-full mt-6"
               loading={isLoading}
             >
-              Tạo tài khoản
+              Create Account
             </Button>
           )}
 
           {success && (
             <Link href="/login">
               <Button variant="primary" size="lg" className="w-full mt-6">
-                Đến trang đăng nhập
+                Go to Login
               </Button>
             </Link>
           )}
@@ -162,12 +162,12 @@ export default function SignupPage() {
 
         <div className="mt-8 pt-6 border-t border-border-default text-center">
           <p className="text-sm text-text-secondary">
-            Đã có tài khoản?{' '}
+            Already have an account?{' '}
             <Link
               href="/login"
               className="text-primary-blue hover:text-accent-cyan transition-colors font-bold"
             >
-              Đăng nhập ngay
+              Sign in now
             </Link>
           </p>
         </div>

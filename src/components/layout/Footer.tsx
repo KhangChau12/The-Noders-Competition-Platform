@@ -11,7 +11,7 @@ export default function Footer() {
               The Noders
             </h3>
             <p className="text-text-tertiary text-sm leading-relaxed mb-4">
-              The Noders Competition Platform - Nền tảng thi đấu AI chính thức của câu lạc bộ The Noders PTNK dành cho các data scientist và ML practitioners.
+              The Noders Competition Platform - Official AI competition platform of The Noders PTNK club for data scientists and ML practitioners.
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-9 h-9 rounded-lg bg-bg-surface border border-border-default hover:border-primary-blue hover:bg-primary-blue/10 flex items-center justify-center transition-all">
@@ -29,7 +29,7 @@ export default function Footer() {
 
           {/* Platform */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Nền tảng</h4>
+            <h4 className="text-text-primary font-bold mb-4">Platform</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
@@ -37,7 +37,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Các kỳ thi
+                  Competitions
                 </Link>
               </li>
               <li>
@@ -46,7 +46,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Bảng điều khiển
+                  Dashboard
                 </Link>
               </li>
               <li>
@@ -55,7 +55,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Giới thiệu
+                  About
                 </Link>
               </li>
             </ul>
@@ -63,7 +63,7 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Tài nguyên</h4>
+            <h4 className="text-text-primary font-bold mb-4">Resources</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
@@ -71,7 +71,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Tài liệu
+                  Documentation
                 </Link>
               </li>
               <li>
@@ -80,7 +80,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Câu hỏi thường gặp
+                  FAQ
                 </Link>
               </li>
               <li>
@@ -89,7 +89,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Hướng dẫn
+                  Tutorials
                 </Link>
               </li>
             </ul>
@@ -97,7 +97,7 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Công ty</h4>
+            <h4 className="text-text-primary font-bold mb-4">Company</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
@@ -105,7 +105,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Về chúng tôi
+                  About Us
                 </Link>
               </li>
               <li>
@@ -114,7 +114,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Liên hệ
+                  Contact
                 </Link>
               </li>
               <li>
@@ -123,7 +123,7 @@ export default function Footer() {
                   className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  Chính sách bảo mật
+                  Privacy Policy
                 </Link>
               </li>
             </ul>

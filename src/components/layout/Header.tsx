@@ -25,8 +25,8 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
   const navLinks = [
-    { href: '/competitions', label: 'Kỳ thi' },
-    { href: '/about', label: 'Giới thiệu' },
+    { href: '/competitions', label: 'Competitions' },
+    { href: '/about', label: 'About' },
   ];
 
   return (
@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                         ) : (
                           <>
                             <User className="w-3 h-3" />
-                            <span>Thành viên</span>
+                            <span>Member</span>
                           </>
                         )}
                       </span>
@@ -108,7 +108,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                       <div className="absolute right-0 mt-3 w-56 bg-bg-surface/95 backdrop-blur-xl border border-border-default/80 rounded-2xl shadow-2xl z-20 overflow-hidden animate-slideInDown">
                         <div className="py-2">
                           <div className="px-4 py-4 bg-gradient-to-br from-primary-blue/10 to-accent-cyan/10 border-b border-border-default">
-                            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1">Đăng nhập với</p>
+                            <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1">Signed in as</p>
                             <p className="text-sm font-bold text-text-primary truncate">{user.email}</p>
                           </div>
                           <div className="my-2">
@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                               <div className="w-8 h-8 rounded-lg bg-primary-blue/10 flex items-center justify-center group-hover:bg-primary-blue/20 transition-colors">
                                 <LayoutDashboard className="w-4 h-4 text-primary-blue" />
                               </div>
-                              <span>Bảng điều khiển</span>
+                              <span>Dashboard</span>
                             </Link>
                             <Link
                               href="/profile"
@@ -130,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                               <div className="w-8 h-8 rounded-lg bg-primary-blue/10 flex items-center justify-center group-hover:bg-primary-blue/20 transition-colors">
                                 <UserCircle className="w-4 h-4 text-primary-blue" />
                               </div>
-                              <span>Hồ sơ cá nhân</span>
+                              <span>Profile</span>
                             </Link>
                             {user.role === 'admin' && (
                               <Link
@@ -141,7 +141,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                                 <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary-blue/50 transition-all">
                                   <Shield className="w-4 h-4 text-white" />
                                 </div>
-                                <span className="bg-gradient-brand bg-clip-text text-transparent">Quản trị viên</span>
+                                <span className="bg-gradient-brand bg-clip-text text-transparent">Admin</span>
                               </Link>
                             )}
                           </div>
@@ -160,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     <LogOut className="w-4 h-4" />
-                    <span>Đăng xuất</span>
+                    <span>Logout</span>
                   </span>
                   <div className="absolute inset-0 bg-error opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </button>
@@ -171,7 +171,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                   href="/login"
                   className="relative px-6 py-2.5 font-semibold text-sm text-text-primary bg-bg-elevated border border-border-default rounded-xl hover:border-primary-blue hover:text-primary-blue hover:bg-primary-blue/5 transition-all duration-300 group overflow-hidden"
                 >
-                  <span className="relative z-10">Đăng nhập</span>
+                  <span className="relative z-10">Login</span>
                   <div className="absolute inset-0 bg-gradient-brand opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                 </Link>
                 <Link
@@ -179,7 +179,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                   className="relative px-6 py-2.5 font-bold text-sm text-white bg-gradient-brand rounded-xl hover:shadow-2xl hover:shadow-primary-blue/50 hover:-translate-y-1 transition-all duration-300 shadow-lg group overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    <span>Đăng ký ngay</span>
+                    <span>Sign Up</span>
                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>

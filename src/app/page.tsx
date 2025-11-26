@@ -86,15 +86,13 @@ export default async function HomePage() {
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null);
 
-  // Count unique participants (distinct user_ids)
-  const { data: registrationsData } = (await supabase
-    .from('registrations')
-    .select('user_id')
-    .eq('status', 'approved')) as { data: { user_id: string }[] | null };
+  // Fetch total unique participants from view (bypasses RLS)
+  const { data: totalParticipantsData } = (await supabase
+    .from('total_participants_count')
+    .select('total_count')
+    .single()) as { data: { total_count: number } | null };
 
-  const totalParticipants = registrationsData
-    ? new Set(registrationsData.map(r => r.user_id)).size
-    : 0;
+  const totalParticipants = totalParticipantsData?.total_count || 0;
 
   const { count: totalSubmissions } = await supabase
     .from('submissions')
@@ -155,7 +153,7 @@ export default async function HomePage() {
             {/* Main Heading with Gradient */}
             <h1 className="font-extrabold text-4xl sm:text-6xl lg:text-7xl mb-6 leading-tight">
               <span className="text-text-primary">
-                Nền tảng thi đấu
+                Competition Platform
               </span>
               <br />
               <span className="bg-gradient-brand bg-clip-text text-transparent">
@@ -165,23 +163,23 @@ export default async function HomePage() {
 
             {/* Subtitle */}
             <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
-              Tham gia cộng đồng The Noders PTNK - Thử thách bản thân với các kỳ thi AI thực tế,
-              cạnh tranh công bằng và học hỏi từ cộng đồng.
+              Join The Noders PTNK community - Challenge yourself with real-world AI competitions,
+              compete fairly and learn from the community.
             </p>
 
             {/* Value Props */}
             <div className="flex flex-wrap gap-4 justify-center mb-12 text-sm">
               <div className="flex items-center gap-2 px-4 py-2 bg-bg-surface/50 rounded-full border border-border-default">
                 <Trophy className="w-4 h-4 text-accent-cyan" />
-                <span>Kỳ thi chất lượng cao</span>
+                <span>High-Quality Competitions</span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-bg-surface/50 rounded-full border border-border-default">
                 <Users className="w-4 h-4 text-accent-cyan" />
-                <span>Cộng đồng chuyên nghiệp</span>
+                <span>Professional Community</span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-bg-surface/50 rounded-full border border-border-default">
                 <Target className="w-4 h-4 text-accent-cyan" />
-                <span>Bài toán thực tế</span>
+                <span>Real-World Problems</span>
               </div>
             </div>
 
@@ -190,12 +188,12 @@ export default async function HomePage() {
               <Link href="/competitions">
                 <Button variant="primary" size="lg" className="gap-2">
                   <Trophy className="w-5 h-5" />
-                  Xem các kỳ thi
+                  View Competitions
                 </Button>
               </Link>
               <Link href="/signup">
                 <Button variant="outline" size="lg" className="gap-2">
-                  Đăng ký ngay
+                  Sign Up Now
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
@@ -211,7 +209,7 @@ export default async function HomePage() {
                   {totalCompetitions || 0}
                 </div>
                 <div className="text-sm text-text-secondary mt-2 text-center font-medium">
-                  Kỳ thi
+                  Competitions
                 </div>
               </div>
               <div className="bg-bg-surface/80 backdrop-blur-sm border border-border-default rounded-2xl p-6 hover:border-primary-blue/50 transition-all">
@@ -222,7 +220,7 @@ export default async function HomePage() {
                   {totalParticipants || 0}+
                 </div>
                 <div className="text-sm text-text-secondary mt-2 text-center font-medium">
-                  Thí sinh tham gia
+                  Participants
                 </div>
               </div>
             </div>
@@ -237,11 +235,11 @@ export default async function HomePage() {
             <div className="flex items-center justify-center gap-2 mb-3">
               <Trophy className="w-8 h-8 text-accent-cyan" />
               <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                Kỳ thi nổi bật
+                Featured Competitions
               </h2>
             </div>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Đăng ký ngay để tham gia các kỳ thi đang mở
+              Register now to join open competitions
             </p>
           </div>
 
@@ -259,7 +257,7 @@ export default async function HomePage() {
           <div className="text-center mt-12">
             <Link href="/competitions">
               <Button variant="outline" size="lg" className="gap-2">
-                Xem tất cả kỳ thi
+                View All Competitions
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
@@ -273,10 +271,10 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-3">
-                Tất cả kỳ thi
+                All Competitions
               </h2>
               <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-                Khám phá các kỳ thi đang diễn ra, sắp diễn ra và đã kết thúc
+                Explore ongoing, upcoming, and completed competitions
               </p>
             </div>
 
@@ -293,7 +291,7 @@ export default async function HomePage() {
             <div className="text-center mt-12">
               <Link href="/competitions">
                 <Button variant="primary" size="lg" className="gap-2">
-                  Khám phá tất cả
+                  Explore All
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
@@ -308,11 +306,11 @@ export default async function HomePage() {
           <div className="flex items-center justify-center gap-2 mb-3">
             <Brain className="w-8 h-8 text-accent-cyan" />
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-              Cách thức hoạt động
+              How It Works
             </h2>
           </div>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            Bắt đầu chỉ với 3 bước đơn giản
+            Get started in just 3 simple steps
           </p>
         </div>
 
@@ -327,11 +325,11 @@ export default async function HomePage() {
                 01
               </div>
               <h3 className="text-xl font-bold text-text-primary mb-4">
-                Đăng ký tài khoản
+                Create Account
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Tạo tài khoản và đăng ký tham gia các kỳ thi mà bạn quan tâm.
-                Tham gia cá nhân hoặc theo nhóm đều được.
+                Create an account and register for competitions you're interested in.
+                Join individually or as a team.
               </p>
             </Card>
           </div>
@@ -346,11 +344,11 @@ export default async function HomePage() {
                 02
               </div>
               <h3 className="text-xl font-bold text-text-primary mb-4">
-                Xây dựng & Huấn luyện
+                Build & Train
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Tải dữ liệu, xây dựng mô hình AI của bạn và huấn luyện
-                để đạt kết quả tốt nhất.
+                Download data, build your AI model and train it
+                to achieve the best results.
               </p>
             </Card>
           </div>
@@ -365,11 +363,11 @@ export default async function HomePage() {
                 03
               </div>
               <h3 className="text-xl font-bold text-text-primary mb-4">
-                Nộp bài & Thi đấu
+                Submit & Compete
               </h3>
               <p className="text-text-secondary leading-relaxed">
-                Nộp kết quả dự đoán, nhận phản hồi ngay lập tức và leo lên
-                bảng xếp hạng để giành chiến thắng.
+                Submit your predictions, get instant feedback and climb
+                the leaderboard to win.
               </p>
             </Card>
           </div>
@@ -383,11 +381,11 @@ export default async function HomePage() {
             <div className="flex items-center justify-center gap-2 mb-3">
               <BarChart3 className="w-8 h-8 text-accent-cyan" />
               <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
-                Thống kê nền tảng
+                Platform Statistics
               </h2>
             </div>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Tham gia cùng cộng đồng AI đang phát triển mạnh mẽ
+              Join our thriving AI community
             </p>
           </div>
 
@@ -399,7 +397,7 @@ export default async function HomePage() {
                 {totalCompetitions || 0}
               </div>
               <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Tổng số kỳ thi
+                Total Competitions
               </div>
             </Card>
 
@@ -410,7 +408,7 @@ export default async function HomePage() {
                 {totalParticipants || 0}+
               </div>
               <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Thí sinh tham gia
+                Total Participants
               </div>
             </Card>
 
@@ -421,7 +419,7 @@ export default async function HomePage() {
                 {totalSubmissions || 0}
               </div>
               <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Tổng bài nộp
+                Total Submissions
               </div>
             </Card>
 
@@ -432,7 +430,7 @@ export default async function HomePage() {
                 &lt;1s
               </div>
               <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Tốc độ chấm điểm
+                Scoring Speed
               </div>
             </Card>
           </div>
@@ -453,26 +451,26 @@ export default async function HomePage() {
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-6">
                 <span className="bg-gradient-brand bg-clip-text text-transparent">
-                  Sẵn sàng thử thách?
+                  Ready for the Challenge?
                 </span>
               </h2>
 
               <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
-                Cùng hàng nghìn data scientist và ML engineer tham gia các thử thách AI hấp dẫn.
-                Bắt đầu hành trình của bạn ngay hôm nay!
+                Join thousands of data scientists and ML engineers in exciting AI challenges.
+                Start your journey today!
               </p>
 
               <div className="flex gap-4 justify-center flex-wrap">
                 <Link href="/signup">
                   <Button variant="primary" size="lg" className="gap-2">
                     <Zap className="w-5 h-5" />
-                    Đăng ký ngay
+                    Sign Up Now
                   </Button>
                 </Link>
                 <Link href="/competitions">
                   <Button variant="outline" size="lg" className="gap-2">
                     <Trophy className="w-5 h-5" />
-                    Xem các kỳ thi
+                    View Competitions
                   </Button>
                 </Link>
               </div>

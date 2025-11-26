@@ -129,14 +129,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                     className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold transition-colors"
                     onClick={onClose}
                   >
-                    Bảng điều khiển
+                    Dashboard
                   </Link>
                   <Link
                     href="/profile"
                     className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold transition-colors"
                     onClick={onClose}
                   >
-                    Hồ sơ cá nhân
+                    Profile
                   </Link>
                   {user.role === 'admin' && (
                     <Link
@@ -144,7 +144,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                       className="block px-4 py-3 rounded-lg text-primary-blue hover:bg-primary-blue/10 font-semibold transition-colors"
                       onClick={onClose}
                     >
-                      Quản trị viên
+                      Admin
                     </Link>
                   )}
                 </div>
@@ -162,7 +162,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                 }}
                 className="w-full px-6 py-3 font-semibold text-white bg-error rounded-lg hover:bg-error/90 transition-colors"
               >
-                Đăng xuất
+                Logout
               </button>
             ) : (
               <div className="space-y-3">
@@ -171,14 +171,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                   className="block w-full px-6 py-3 font-semibold text-center text-text-primary bg-bg-elevated border border-border-default rounded-lg hover:border-primary-blue hover:bg-primary-blue/10 transition-all"
                   onClick={onClose}
                 >
-                  Đăng nhập
+                  Login
                 </Link>
                 <Link
                   href="/signup"
                   className="block w-full px-6 py-3 font-semibold text-center text-white bg-gradient-brand rounded-lg hover:shadow-lg hover:shadow-primary-blue/30 transition-all"
                   onClick={onClose}
                 >
-                  Đăng ký
+                  Sign Up
                 </Link>
               </div>
             )}

@@ -42,9 +42,10 @@ const config: Config = {
         'phase-ended': '#64748B',
       },
       fontFamily: {
-        sans: ['Nunito', 'sans-serif'],
-        display: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['var(--font-nunito)', 'sans-serif'],
+        display: ['var(--font-inter)', 'sans-serif'],
+        mono: ['var(--font-jetbrains-mono)', 'monospace'],
+        heading: ['var(--font-sigmar)', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
