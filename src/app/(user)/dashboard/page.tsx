@@ -15,6 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 
 type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
 
@@ -111,11 +112,14 @@ export default async function DashboardPage() {
   }
 
   // Fetch user's registrations with competitions
-  const { data: registrations } = await supabase
+  const { data: registrations, error: regError } = await supabase
     .from('registrations')
     .select(`
-      *,
-      competition:competitions (
+      id,
+      competition_id,
+      status,
+      registered_at,
+      competitions!inner (
         id,
         title,
         description,
@@ -131,35 +135,65 @@ export default async function DashboardPage() {
       )
     `)
     .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .order('registered_at', { ascending: false });
+
+  if (regError) {
+    console.error('Error fetching registrations:', regError);
+  }
+
+  console.log('Dashboard Debug - User ID:', user.id);
+  console.log('Dashboard Debug - Registrations:', registrations?.length || 0);
+  console.log('Dashboard Debug - Registrations data:', JSON.stringify(registrations, null, 2));
 
   // Fetch total submissions count
-  const { count: totalSubmissions } = await supabase
+  const { count: totalSubmissions, error: submissionsError } = await supabase
     .from('submissions')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
-  // Fetch best rank (from best scores in leaderboard)
-  const { data: bestSubmission } = (await supabase
+  if (submissionsError) {
+    console.error('Error fetching submissions count:', submissionsError);
+  }
+  console.log('Dashboard Debug - Total Submissions:', totalSubmissions);
+
+  // Fetch ALL user's best scores with competition metric
+  const { data: allBestSubmissions } = (await supabase
     .from('submissions')
-    .select('score, competition_id')
+    .select(`
+      score,
+      competition_id,
+      competitions (
+        scoring_metric
+      )
+    `)
     .eq('user_id', user.id)
-    .eq('is_best_score', true)
-    .order('score', { ascending: false })
-    .limit(1)
-    .single()) as { data: any };
+    .eq('is_best_score', true)) as { data: any };
 
-  // Calculate best rank if user has submissions
+  // Calculate best rank across all competitions
   let bestRank = null;
-  if (bestSubmission) {
-    const { count: betterCount } = await supabase
-      .from('submissions')
-      .select('*', { count: 'exact', head: true })
-      .eq('competition_id', bestSubmission.competition_id)
-      .eq('is_best_score', true)
-      .gt('score', bestSubmission.score);
+  if (allBestSubmissions && allBestSubmissions.length > 0) {
+    // Calculate rank for each submission, find the best one
+    const ranksPromises = allBestSubmissions.map(async (submission: any) => {
+      const metric = submission.competitions?.scoring_metric || 'f1_score';
+      const metricInfo = SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO];
+      const isHigherBetter = metricInfo?.higher_is_better !== false;
 
-    bestRank = (betterCount || 0) + 1;
+      // Count better scores based on metric direction
+      const query = supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('competition_id', submission.competition_id)
+        .eq('is_best_score', true);
+
+      const { count } = isHigherBetter
+        ? await query.gt('score', submission.score)
+        : await query.lt('score', submission.score);
+
+      return (count || 0) + 1;
+    });
+
+    const ranks = await Promise.all(ranksPromises);
+    bestRank = Math.min(...ranks); // Get the best (lowest) rank
   }
 
   // Fetch ALL active competitions (not just registered ones)
@@ -169,23 +203,28 @@ export default async function DashboardPage() {
     .is('deleted_at', null)
     .order('created_at', { ascending: false })) as { data: any };
 
-  const registeredIds = new Set(
-    registrations?.map((r: any) => r.competition?.id).filter(Boolean) || []
+  // Create map of competition_id -> registration status
+  const registrationStatusMap = new Map(
+    registrations?.map((r: any) => [r.competition_id, r.status]) || []
   );
 
   // Separate into registered and not registered
   const registeredCompetitions = allCompetitions?.filter(
-    (comp: any) => registeredIds.has(comp.id)
+    (comp: any) => registrationStatusMap.has(comp.id)
   ) || [];
   const recommendedCompetitions = allCompetitions?.filter(
-    (comp: any) => !registeredIds.has(comp.id)
+    (comp: any) => !registrationStatusMap.has(comp.id)
   ) || [];
 
   // Separate competitions by status
   const activeCompetitions = registrations?.filter(
-    (r: any) => r.status === 'approved' && r.competition
+    (r: any) => r.status === 'approved' && r.competitions
   );
   const pendingCompetitions = registrations?.filter((r: any) => r.status === 'pending');
+
+  console.log('Dashboard Debug - Active Competitions:', activeCompetitions?.length || 0);
+  console.log('Dashboard Debug - Pending Competitions:', pendingCompetitions?.length || 0);
+  console.log('Dashboard Debug - Registration Status Map:', Array.from(registrationStatusMap.entries()));
 
   // Fetch participant counts from public view (bypasses RLS)
   const { data: participantCountsData } = await supabase
@@ -205,7 +244,7 @@ export default async function DashboardPage() {
   const processActiveCompetitions = (regs: any[]): CompetitionWithStats[] => {
     return regs
       .map((reg: any) => {
-        const comp = reg.competition as Competition;
+        const comp = reg.competitions as Competition;
         if (!comp) return null;
 
         const phase = getCompetitionPhase(comp, now);
@@ -243,11 +282,16 @@ export default async function DashboardPage() {
       const phase = getCompetitionPhase(comp, now);
       const countdown = getCountdown(comp, phase, now);
 
+      // Get registration status from map
+      const regStatus = registrationStatusMap.get(comp.id);
+      const registration_status: 'not_registered' | 'pending' | 'approved' | 'rejected' =
+        regStatus || 'not_registered';
+
       return {
         ...comp,
         phase,
         participant_count: participantCounts[comp.id] || 0,
-        registration_status: registeredIds.has(comp.id) ? 'approved' as const : 'not_registered' as const,
+        registration_status,
         countdown,
       };
     });
@@ -363,6 +407,22 @@ export default async function DashboardPage() {
                                competition.phase === 'public_test' ? 'Public Test' :
                                competition.phase === 'private_test' ? 'Private Test' : 'Ended'}
                             </Badge>
+
+                            {/* Registration Status Badge */}
+                            {competition.phase !== 'ended' && (
+                              <Badge
+                                variant={
+                                  competition.registration_status === 'approved' ? 'green' :
+                                  competition.registration_status === 'pending' ? 'yellow' :
+                                  competition.registration_status === 'rejected' ? 'red' : 'gray'
+                                }
+                              >
+                                {competition.registration_status === 'approved' ? '✓ Registered' :
+                                 competition.registration_status === 'pending' ? '⏳ Pending' :
+                                 competition.registration_status === 'rejected' ? '✗ Rejected' : 'Not Registered'}
+                              </Badge>
+                            )}
+
                             {competition.countdown && (
                               <span className="text-sm text-text-secondary">
                                 {competition.countdown.label}: {competition.countdown.days}d {competition.countdown.hours}h {competition.countdown.minutes}m

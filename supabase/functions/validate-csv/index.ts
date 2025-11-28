@@ -92,8 +92,9 @@ serve(async (req) => {
       )
     }
 
-    // If valid, calculate score
-    const score = calculateF1Score(submissionRows, answerRows)
+    // If valid, calculate score based on competition metric
+    const scoringMetric = submission.competition.scoring_metric || 'f1_score'
+    const score = calculateScore(submissionRows, answerRows, scoringMetric)
 
     // Update submission
     await supabase
@@ -190,22 +191,152 @@ function validateCSV(
   }
 }
 
-// Calculate F1 Score
-function calculateF1Score(
+// Main scoring function - routes to appropriate metric calculator
+function calculateScore(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>,
+  metric: string
+): number {
+  switch (metric) {
+    case 'f1_score':
+      return calculateF1Score(submission, answer)
+    case 'accuracy':
+      return calculateAccuracy(submission, answer)
+    case 'precision':
+      return calculatePrecision(submission, answer)
+    case 'recall':
+      return calculateRecall(submission, answer)
+    case 'mae':
+      return calculateMAE(submission, answer)
+    case 'rmse':
+      return calculateRMSE(submission, answer)
+    default:
+      console.warn(`Unknown metric: ${metric}, defaulting to F1 Score`)
+      return calculateF1Score(submission, answer)
+  }
+}
+
+// ============================================================================
+// CLASSIFICATION METRICS
+// ============================================================================
+
+// Calculate Accuracy
+function calculateAccuracy(
   submission: Array<{ id: string; value: string }>,
   answer: Array<{ id: string; value: string }>
 ): number {
-  // Build lookup map
   const answerMap = new Map(answer.map((row) => [row.id, row.value]))
   const submissionMap = new Map(submission.map((row) => [row.id, row.value]))
 
-  // Get unique labels
+  let correct = 0
+  let total = 0
+
+  for (const [id, trueLabel] of answerMap) {
+    const predLabel = submissionMap.get(id)
+    if (predLabel === trueLabel) {
+      correct++
+    }
+    total++
+  }
+
+  return total > 0 ? correct / total : 0
+}
+
+// Calculate Precision (Macro-averaged)
+function calculatePrecision(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>
+): number {
+  const answerMap = new Map(answer.map((row) => [row.id, row.value]))
+  const submissionMap = new Map(submission.map((row) => [row.id, row.value]))
+
   const allLabels = new Set([
     ...answer.map((row) => row.value),
     ...submission.map((row) => row.value),
   ])
 
-  // Calculate F1 score for each class (macro-averaged)
+  let totalPrecision = 0
+  let classCount = 0
+
+  for (const label of allLabels) {
+    let tp = 0
+    let fp = 0
+
+    for (const [id, trueLabel] of answerMap) {
+      const predLabel = submissionMap.get(id)
+
+      if (predLabel === label) {
+        if (trueLabel === label) {
+          tp++
+        } else {
+          fp++
+        }
+      }
+    }
+
+    if (tp + fp > 0) {
+      totalPrecision += tp / (tp + fp)
+      classCount++
+    }
+  }
+
+  return classCount > 0 ? totalPrecision / classCount : 0
+}
+
+// Calculate Recall (Macro-averaged)
+function calculateRecall(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>
+): number {
+  const answerMap = new Map(answer.map((row) => [row.id, row.value]))
+  const submissionMap = new Map(submission.map((row) => [row.id, row.value]))
+
+  const allLabels = new Set([
+    ...answer.map((row) => row.value),
+    ...submission.map((row) => row.value),
+  ])
+
+  let totalRecall = 0
+  let classCount = 0
+
+  for (const label of allLabels) {
+    let tp = 0
+    let fn = 0
+
+    for (const [id, trueLabel] of answerMap) {
+      const predLabel = submissionMap.get(id)
+
+      if (trueLabel === label) {
+        if (predLabel === label) {
+          tp++
+        } else {
+          fn++
+        }
+      }
+    }
+
+    if (tp + fn > 0) {
+      totalRecall += tp / (tp + fn)
+      classCount++
+    }
+  }
+
+  return classCount > 0 ? totalRecall / classCount : 0
+}
+
+// Calculate F1 Score (Macro-averaged)
+function calculateF1Score(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>
+): number {
+  const answerMap = new Map(answer.map((row) => [row.id, row.value]))
+  const submissionMap = new Map(submission.map((row) => [row.id, row.value]))
+
+  const allLabels = new Set([
+    ...answer.map((row) => row.value),
+    ...submission.map((row) => row.value),
+  ])
+
   let totalF1 = 0
   let classCount = 0
 
@@ -235,6 +366,56 @@ function calculateF1Score(
     }
   }
 
-  // Macro-averaged F1
   return classCount > 0 ? totalF1 / classCount : 0
+}
+
+// ============================================================================
+// REGRESSION METRICS
+// ============================================================================
+
+// Calculate MAE (Mean Absolute Error)
+function calculateMAE(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>
+): number {
+  const answerMap = new Map(answer.map((row) => [row.id, parseFloat(row.value)]))
+  const submissionMap = new Map(submission.map((row) => [row.id, parseFloat(row.value)]))
+
+  let totalError = 0
+  let count = 0
+
+  for (const [id, trueValue] of answerMap) {
+    const predValue = submissionMap.get(id)
+
+    if (predValue !== undefined && !isNaN(predValue) && !isNaN(trueValue)) {
+      totalError += Math.abs(trueValue - predValue)
+      count++
+    }
+  }
+
+  return count > 0 ? totalError / count : 0
+}
+
+// Calculate RMSE (Root Mean Squared Error)
+function calculateRMSE(
+  submission: Array<{ id: string; value: string }>,
+  answer: Array<{ id: string; value: string }>
+): number {
+  const answerMap = new Map(answer.map((row) => [row.id, parseFloat(row.value)]))
+  const submissionMap = new Map(submission.map((row) => [row.id, parseFloat(row.value)]))
+
+  let totalSquaredError = 0
+  let count = 0
+
+  for (const [id, trueValue] of answerMap) {
+    const predValue = submissionMap.get(id)
+
+    if (predValue !== undefined && !isNaN(predValue) && !isNaN(trueValue)) {
+      const error = trueValue - predValue
+      totalSquaredError += error * error
+      count++
+    }
+  }
+
+  return count > 0 ? Math.sqrt(totalSquaredError / count) : 0
 }

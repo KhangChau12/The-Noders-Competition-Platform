@@ -111,14 +111,10 @@ export async function submitSolution(competitionId: string, formData: FormData) 
     return { error: `Upload failed: ${uploadError.message}` };
   }
 
-  // TODO: In production, implement actual scoring logic here
-  // For now, generate a random score between 0 and 1
-  const mockScore = Math.random();
-
   // Map phase names to database values
   const phaseValue = currentPhase === 'public_test' ? 'public' : 'private';
 
-  // Create submission record
+  // Create submission record with pending validation status
   const { data: submission, error: submissionError } = (await supabase
     .from('submissions')
     // @ts-expect-error - Supabase types need regeneration
@@ -129,9 +125,9 @@ export async function submitSolution(competitionId: string, formData: FormData) 
       file_path: uploadData.path,
       file_name: file.name,
       file_size_bytes: file.size,
-      score: mockScore,
+      score: null, // Will be set by Edge Function
       phase: phaseValue,
-      validation_status: 'valid',
+      validation_status: 'pending', // Will be updated by Edge Function
       is_best_score: false, // Will be updated by trigger
     })
     .select()
@@ -143,13 +139,24 @@ export async function submitSolution(competitionId: string, formData: FormData) 
     return { error: `Submission failed: ${submissionError.message}` };
   }
 
+  // Call Edge Function to validate and score the submission asynchronously
+  // Note: This is a fire-and-forget call. The submission will be scored in the background.
+  try {
+    await supabase.functions.invoke('validate-csv', {
+      body: { submissionId: submission.id },
+    });
+  } catch (error) {
+    console.error('Failed to invoke validation function:', error);
+    // Don't fail the submission if Edge Function call fails
+    // The submission will remain in 'pending' status and can be retried
+  }
+
   revalidatePath(`/competitions/${competitionId}`);
   revalidatePath(`/competitions/${competitionId}/submit`);
 
   return {
     success: true,
-    message: 'Submission successful',
-    score: mockScore,
+    message: 'Submission uploaded successfully. Your submission is being validated and scored.',
     submissionId: submission.id,
   };
 }

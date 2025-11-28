@@ -88,6 +88,12 @@ export async function createCompetition(formData: FormData) {
     return { error: 'Invalid competition type' };
   }
 
+  // Validate scoring metric
+  const validMetrics = ['f1_score', 'accuracy', 'precision', 'recall', 'mae', 'rmse'];
+  if (!scoringMetric || !validMetrics.includes(scoringMetric)) {
+    return { error: 'Invalid scoring metric. Must be one of: f1_score, accuracy, precision, recall, mae, rmse' };
+  }
+
   // Validate 4-phase requirements
   if (competitionType === '4-phase') {
     if (!privateTestStart || !privateTestEnd) {

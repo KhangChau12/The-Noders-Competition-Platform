@@ -69,7 +69,7 @@ export interface Database {
           max_file_size_mb: number;
           min_team_size: number | null;
           max_team_size: number | null;
-          scoring_metric: string;
+          scoring_metric: 'f1_score' | 'accuracy' | 'precision' | 'recall' | 'mae' | 'rmse';
           dataset_url: string | null;
           created_by: string;
           created_at: string;
@@ -94,7 +94,7 @@ export interface Database {
           max_file_size_mb?: number;
           min_team_size?: number | null;
           max_team_size?: number | null;
-          scoring_metric?: string;
+          scoring_metric?: 'f1_score' | 'accuracy' | 'precision' | 'recall' | 'mae' | 'rmse';
           dataset_url?: string | null;
           created_by: string;
           created_at?: string;
@@ -119,7 +119,7 @@ export interface Database {
           max_file_size_mb?: number;
           min_team_size?: number | null;
           max_team_size?: number | null;
-          scoring_metric?: string;
+          scoring_metric?: 'f1_score' | 'accuracy' | 'precision' | 'recall' | 'mae' | 'rmse';
           dataset_url?: string | null;
           created_by?: string;
           created_at?: string;

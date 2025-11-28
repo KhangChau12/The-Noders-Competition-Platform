@@ -117,9 +117,7 @@ export default function SubmitForm({
       setSubmitError(result.error);
       setIsSubmitting(false);
     } else if (result?.success) {
-      setSubmitMessage(
-        `Submission successful! Score: ${result.score?.toFixed(4) || 'N/A'}`
-      );
+      setSubmitMessage(result.message || 'Submission successful! Your submission is being validated and scored.');
       setSelectedFile(null);
       setIsSubmitting(false);
 

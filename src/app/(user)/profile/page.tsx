@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { User, Mail, Calendar, Trophy, Target, Award } from 'lucide-react';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -34,19 +35,39 @@ export default async function ProfilePage() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
-  // Get best scores
+  // Get best scores with metric info
   const { data: bestScores } = (await supabase
     .from('submissions')
     .select(`
       score,
       competitions (
-        title
+        title,
+        scoring_metric
       )
     `)
     .eq('user_id', user.id)
     .eq('is_best_score', true)
-    .order('score', { ascending: false })
     .limit(5)) as { data: any };
+
+  // Sort in JavaScript based on metric type (can't do in SQL when mixing metrics)
+  const sortedBestScores = bestScores?.sort((a: any, b: any) => {
+    const metricA = a.competitions?.scoring_metric || 'f1_score';
+    const metricB = b.competitions?.scoring_metric || 'f1_score';
+    const infoA = SCORING_METRIC_INFO[metricA as keyof typeof SCORING_METRIC_INFO];
+    const infoB = SCORING_METRIC_INFO[metricB as keyof typeof SCORING_METRIC_INFO];
+
+    // Group by metric type, then sort within group
+    if (infoA?.type !== infoB?.type) {
+      return infoA?.type === 'classification' ? -1 : 1; // Classification first
+    }
+
+    // Within same type, sort by score direction
+    if (infoA?.higher_is_better) {
+      return (b.score || 0) - (a.score || 0); // DESC for higher_is_better
+    } else {
+      return (a.score || 0) - (b.score || 0); // ASC for lower_is_better
+    }
+  }) || [];
 
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -127,28 +148,35 @@ export default async function ProfilePage() {
                 Top Performances
               </h3>
 
-              {bestScores && bestScores.length > 0 ? (
+              {sortedBestScores && sortedBestScores.length > 0 ? (
                 <div className="space-y-3">
-                  {bestScores.map((submission: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-bg-elevated rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg text-text-tertiary">#{index + 1}</span>
-                        <div>
-                          <p className="font-semibold truncate">{submission.competitions?.title}</p>
-                          <p className="text-sm text-text-tertiary">Competition</p>
+                  {sortedBestScores.map((submission: any, index: number) => {
+                    const metric = submission.competitions?.scoring_metric || 'f1_score';
+                    const metricInfo = SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO];
+
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-bg-elevated rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg text-text-tertiary">#{index + 1}</span>
+                          <div>
+                            <p className="font-semibold truncate">{submission.competitions?.title}</p>
+                            <p className="text-sm text-text-tertiary">Competition</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-xl text-primary-blue">
+                            {submission.score?.toFixed(metricInfo?.decimals || 4)}
+                            {metricInfo?.higher_is_better === false && ' ↓'}
+                            {metricInfo?.higher_is_better === true && ' ↑'}
+                          </p>
+                          <p className="text-xs text-text-tertiary">{metricInfo?.name || 'Score'}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold text-xl text-primary-blue">
-                          {submission.score?.toFixed(4)}
-                        </p>
-                        <p className="text-xs text-text-tertiary">F1 Score</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">

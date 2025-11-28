@@ -36,78 +36,11 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
     redirect('/competitions');
   }
 
-  // Check if registration period is open
-  const now = new Date();
+  // Get registration dates for display
   const registrationStart = new Date(competition.registration_start);
   const registrationEnd = new Date(competition.registration_end);
 
-  if (now < registrationStart) {
-    return (
-      <div className="min-h-screen px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <Link
-            href={`/competitions/${id}`}
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-primary-blue transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Competition
-          </Link>
-
-          <Card className="p-8 text-center">
-            <Clock className="w-16 h-16 mx-auto mb-4 text-warning" />
-            <h2 className="text-2xl font-bold mb-2">Registration Not Yet Open</h2>
-            <p className="text-text-secondary mb-6">
-              Registration for this competition will open on{' '}
-              {registrationStart.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-            <Link href={`/competitions/${id}`}>
-              <Button variant="primary">Back to Competition</Button>
-            </Link>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (now > registrationEnd) {
-    return (
-      <div className="min-h-screen px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <Link
-            href={`/competitions/${id}`}
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-primary-blue transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Competition
-          </Link>
-
-          <Card className="p-8 text-center">
-            <Clock className="w-16 h-16 mx-auto mb-4 text-error" />
-            <h2 className="text-2xl font-bold mb-2">Registration Closed</h2>
-            <p className="text-text-secondary mb-6">
-              Registration for this competition closed on{' '}
-              {registrationEnd.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-            <Link href={`/competitions/${id}`}>
-              <Button variant="primary">Back to Competition</Button>
-            </Link>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // Allow late registration - no time restriction
 
   // Check if already registered
   const { data: existingRegistration } = (await supabase

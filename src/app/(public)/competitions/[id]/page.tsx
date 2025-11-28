@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import CountdownTimer from '@/components/competition/CountdownTimer';
 import PhaseIndicator from '@/components/competition/PhaseIndicator';
 import CompetitionTabs from './CompetitionTabs';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 import {
   Clock,
   Trophy,
@@ -143,6 +144,10 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
   // Fetch leaderboard preview (top 10) - showing public test scores
   // For each user, get their best score
+  // Determine sort order based on metric type
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const ascending = metricInfo?.higher_is_better === false; // true for MAE/RMSE (lower is better)
+
   const { data: allSubmissions } = (await supabase
     .from('submissions')
     .select(`
@@ -167,7 +172,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     .eq('competition_id', id)
     .eq('validation_status', 'valid')
     .eq('phase', 'public')
-    .order('score', { ascending: false })
+    .order('score', { ascending }) // Dynamic sorting based on metric
     .order('submitted_at', { ascending: true })) as { data: any; error: any };
 
   // Get unique users with their best scores
@@ -248,7 +253,11 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
             </div>
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              <span>Metric: {competition.scoring_metric || 'F1 Score'}</span>
+              <span>
+                Metric: {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.name || 'F1 Score'}
+                {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false && ' ↓'}
+                {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === true && ' ↑'}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5" />

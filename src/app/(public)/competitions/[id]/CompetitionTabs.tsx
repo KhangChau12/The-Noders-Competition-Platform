@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Trophy, FileText, History, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 
 interface CompetitionTabsProps {
   competition: any;
@@ -63,6 +64,10 @@ export default function CompetitionTabs({
     setLoading(true);
     const supabase = createClient();
 
+    // Determine sort order based on metric type
+    const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+    const ascending = metricInfo?.higher_is_better === false; // true for MAE/RMSE (lower is better)
+
     // Fetch all valid submissions and compute best scores client-side
     const { data: allSubs } = await supabase
       .from('submissions')
@@ -87,7 +92,7 @@ export default function CompetitionTabs({
       .eq('competition_id', competition.id)
       .eq('validation_status', 'valid')
       .eq('phase', 'public')
-      .order('score', { ascending: false })
+      .order('score', { ascending }) // Dynamic sorting based on metric
       .order('submitted_at', { ascending: true });
 
     if (allSubs) {
@@ -143,7 +148,7 @@ export default function CompetitionTabs({
       <div className="min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab competition={competition} />}
         {activeTab === 'leaderboard' && (
-          <LeaderboardTab leaderboard={leaderboard} loading={loading} />
+          <LeaderboardTab leaderboard={leaderboard} loading={loading} competition={competition} />
         )}
         {activeTab === 'submissions' && (
           <SubmissionsTab submissions={submissions} loading={loading} />
@@ -214,7 +219,7 @@ function OverviewTab({ competition }: { competition: any }) {
 }
 
 // Leaderboard Tab Component
-function LeaderboardTab({ leaderboard, loading }: { leaderboard: any[]; loading: boolean }) {
+function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: any[]; loading: boolean; competition: any }) {
   if (loading) {
     return (
       <Card className="p-12">
@@ -234,6 +239,10 @@ function LeaderboardTab({ leaderboard, loading }: { leaderboard: any[]; loading:
     );
   }
 
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const metricName = metricInfo?.name || 'Score';
+  const decimals = metricInfo?.decimals || 4;
+
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -242,7 +251,11 @@ function LeaderboardTab({ leaderboard, loading }: { leaderboard: any[]; loading:
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Participant</th>
-              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Score</th>
+              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
+                {metricName}
+                {metricInfo?.higher_is_better === false && ' ↓'}
+                {metricInfo?.higher_is_better === true && ' ↑'}
+              </th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
             </tr>
           </thead>
@@ -278,7 +291,7 @@ function LeaderboardTab({ leaderboard, loading }: { leaderboard: any[]; loading:
                 </td>
                 <td className="px-6 py-4 text-right">
                   <span className="font-mono font-bold text-primary-blue">
-                    {entry.score?.toFixed(4) || '0.0000'}
+                    {entry.score?.toFixed(decimals) || '0.0000'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right text-sm text-text-tertiary">

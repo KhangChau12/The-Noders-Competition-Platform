@@ -59,6 +59,54 @@ export const SCORING_METRICS = {
   ACCURACY: 'accuracy',
   PRECISION: 'precision',
   RECALL: 'recall',
+  MAE: 'mae',
+  RMSE: 'rmse',
+} as const;
+
+// Scoring metric metadata
+export const SCORING_METRIC_INFO = {
+  f1_score: {
+    name: 'F1 Score',
+    description: 'Harmonic mean of precision and recall (for classification)',
+    higher_is_better: true,
+    decimals: 4,
+    type: 'classification',
+  },
+  accuracy: {
+    name: 'Accuracy',
+    description: 'Percentage of correct predictions (for classification)',
+    higher_is_better: true,
+    decimals: 4,
+    type: 'classification',
+  },
+  precision: {
+    name: 'Precision',
+    description: 'Ratio of true positives to predicted positives (for classification)',
+    higher_is_better: true,
+    decimals: 4,
+    type: 'classification',
+  },
+  recall: {
+    name: 'Recall',
+    description: 'Ratio of true positives to actual positives (for classification)',
+    higher_is_better: true,
+    decimals: 4,
+    type: 'classification',
+  },
+  mae: {
+    name: 'MAE (Mean Absolute Error)',
+    description: 'Average absolute difference between predictions and actual values (for regression)',
+    higher_is_better: false,
+    decimals: 4,
+    type: 'regression',
+  },
+  rmse: {
+    name: 'RMSE (Root Mean Squared Error)',
+    description: 'Square root of average squared differences (for regression)',
+    higher_is_better: false,
+    decimals: 4,
+    type: 'regression',
+  },
 } as const;
 
 // Date formats

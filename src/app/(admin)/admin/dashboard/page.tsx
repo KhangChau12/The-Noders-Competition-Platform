@@ -108,21 +108,34 @@ export default async function AdminDashboardPage() {
     .select('*', { count: 'exact', head: true });
 
   // Fetch recent submissions
-  const { data: recentSubmissions } = (await supabase
+  const { data: recentSubmissions, error: submissionsError } = (await supabase
     .from('submissions')
     .select(
       `
-      *,
-      user:users (
-        full_name
+      id,
+      score,
+      is_best_score,
+      submitted_at,
+      validation_status,
+      user_id,
+      users!submissions_user_id_fkey (
+        id,
+        full_name,
+        email
       ),
-      competition:competitions (
+      competitions!submissions_competition_id_fkey (
+        id,
         title
       )
     `
     )
-    .order('created_at', { ascending: false })
-    .limit(5)) as { data: any };
+    .order('submitted_at', { ascending: false })
+    .limit(10)) as { data: any; error: any };
+
+  if (submissionsError) {
+    console.error('Error fetching recent submissions:', submissionsError);
+  }
+  console.log('Recent submissions:', recentSubmissions?.length || 0);
 
   return (
     <div className="min-h-screen px-4 py-8">
@@ -291,28 +304,39 @@ export default async function AdminDashboardPage() {
                   >
                     <div className="flex-1">
                       <div className="font-medium mb-1">
-                        {submission.user?.full_name || 'Unknown User'}
+                        {submission.users?.full_name || 'Unknown User'}
                       </div>
                       <div className="text-sm text-text-secondary mb-2">
-                        {submission.competition?.title || 'Unknown Competition'}
+                        {submission.competitions?.title || 'Unknown Competition'}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-text-tertiary">
                         <span className="flex items-center gap-1">
                           <Target className="w-3 h-3" />
-                          Score: {submission.score?.toFixed(4) || 'N/A'}
+                          Score: {submission.score?.toFixed(4) || 'Pending'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {new Date(submission.created_at).toLocaleTimeString('en-US', {
+                          {new Date(submission.submitted_at).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
                         </span>
+                        <Badge
+                          variant={
+                            submission.validation_status === 'valid' ? 'green' :
+                            submission.validation_status === 'invalid' ? 'red' : 'yellow'
+                          }
+                          className="text-xs"
+                        >
+                          {submission.validation_status}
+                        </Badge>
                       </div>
                     </div>
-                    {submission.is_best_score && (
-                      <Badge variant="success">Best</Badge>
-                    )}
+                    <div className="flex flex-col items-end gap-1">
+                      {submission.is_best_score && (
+                        <Badge variant="success">Best</Badge>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

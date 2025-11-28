@@ -27,13 +27,7 @@ export async function registerForCompetition(competitionId: string) {
     return { error: 'Competition not found' };
   }
 
-  // Check if registration is still open
-  const now = new Date();
-  const registrationEnd = new Date(competition.registration_end);
-
-  if (now > registrationEnd) {
-    return { error: 'Registration period has ended' };
-  }
+  // Allow late registration - no time restriction
 
   // Check if already registered
   const { data: existingRegistration } = (await supabase

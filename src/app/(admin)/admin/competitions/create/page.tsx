@@ -207,11 +207,19 @@ export default function CreateCompetitionPage() {
                   className="w-full px-4 py-3 bg-bg-surface border border-border-default rounded-lg focus:outline-none focus:border-border-focus text-text-primary"
                   required
                 >
-                  <option value="f1_score">F1 Score</option>
-                  <option value="accuracy">Accuracy</option>
+                  <optgroup label="Classification Metrics (Higher is Better)">
+                    <option value="f1_score">F1 Score - Harmonic mean of precision and recall</option>
+                    <option value="accuracy">Accuracy - Percentage of correct predictions</option>
+                    <option value="precision">Precision - Ratio of true positives to predicted positives</option>
+                    <option value="recall">Recall - Ratio of true positives to actual positives</option>
+                  </optgroup>
+                  <optgroup label="Regression Metrics (Lower is Better)">
+                    <option value="mae">MAE - Mean Absolute Error</option>
+                    <option value="rmse">RMSE - Root Mean Squared Error</option>
+                  </optgroup>
                 </select>
                 <p className="text-xs text-text-tertiary mt-1">
-                  Metric used to evaluate submissions. Higher scores rank better.
+                  Metric used to evaluate submissions. For classification tasks, use F1/Accuracy/Precision/Recall (higher is better). For regression tasks, use MAE/RMSE (lower is better).
                 </p>
               </div>
 

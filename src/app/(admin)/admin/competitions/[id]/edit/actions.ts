@@ -57,6 +57,12 @@ export async function updateCompetition(id: string, formData: FormData) {
     return { error: 'Please fill in all required fields' };
   }
 
+  // Validate scoring metric
+  const validMetrics = ['f1_score', 'accuracy', 'precision', 'recall', 'mae', 'rmse'];
+  if (scoringMetric && !validMetrics.includes(scoringMetric)) {
+    return { error: 'Invalid scoring metric. Must be one of: f1_score, accuracy, precision, recall, mae, rmse' };
+  }
+
   // Update competition
   const { error } = await supabase
     .from('competitions')
