@@ -2,7 +2,7 @@ import { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'blue' | 'purple' | 'green' | 'red' | 'yellow' | 'outline' | 'registration' | 'public' | 'private' | 'ended' | 'tech' | 'secondary' | 'success' | 'danger';
+  variant?: 'blue' | 'purple' | 'green' | 'red' | 'yellow' | 'cyan' | 'gray' | 'outline' | 'registration' | 'public' | 'private' | 'ended' | 'tech' | 'secondary' | 'success' | 'danger';
 }
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
@@ -15,6 +15,8 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       green: 'bg-success/20 text-success border border-success/30',
       red: 'bg-error/20 text-error border border-error/30',
       yellow: 'bg-warning/20 text-warning border border-warning/30',
+      cyan: 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30',
+      gray: 'bg-phase-ended/20 text-text-tertiary border border-phase-ended/30',
       outline: 'bg-transparent border border-border-default text-text-secondary',
       // Competition phase variants
       registration: 'bg-phase-registration/20 text-[#A78BFA] border border-phase-registration/30',
