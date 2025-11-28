@@ -1,33 +1,24 @@
 import type { Metadata } from 'next';
-import { Nunito, Inter, JetBrains_Mono, Sigmar } from 'next/font/google';
+import { Nunito, Shrikhand } from 'next/font/google';
 import HeaderWithAuth from '@/components/layout/HeaderWithAuth';
 import Footer from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
 import NeuralNetworkBackground from '@/components/ui/NeuralNetworkBackground';
 import './globals.css';
 
+// Primary font - Nunito (body text, UI, headings)
 const nunito = Nunito({
-  subsets: ['latin', 'vietnamese'],
+  subsets: ['latin'],
+  weight: ['300', '400', '600', '700', '800'],
   variable: '--font-nunito',
   display: 'swap',
 });
 
-const inter = Inter({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-inter',
-  display: 'swap',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
-});
-
-const sigmar = Sigmar({
+// Display font - Shrikhand (hero titles, brand name)
+const shrikhand = Shrikhand({
   weight: '400',
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-sigmar',
+  subsets: ['latin'],
+  variable: '--font-shrikhand',
   display: 'swap',
 });
 
@@ -47,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={`${nunito.variable} ${inter.variable} ${jetbrainsMono.variable} ${sigmar.variable}`}>
+    <html lang="vi" className={`${nunito.variable} ${shrikhand.variable}`}>
       <body className="font-sans bg-bg-primary text-text-primary antialiased flex flex-col min-h-screen">
         {/* Neural Network Background - Global */}
         <NeuralNetworkBackground />

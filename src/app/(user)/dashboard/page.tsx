@@ -162,21 +162,24 @@ export default async function DashboardPage() {
     bestRank = (betterCount || 0) + 1;
   }
 
-  // Fetch competitions not yet registered for (recommendations)
+  // Fetch ALL active competitions (not just registered ones)
   const { data: allCompetitions } = (await supabase
     .from('competitions')
     .select('*')
     .is('deleted_at', null)
-    .gte('registration_end', new Date().toISOString())
-    .order('created_at', { ascending: false })
-    .limit(6)) as { data: any };
+    .order('created_at', { ascending: false })) as { data: any };
 
   const registeredIds = new Set(
     registrations?.map((r: any) => r.competition?.id).filter(Boolean) || []
   );
+
+  // Separate into registered and not registered
+  const registeredCompetitions = allCompetitions?.filter(
+    (comp: any) => registeredIds.has(comp.id)
+  ) || [];
   const recommendedCompetitions = allCompetitions?.filter(
     (comp: any) => !registeredIds.has(comp.id)
-  );
+  ) || [];
 
   // Separate competitions by status
   const activeCompetitions = registrations?.filter(
@@ -234,8 +237,27 @@ export default async function DashboardPage() {
     });
   };
 
+  // Process ALL competitions with phase info
+  const processAllCompetitions = (comps: any[]): CompetitionWithStats[] => {
+    return comps.map((comp: Competition) => {
+      const phase = getCompetitionPhase(comp, now);
+      const countdown = getCountdown(comp, phase, now);
+
+      return {
+        ...comp,
+        phase,
+        participant_count: participantCounts[comp.id] || 0,
+        registration_status: registeredIds.has(comp.id) ? 'approved' as const : 'not_registered' as const,
+        countdown,
+      };
+    });
+  };
+
   const processedActiveCompetitions = activeCompetitions
     ? processActiveCompetitions(activeCompetitions)
+    : [];
+  const processedAllCompetitions = allCompetitions
+    ? processAllCompetitions(allCompetitions)
     : [];
   const processedRecommendedCompetitions = recommendedCompetitions
     ? processRecommendedCompetitions(recommendedCompetitions)
@@ -246,8 +268,8 @@ export default async function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-display text-4xl sm:text-5xl mb-2 gradient-text">Dashboard</h1>
-          <p className="text-text-secondary">Welcome back! Here's your competition overview.</p>
+          <h1 className="font-shrikhand text-4xl md:text-5xl mb-2 gradient-text">Dashboard</h1>
+          <p className="text-lg text-text-secondary">Welcome back! Here's your competition overview.</p>
         </div>
 
         {/* Stats Overview */}
@@ -291,13 +313,13 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Active Competitions */}
-        {activeCompetitions && activeCompetitions.length > 0 && (
+        {/* All Competitions with Timeline */}
+        {processedAllCompetitions.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-primary-blue" />
-                My Active Competitions
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary flex items-center gap-2">
+                <TrendingUp className="w-7 h-7 text-primary-blue" />
+                All Competitions
               </h2>
               <Link href="/competitions">
                 <Button variant="outline" size="sm">
@@ -306,27 +328,110 @@ export default async function DashboardPage() {
               </Link>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {processedActiveCompetitions.map((competition) => (
-                <CompetitionCard
-                  key={competition.id}
-                  competition={competition}
-                  phase={competition.phase}
-                  stats={{ participants: competition.participant_count }}
-                  countdown={competition.countdown}
-                  registrationStatus={competition.registration_status}
-                  showRegistrationBadge={true}
-                />
-              ))}
+            {/* Timeline View */}
+            <div className="mb-8 space-y-4">
+              {processedAllCompetitions.map((competition) => {
+                const now = new Date();
+                const regStart = new Date(competition.registration_start);
+                const regEnd = new Date(competition.registration_end);
+                const publicStart = new Date(competition.public_test_start);
+                const publicEnd = new Date(competition.public_test_end);
+                const privateStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
+                const privateEnd = competition.private_test_end ? new Date(competition.private_test_end) : null;
+
+                const totalDuration = (privateEnd || publicEnd).getTime() - regStart.getTime();
+                const elapsed = now.getTime() - regStart.getTime();
+                const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+
+                return (
+                  <Card key={competition.id} className="p-6">
+                    <div className="mb-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-text-primary mb-1">
+                            {competition.title}
+                          </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge
+                              variant={
+                                competition.phase === 'registration' ? 'purple' :
+                                competition.phase === 'public_test' ? 'blue' :
+                                competition.phase === 'private_test' ? 'cyan' : 'gray'
+                              }
+                            >
+                              {competition.phase === 'registration' ? 'Registration' :
+                               competition.phase === 'public_test' ? 'Public Test' :
+                               competition.phase === 'private_test' ? 'Private Test' : 'Ended'}
+                            </Badge>
+                            {competition.countdown && (
+                              <span className="text-sm text-text-secondary">
+                                {competition.countdown.label}: {competition.countdown.days}d {competition.countdown.hours}h {competition.countdown.minutes}m
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Link href={`/competitions/${competition.id}`}>
+                          <Button variant="outline" size="sm">
+                            View
+                            <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Timeline Bar */}
+                    <div className="relative">
+                      {/* Progress Bar */}
+                      <div className="relative h-3 bg-bg-elevated rounded-full overflow-hidden">
+                        <div
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+
+                      {/* Timeline Markers */}
+                      <div className="flex justify-between mt-3 text-xs">
+                        <div className="flex flex-col items-start">
+                          <span className="text-text-tertiary mb-1">Registration</span>
+                          <span className="text-text-secondary font-semibold">
+                            {regStart.toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-text-tertiary mb-1">Public Test</span>
+                          <span className="text-text-secondary font-semibold">
+                            {publicStart.toLocaleDateString()}
+                          </span>
+                        </div>
+                        {privateStart && (
+                          <div className="flex flex-col items-center">
+                            <span className="text-text-tertiary mb-1">Private Test</span>
+                            <span className="text-text-secondary font-semibold">
+                              {privateStart.toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-col items-end">
+                          <span className="text-text-tertiary mb-1">End</span>
+                          <span className="text-text-secondary font-semibold">
+                            {(privateEnd || publicEnd).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
+
           </div>
         )}
 
         {/* Pending Approvals */}
         {pendingCompetitions && pendingCompetitions.length > 0 && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Clock className="w-6 h-6 text-warning" />
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-6 flex items-center gap-2">
+              <Clock className="w-7 h-7 text-warning" />
               Pending Approvals
             </h2>
 
@@ -363,29 +468,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Recommended Competitions */}
-        {recommendedCompetitions && recommendedCompetitions.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-accent-cyan" />
-              Recommended Competitions
-            </h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {processedRecommendedCompetitions.slice(0, 3).map((competition) => (
-                <CompetitionCard
-                  key={competition.id}
-                  competition={competition}
-                  phase={competition.phase}
-                  stats={{ participants: competition.participant_count }}
-                  countdown={competition.countdown}
-                  registrationStatus={competition.registration_status}
-                  showRegistrationBadge={false}
-                />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

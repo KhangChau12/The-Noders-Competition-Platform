@@ -5,9 +5,8 @@
 @layer base {
   :root {
     /* Fonts */
-    --font-nunito: 'Nunito', sans-serif;
-    --font-inter: 'Inter', sans-serif;
-    --font-jetbrains-mono: 'JetBrains Mono', monospace;
+    --font-nunito: 'Nunito', system-ui, sans-serif;
+    --font-shrikhand: 'Shrikhand', system-ui, sans-serif;
 
     /* Colors - Primary Identity */
     --color-primary-blue: #2563EB;
@@ -111,20 +110,20 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
-  /* Override all text to use Nunito */
+  /* Default text to use Nunito */
   h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select {
-    font-family: var(--font-nunito), sans-serif;
+    font-family: var(--font-nunito), system-ui, sans-serif;
   }
 
-  /* Keep display font for branding only */
-  .font-display {
-    font-family: var(--font-inter), sans-serif;
-    font-weight: 800;
+  /* Brand font for hero titles and brand name - MUST override everything */
+  .font-shrikhand,
+  .font-shrikhand * {
+    font-family: var(--font-shrikhand), system-ui, sans-serif !important;
   }
 
-  /* Keep mono font for code/numbers */
+  /* Monospace font for code blocks */
   .font-mono, code, pre {
-    font-family: var(--font-jetbrains-mono), monospace;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
   }
 
   /* Custom scrollbar */

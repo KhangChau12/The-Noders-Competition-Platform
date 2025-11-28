@@ -150,20 +150,20 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Main Heading with Gradient */}
-            <h1 className="font-extrabold text-4xl sm:text-6xl lg:text-7xl mb-6 leading-tight">
+            {/* Main Heading with Gradient - Hero title: text-5xl md:text-7xl font-brand */}
+            <h1 className="font-brand text-5xl md:text-7xl leading-tight mb-6">
               <span className="text-text-primary">
                 Competition Platform
               </span>
               <br />
-              <span className="bg-gradient-brand bg-clip-text text-transparent">
+              <span className="gradient-text">
                 AI & Machine Learning
               </span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
-              Join The Noders PTNK community - Challenge yourself with real-world AI competitions,
+            {/* Subtitle - Hero subtitle: text-xl md:text-2xl font-light */}
+            <p className="text-xl md:text-2xl font-light text-text-secondary mb-8 max-w-3xl mx-auto leading-relaxed">
+              Join <span className="font-brand gradient-text">The Noders PTNK</span> community - Challenge yourself with real-world AI competitions,
               compete fairly and learn from the community.
             </p>
 
@@ -234,7 +234,7 @@ export default async function HomePage() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-3">
               <Trophy className="w-8 h-8 text-accent-cyan" />
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
                 Featured Competitions
               </h2>
             </div>
@@ -324,7 +324,7 @@ export default async function HomePage() {
               <div className="absolute top-4 right-4 text-6xl font-bold text-text-tertiary/10 font-mono">
                 01
               </div>
-              <h3 className="text-xl font-bold text-text-primary mb-4">
+              <h3 className="text-xl font-semibold text-text-primary mb-4">
                 Create Account
               </h3>
               <p className="text-text-secondary leading-relaxed">
@@ -343,7 +343,7 @@ export default async function HomePage() {
               <div className="absolute top-4 right-4 text-6xl font-bold text-text-tertiary/10 font-mono">
                 02
               </div>
-              <h3 className="text-xl font-bold text-text-primary mb-4">
+              <h3 className="text-xl font-semibold text-text-primary mb-4">
                 Build & Train
               </h3>
               <p className="text-text-secondary leading-relaxed">
@@ -362,7 +362,7 @@ export default async function HomePage() {
               <div className="absolute top-4 right-4 text-6xl font-bold text-text-tertiary/10 font-mono">
                 03
               </div>
-              <h3 className="text-xl font-bold text-text-primary mb-4">
+              <h3 className="text-xl font-semibold text-text-primary mb-4">
                 Submit & Compete
               </h3>
               <p className="text-text-secondary leading-relaxed">
@@ -380,7 +380,7 @@ export default async function HomePage() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-3">
               <BarChart3 className="w-8 h-8 text-accent-cyan" />
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary">
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
                 Platform Statistics
               </h2>
             </div>
@@ -449,13 +449,13 @@ export default async function HomePage() {
                 <Award className="w-10 h-10 text-white" />
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-6">
-                <span className="bg-gradient-brand bg-clip-text text-transparent">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                <span className="gradient-text">
                   Ready for the Challenge?
                 </span>
               </h2>
 
-              <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
                 Join thousands of data scientists and ML engineers in exciting AI challenges.
                 Start your journey today!
               </p>

@@ -7,10 +7,10 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-10 mb-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <h3 className="font-display text-2xl bg-gradient-brand bg-clip-text text-transparent mb-3">
+            <h3 className="font-shrikhand text-2xl gradient-text mb-3">
               The Noders
             </h3>
-            <p className="text-text-tertiary text-sm leading-relaxed mb-4">
+            <p className="text-sm text-text-tertiary leading-relaxed mb-4">
               The Noders Competition Platform - Official AI competition platform of The Noders PTNK club for data scientists and ML practitioners.
             </p>
             <div className="flex gap-3">
@@ -29,7 +29,7 @@ export default function Footer() {
 
           {/* Platform */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Platform</h4>
+            <h4 className="text-base font-semibold text-text-primary mb-4">Platform</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
@@ -63,7 +63,7 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Resources</h4>
+            <h4 className="text-base font-semibold text-text-primary mb-4">Resources</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
@@ -97,7 +97,7 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-text-primary font-bold mb-4">Company</h4>
+            <h4 className="text-base font-semibold text-text-primary mb-4">Company</h4>
             <ul className="space-y-2.5">
               <li>
                 <Link
