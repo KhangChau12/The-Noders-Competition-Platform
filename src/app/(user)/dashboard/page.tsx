@@ -13,7 +13,6 @@ import {
   Users,
   Award,
   Clock,
-  ArrowRight,
 } from 'lucide-react';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
 
@@ -388,56 +387,51 @@ export default async function DashboardPage() {
                 const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
 
                 return (
-                  <Card key={competition.id} className="p-6">
-                    <div className="mb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-text-primary mb-1">
-                            {competition.title}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge
-                              variant={
-                                competition.phase === 'registration' ? 'purple' :
-                                competition.phase === 'public_test' ? 'blue' :
-                                competition.phase === 'private_test' ? 'cyan' : 'gray'
-                              }
-                            >
-                              {competition.phase === 'registration' ? 'Registration' :
-                               competition.phase === 'public_test' ? 'Public Test' :
-                               competition.phase === 'private_test' ? 'Private Test' : 'Ended'}
-                            </Badge>
-
-                            {/* Registration Status Badge */}
-                            {competition.phase !== 'ended' && (
+                  <Link key={competition.id} href={`/competitions/${competition.id}`}>
+                    <Card className="p-6 hover:border-primary-blue/50 transition-all cursor-pointer">
+                      <div className="mb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-text-primary mb-1">
+                              {competition.title}
+                            </h3>
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Badge
                                 variant={
-                                  competition.registration_status === 'approved' ? 'green' :
-                                  competition.registration_status === 'pending' ? 'yellow' :
-                                  competition.registration_status === 'rejected' ? 'red' : 'gray'
+                                  competition.phase === 'registration' ? 'purple' :
+                                  competition.phase === 'public_test' ? 'blue' :
+                                  competition.phase === 'private_test' ? 'cyan' : 'gray'
                                 }
                               >
-                                {competition.registration_status === 'approved' ? '✓ Registered' :
-                                 competition.registration_status === 'pending' ? '⏳ Pending' :
-                                 competition.registration_status === 'rejected' ? '✗ Rejected' : 'Not Registered'}
+                                {competition.phase === 'registration' ? 'Registration' :
+                                 competition.phase === 'public_test' ? 'Public Test' :
+                                 competition.phase === 'private_test' ? 'Private Test' : 'Ended'}
                               </Badge>
-                            )}
 
-                            {competition.countdown && (
-                              <span className="text-sm text-text-secondary">
-                                {competition.countdown.label}: {competition.countdown.days}d {competition.countdown.hours}h {competition.countdown.minutes}m
-                              </span>
-                            )}
+                              {/* Registration Status Badge */}
+                              {competition.phase !== 'ended' && (
+                                <Badge
+                                  variant={
+                                    competition.registration_status === 'approved' ? 'green' :
+                                    competition.registration_status === 'pending' ? 'yellow' :
+                                    competition.registration_status === 'rejected' ? 'red' : 'gray'
+                                  }
+                                >
+                                  {competition.registration_status === 'approved' ? '✓ Registered' :
+                                   competition.registration_status === 'pending' ? '⏳ Pending' :
+                                   competition.registration_status === 'rejected' ? '✗ Rejected' : 'Not Registered'}
+                                </Badge>
+                              )}
+
+                              {competition.countdown && (
+                                <span className="text-sm text-text-secondary">
+                                  {competition.countdown.label}: {competition.countdown.days}d {competition.countdown.hours}h {competition.countdown.minutes}m
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <Link href={`/competitions/${competition.id}`}>
-                          <Button variant="outline" size="sm">
-                            View
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </Link>
                       </div>
-                    </div>
 
                     {/* Timeline Bar */}
                     <div className="relative">
@@ -479,7 +473,8 @@ export default async function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                  </Card>
+                    </Card>
+                  </Link>
                 );
               })}
             </div>

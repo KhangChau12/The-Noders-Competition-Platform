@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import SubmitForm from './SubmitForm';
+import DailyResetCountdown from './DailyResetCountdown';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 import {
   ArrowLeft,
   Calendar,
@@ -64,6 +66,24 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
     .eq('competition_id', id)
     .order('submitted_at', { ascending: false })) as { data: any };
 
+  // Sort submissions by score based on competition metric
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const isHigherBetter = metricInfo?.higher_is_better !== false;
+
+  const sortedSubmissions = [...(submissions || [])].sort((a: any, b: any) => {
+    // Handle null scores (put at end)
+    if (a.score === null && b.score === null) return 0;
+    if (a.score === null) return 1;
+    if (b.score === null) return -1;
+
+    // Sort by score based on metric direction
+    if (isHigherBetter) {
+      return b.score - a.score; // DESC for higher is better
+    } else {
+      return a.score - b.score; // ASC for lower is better
+    }
+  });
+
   // Count daily and total submissions
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -112,6 +132,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
               )}{' '}
               remaining today
             </div>
+            <DailyResetCountdown />
           </Card>
 
           <Card className="p-6 border-l-4 border-accent-cyan">
@@ -138,13 +159,15 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
             My Submissions
           </h2>
 
-          {submissions && submissions.length > 0 ? (
+          {sortedSubmissions && sortedSubmissions.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="border-b border-border-default">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">#</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Score</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">Rank</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                      Score {isHigherBetter ? '↑' : '↓'}
+                    </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Phase</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">
@@ -153,12 +176,19 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-default">
-                  {submissions.map((submission: any, index: number) => (
-                    <tr key={submission.id} className="hover:bg-bg-tertiary/50">
-                      <td className="px-4 py-3 text-sm">{submissions.length - index}</td>
+                  {sortedSubmissions.map((submission: any, index: number) => (
+                    <tr
+                      key={submission.id}
+                      className={`hover:bg-bg-tertiary/50 ${submission.is_best_score ? 'bg-success/5' : ''}`}
+                    >
                       <td className="px-4 py-3">
-                        <span className="font-mono font-medium">
-                          {submission.score?.toFixed(4) || 'N/A'}
+                        <span className={`font-semibold ${index === 0 && submission.score !== null ? 'text-warning' : ''}`}>
+                          {submission.score !== null ? `#${index + 1}` : '-'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`font-mono font-medium ${index === 0 && submission.score !== null ? 'text-warning' : ''}`}>
+                          {submission.score?.toFixed(metricInfo?.decimals || 4) || 'Pending'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -169,9 +199,19 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        {submission.is_best_score && (
-                          <Badge variant="success">Best Score</Badge>
-                        )}
+                        <div className="flex gap-2">
+                          {submission.is_best_score && (
+                            <Badge variant="success">Best Score</Badge>
+                          )}
+                          <Badge
+                            variant={
+                              submission.validation_status === 'valid' ? 'green' :
+                              submission.validation_status === 'invalid' ? 'red' : 'yellow'
+                            }
+                          >
+                            {submission.validation_status}
+                          </Badge>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-text-secondary">
                         {new Date(submission.submitted_at).toLocaleString('en-US', {
