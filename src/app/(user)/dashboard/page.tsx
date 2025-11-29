@@ -216,12 +216,20 @@ export default async function DashboardPage() {
   ) || [];
 
   // Separate competitions by status
-  const activeCompetitions = registrations?.filter(
+  const myRegisteredCompetitions = registrations?.filter(
     (r: any) => r.status === 'approved' && r.competitions
   );
   const pendingCompetitions = registrations?.filter((r: any) => r.status === 'pending');
 
-  console.log('Dashboard Debug - Active Competitions:', activeCompetitions?.length || 0);
+  // Count ACTIVE competitions (ongoing: registration or public_test phase)
+  const now = new Date();
+  const activeCompetitionsCount = allCompetitions?.filter((comp: any) => {
+    const phase = getCompetitionPhase(comp, now);
+    return phase === 'registration' || phase === 'public_test' || phase === 'private_test';
+  }).length || 0;
+
+  console.log('Dashboard Debug - Active Competitions Count:', activeCompetitionsCount);
+  console.log('Dashboard Debug - My Registered:', myRegisteredCompetitions?.length || 0);
   console.log('Dashboard Debug - Pending Competitions:', pendingCompetitions?.length || 0);
   console.log('Dashboard Debug - Registration Status Map:', Array.from(registrationStatusMap.entries()));
 
@@ -239,7 +247,6 @@ export default async function DashboardPage() {
   );
 
   // Process competitions with phase and stats
-  const now = new Date();
   const processActiveCompetitions = (regs: any[]): CompetitionWithStats[] => {
     return regs
       .map((reg: any) => {
@@ -296,8 +303,8 @@ export default async function DashboardPage() {
     });
   };
 
-  const processedActiveCompetitions = activeCompetitions
-    ? processActiveCompetitions(activeCompetitions)
+  const processedActiveCompetitions = myRegisteredCompetitions
+    ? processActiveCompetitions(myRegisteredCompetitions)
     : [];
   const processedAllCompetitions = allCompetitions
     ? processAllCompetitions(allCompetitions)
@@ -323,7 +330,7 @@ export default async function DashboardPage() {
               <Trophy className="w-5 h-5 text-primary-blue" />
             </div>
             <div className="text-3xl font-bold text-primary-blue">
-              {activeCompetitions?.length || 0}
+              {activeCompetitionsCount}
             </div>
           </Card>
 

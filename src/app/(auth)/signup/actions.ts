@@ -28,7 +28,8 @@ export async function signUp(formData: FormData) {
     // Map Supabase errors to user-friendly messages
     const errorMessages: Record<string, string> = {
       'User already registered': 'An account with this email already exists',
-      'Password should be at least 8 characters': 'Password must be at least 8 characters long',
+      'Password should be at least 8 characters': 'Password must be at least 6 characters long',
+      'Password should be at least 6 characters': 'Password must be at least 6 characters long',
     };
 
     return { error: errorMessages[error.message] || error.message };
