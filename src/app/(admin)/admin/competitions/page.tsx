@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import DeleteCompetitionButton from './DeleteCompetitionButton';
 import {
   Trophy,
   Users,
@@ -274,6 +275,10 @@ export default async function AdminCompetitionsPage() {
                           View
                         </Button>
                       </Link>
+                      <DeleteCompetitionButton
+                        competitionId={competition.id}
+                        competitionTitle={competition.title}
+                      />
                     </div>
                   </div>
                 </div>

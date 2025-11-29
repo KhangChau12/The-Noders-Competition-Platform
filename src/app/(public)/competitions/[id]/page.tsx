@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import CountdownTimer from '@/components/competition/CountdownTimer';
 import PhaseIndicator from '@/components/competition/PhaseIndicator';
+import CompetitionTimeline from '@/components/competition/CompetitionTimeline';
 import CompetitionTabs from './CompetitionTabs';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
 import {
@@ -279,6 +280,9 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                 />
               </Card>
             )}
+
+            {/* Competition Timeline */}
+            <CompetitionTimeline competition={competition} />
 
             {/* Registration Status */}
             {user && (
