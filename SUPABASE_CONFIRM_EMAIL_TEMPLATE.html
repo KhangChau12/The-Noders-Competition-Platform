@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email - The Noders PTNK</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0F172A;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0F172A;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1E293B; border-radius: 12px; overflow: hidden;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%); padding: 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #FFFFFF; font-size: 24px; font-weight: 800;">The Noders PTNK</h1>
+                            <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">AI Competition Platform</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%); border-radius: 50%; line-height: 80px; font-size: 40px;">
+                                    ✅
+                                </div>
+                            </div>
+
+                            <h2 style="margin: 0 0 20px; color: #F1F5F9; font-size: 20px; font-weight: 700; text-align: center;">Verify Your Email Address</h2>
+
+                            <p style="margin: 0 0 30px; color: #CBD5E1; font-size: 15px; line-height: 1.6;">
+                                Welcome to The Noders Competition Platform! Please confirm your email address to complete your registration and start competing.
+                            </p>
+
+                            <!-- Button -->
+                            <div style="text-align: center; margin: 40px 0;">
+                                <a href="{{ .ConfirmationURL }}" style="display: inline-block; background: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%); color: #FFFFFF; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+                                    Verify Email Address
+                                </a>
+                            </div>
+
+                            <!-- Alternative Link -->
+                            <div style="margin-top: 30px; padding: 20px; background-color: #334155; border-radius: 8px; border-left: 4px solid #2563EB;">
+                                <p style="margin: 0 0 10px; font-weight: 600; color: #F1F5F9; font-size: 14px;">If the button doesn't work:</p>
+                                <p style="margin: 0; color: #06B6D4; word-break: break-all; font-size: 13px;">
+                                    {{ .ConfirmationURL }}
+                                </p>
+                            </div>
+
+                            <!-- Warning -->
+                            <div style="margin-top: 30px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 20px; border-radius: 8px; border-left: 4px solid #EF4444;">
+                                <p style="margin: 0 0 10px; font-weight: 600; color: #FCA5A5; font-size: 14px;">⚠️ Didn't request this?</p>
+                                <p style="margin: 0; color: #CBD5E1; font-size: 13px;">
+                                    If you didn't create an account, please ignore this email.
+                                </p>
+                            </div>
+
+                            <!-- Info -->
+                            <div style="margin-top: 30px; background-color: #334155; padding: 20px; border-radius: 8px;">
+                                <p style="margin: 0 0 10px; font-weight: 600; color: #F1F5F9; font-size: 14px;">⏰ Important:</p>
+                                <p style="margin: 0; color: #94A3B8; font-size: 13px;">
+                                    This verification link will expire in 24 hours for security reasons.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0F172A; padding: 30px; text-align: center; border-top: 1px solid #334155;">
+                            <p style="margin: 0 0 15px; color: #64748B; font-size: 13px;">
+                                This email was sent from The Noders PTNK Competition Platform
+                            </p>
+                            <p style="margin: 0; color: #475569; font-size: 12px;">
+                                © 2025 The Noders PTNK. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

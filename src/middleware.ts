@@ -54,6 +54,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Handle email verification code in URL (redirect from email)
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+    // Redirect to auth callback with code
+    const callbackUrl = new URL('/auth/callback', request.url);
+    callbackUrl.searchParams.set('code', code);
+    return NextResponse.redirect(callbackUrl);
+  }
+
   // Refresh session if expired
   const { data: { user } } = await supabase.auth.getUser();
 
