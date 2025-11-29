@@ -119,7 +119,7 @@ export default function SignupPage() {
               id="password"
               name="password"
               type="password"
-              placeholder="Minimum 8 characters"
+              placeholder="Minimum 6 characters"
               required
               disabled={isLoading || !!success}
             />

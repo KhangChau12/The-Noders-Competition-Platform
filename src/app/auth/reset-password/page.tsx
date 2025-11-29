@@ -158,17 +158,8 @@ export default function UpdatePasswordPage() {
           <div className="bg-bg-elevated border border-border-subtle rounded-lg p-4 text-sm text-text-secondary">
             <div className="font-semibold mb-2">Password requirements:</div>
             <ul className="space-y-1">
-              <li className={password.length >= 8 ? 'text-success' : ''}>
-                • At least 8 characters
-              </li>
-              <li className={/[A-Z]/.test(password) ? 'text-success' : ''}>
-                • One uppercase letter
-              </li>
-              <li className={/[a-z]/.test(password) ? 'text-success' : ''}>
-                • One lowercase letter
-              </li>
-              <li className={/[0-9]/.test(password) ? 'text-success' : ''}>
-                • One number
+              <li className={password.length >= 6 ? 'text-success' : ''}>
+                • At least 6 characters
               </li>
             </ul>
           </div>
