@@ -115,11 +115,6 @@
     font-family: var(--font-nunito), system-ui, sans-serif;
   }
 
-  /* Brand font for hero titles and brand name - MUST override everything */
-  .font-shrikhand,
-  .font-shrikhand * {
-    font-family: var(--font-shrikhand), system-ui, sans-serif !important;
-  }
 
   /* Monospace font for code blocks */
   .font-mono, code, pre {

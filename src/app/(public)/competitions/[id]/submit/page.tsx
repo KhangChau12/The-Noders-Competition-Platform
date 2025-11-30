@@ -113,7 +113,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
             <ArrowLeft className="w-4 h-4" />
             Back to Competition
           </Link>
-          <h1 className="font-display text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
             Submit Solution
           </h1>
           <p className="text-text-secondary">{competition.title}</p>

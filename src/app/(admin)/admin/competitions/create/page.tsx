@@ -105,7 +105,7 @@ export default function CreateCompetitionPage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="font-display text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
             Create Competition
           </h1>
           <p className="text-text-secondary">Set up a new AI competition</p>

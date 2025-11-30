@@ -235,7 +235,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
           </div>
 
           {/* Title */}
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl mb-4 gradient-text">
+          <h1 className="font-brand text-4xl sm:text-5xl lg:text-6xl mb-4 gradient-text">
             {competition.title}
           </h1>
 

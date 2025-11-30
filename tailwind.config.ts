@@ -43,7 +43,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-nunito)', 'system-ui', 'sans-serif'],
-        brand: ['var(--font-shrikhand)', 'system-ui', 'sans-serif'],
+        brand: ['var(--font-shrikhand)', 'cursive'],
         mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
       },
       backgroundImage: {

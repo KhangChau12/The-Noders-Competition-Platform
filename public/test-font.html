@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Test - Shrikhand</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Shrikhand&display=swap');
+
+        body {
+            background: #0F172A;
+            color: #F8FAFC;
+            padding: 40px;
+            font-family: system-ui, sans-serif;
+        }
+
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #1E293B;
+            border-radius: 12px;
+        }
+
+        .shrikhand-direct {
+            font-family: "Shrikhand", cursive;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .shrikhand-var {
+            font-family: var(--font-shrikhand), cursive;
+        }
+
+        .comparison {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #94A3B8;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="font-family: system-ui;">Font Loading Test</h1>
+
+    <div class="test-section">
+        <div class="label">1. Direct Google Font Import - Shrikhand with cursive fallback</div>
+        <h1 class="shrikhand-direct">The Noders PTNK - Competition Platform</h1>
+    </div>
+
+    <div class="test-section">
+        <div class="label">2. Using CSS Variable (như Next.js đang dùng)</div>
+        <h1 class="shrikhand-var">The Noders PTNK - Competition Platform</h1>
+        <p style="color: #94A3B8; font-size: 12px;">Note: CSS variable chỉ hoạt động nếu được set từ Next.js</p>
+    </div>
+
+    <div class="test-section">
+        <div class="label">3. Default system font (để so sánh)</div>
+        <h1 style="font-family: system-ui;">The Noders PTNK - Competition Platform</h1>
+    </div>
+
+    <div class="test-section">
+        <div class="label">4. Serif fallback (nếu Shrikhand không load)</div>
+        <h1 style="font-family: serif;">The Noders PTNK - Competition Platform</h1>
+    </div>
+
+    <div class="test-section">
+        <div class="label">5. Cursive fallback</div>
+        <h1 style="font-family: cursive;">The Noders PTNK - Competition Platform</h1>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #334155; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Hướng dẫn:</h3>
+        <ul>
+            <li>Mục 1 phải hiển thị font Shrikhand (chữ rất đặc biệt, có style retro)</li>
+            <li>Nếu tất cả đều giống nhau → Font Shrikhand không load được</li>
+            <li>Nếu mục 1 khác biệt rõ ràng → Font đang load đúng</li>
+        </ul>
+        <p style="color: #06B6D4; margin-top: 20px;">
+            👉 Truy cập: <a href="http://localhost:3001/test-font.html" style="color: #06B6D4; text-decoration: underline;">http://localhost:3001/test-font.html</a>
+        </p>
+    </div>
+</body>
+</html>

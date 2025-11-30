@@ -143,7 +143,7 @@ export default async function AdminDashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-display text-4xl sm:text-5xl mb-2 gradient-text">
+            <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
               Admin Dashboard
             </h1>
             <p className="text-text-secondary">

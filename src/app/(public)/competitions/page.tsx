@@ -214,7 +214,7 @@ export default function CompetitionsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="font-display text-5xl mb-4 gradient-text">Competitions</h1>
+          <h1 className="font-brand text-5xl mb-4 gradient-text">Competitions</h1>
           <p className="text-xl text-text-secondary max-w-2xl mx-auto">
             Browse active competitions and start your AI journey
           </p>

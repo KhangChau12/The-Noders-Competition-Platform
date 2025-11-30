@@ -61,7 +61,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border-default">
-            <span className="text-xl font-display bg-gradient-brand bg-clip-text text-transparent">
+            <span className="text-xl font-brand bg-gradient-brand bg-clip-text text-transparent">
               Menu
             </span>
             <button
