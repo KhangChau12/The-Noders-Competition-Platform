@@ -144,7 +144,7 @@ export default async function DashboardPage() {
   console.log('Dashboard Debug - Registrations:', registrations?.length || 0);
   console.log('Dashboard Debug - Registrations data:', JSON.stringify(registrations, null, 2));
 
-  // Fetch total submissions count
+  // Fetch total submissions count (show all, not just valid)
   const { count: totalSubmissions, error: submissionsError } = await supabase
     .from('submissions')
     .select('*', { count: 'exact', head: true })

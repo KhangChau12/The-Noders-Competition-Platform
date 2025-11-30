@@ -84,17 +84,21 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
     }
   });
 
-  // Count daily and total submissions
+  // Count daily and total submissions (only VALID submissions count towards limit)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const dailySubmissions = submissions?.filter(
+  const validSubmissions = submissions?.filter(
+    (sub: any) => sub.validation_status === 'valid'
+  ) || [];
+
+  const dailyValidSubmissions = validSubmissions.filter(
     (sub: any) => new Date(sub.submitted_at) >= todayStart
   );
 
   const submissionCount = {
-    daily: dailySubmissions?.length || 0,
-    total: submissions?.length || 0,
+    daily: dailyValidSubmissions.length,
+    total: validSubmissions.length,
   };
 
   return (

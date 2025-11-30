@@ -117,16 +117,17 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
     registration = regData;
 
-    // If approved, get submission counts
+    // If approved, get submission counts (only VALID submissions count)
     if (registration && registration.status === 'approved') {
-      // Total submissions
+      // Total VALID submissions
       const { count: totalCount } = await supabase
         .from('submissions')
         .select('*', { count: 'exact', head: true })
         .eq('competition_id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('validation_status', 'valid');
 
-      // Daily submissions (today)
+      // Daily VALID submissions (today)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const { count: dailyCount } = await supabase
@@ -134,6 +135,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         .select('*', { count: 'exact', head: true })
         .eq('competition_id', id)
         .eq('user_id', user.id)
+        .eq('validation_status', 'valid')
         .gte('submitted_at', today.toISOString());
 
       submissionCount = {
