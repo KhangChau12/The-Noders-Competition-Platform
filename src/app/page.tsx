@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Code2,
   Brain,
-  Sparkles,
 } from 'lucide-react';
 
 // Helper function to calculate competition phase
@@ -142,14 +141,6 @@ export default async function HomePage() {
 
         <div className="relative mx-auto max-w-7xl">
           <div className="text-center">
-            {/* Sparkles Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <Sparkles className="w-16 h-16 text-accent-cyan animate-pulse" />
-                <div className="absolute inset-0 blur-xl bg-accent-cyan/30 animate-pulse" />
-              </div>
-            </div>
-
             {/* Main Heading with Gradient - Hero title: text-5xl md:text-7xl font-brand */}
             <h1 className="font-brand text-5xl md:text-7xl leading-tight mb-6">
               <span className="text-text-primary">
