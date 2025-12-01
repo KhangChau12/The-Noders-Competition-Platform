@@ -4,10 +4,6 @@
 
 @layer base {
   :root {
-    /* Fonts */
-    --font-nunito: 'Nunito', system-ui, sans-serif;
-    --font-shrikhand: 'Shrikhand', system-ui, sans-serif;
-
     /* Colors - Primary Identity */
     --color-primary-blue: #2563EB;
     --color-accent-cyan: #06B6D4;
@@ -106,14 +102,9 @@
 
   body {
     @apply bg-bg-primary text-text-primary;
-    font-family: var(--font-nunito), sans-serif;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
-  /* Default text to use Nunito */
-  h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select {
-    font-family: var(--font-nunito), system-ui, sans-serif;
-  }
 
 
   /* Monospace font for code blocks */

@@ -37,19 +37,18 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#1a2332]/80 backdrop-blur-md border-b border-gray-700/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
-              <span className="text-3xl font-brand text-white">
-                The Noders <span className="text-[#3b9eff]">PTNK</span>
-              </span>
-            </Link>
-          </div>
+      <div className="relative h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Logo - Absolute Left */}
+        <div className="absolute left-4 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2">
+          <Link href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
+            <span className="text-3xl font-brand text-white">
+              The Noders <span className="text-[#3b9eff]">PTNK</span>
+            </span>
+          </Link>
+        </div>
 
-          {/* Desktop Navigation - Absolutely Centered */}
-          <nav className="hidden lg:flex items-center absolute left-1/2 transform -translate-x-1/2" aria-label="Main navigation">
+        {/* Desktop Navigation - Absolutely Centered */}
+        <nav className="hidden lg:flex items-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-label="Main navigation">
             <div className="flex items-center gap-2">
               {navLinks.map((link) => {
                 const active = isActive(link.href);
@@ -76,8 +75,8 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
             </div>
           </nav>
 
-          {/* Desktop Actions - Right */}
-          <div className="hidden lg:flex items-center gap-2 ml-auto">
+        {/* Desktop Actions - Absolute Right */}
+        <div className="hidden lg:flex items-center gap-2 absolute right-4 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2">
             {user ? (
               <>
                 {user.role === 'admin' && (
@@ -124,27 +123,26 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors"
-            onClick={() => setShowMobileMenu(true)}
-            aria-label="Open menu"
+        {/* Mobile Menu Button - Absolute Right */}
+        <button
+          className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors absolute right-4 top-1/2 -translate-y-1/2"
+          onClick={() => setShowMobileMenu(true)}
+          aria-label="Open menu"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Mobile Menu */}
