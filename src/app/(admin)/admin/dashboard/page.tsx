@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import RegistrationActions from './RegistrationActions';
+import CompetitionRegistrationsList from './CompetitionRegistrationsList';
 import {
   Trophy,
   Users,
@@ -413,30 +414,14 @@ export default async function AdminDashboardPage() {
                     }
 
                     return (
-                      <Link
+                      <CompetitionRegistrationsList
                         key={comp.id}
-                        href={`/competitions/${comp.id}`}
-                        className="block"
-                      >
-                        <div className="p-3 bg-bg-tertiary rounded border border-border-default hover:border-primary-blue/50 transition-colors">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="font-medium text-sm flex-1">{comp.title}</div>
-                            <Badge variant={
-                              phase === 'registration' ? 'yellow' :
-                              phase === 'public test' ? 'blue' :
-                              phase === 'private test' ? 'purple' :
-                              phase === 'upcoming' ? 'secondary' : 'outline'
-                            } className="text-xs flex-shrink-0">
-                              {phase}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-text-tertiary">
-                            {phase === 'ended' ? 'Ended' : `Ends: ${new Date(
-                              privateEnd || publicEnd
-                            ).toLocaleDateString()}`}
-                          </div>
-                        </div>
-                      </Link>
+                        competitionId={comp.id}
+                        competitionTitle={comp.title}
+                        phase={phase}
+                        phaseColor={phaseColor}
+                        endDate={privateEnd || publicEnd}
+                      />
                     );
                   })}
                 </div>
