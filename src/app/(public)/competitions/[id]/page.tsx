@@ -199,11 +199,19 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     }
   }
 
-  // Fetch leaderboard preview (top 10) - showing public test scores
-  // For each user, get their best score
+  // Fetch leaderboard preview (top 10)
+  // For 4-phase competitions:
+  //   - During public phase: show public scores only
+  //   - During private phase: show ONLY participants with BOTH phase scores (combined average)
+  // For 3-phase competitions: show public test scores only
   // Determine sort order based on metric type
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const ascending = metricInfo?.higher_is_better === false; // true for MAE/RMSE (lower is better)
+  const is4Phase = competition.competition_type === '4-phase';
+
+  // Check if private phase has started
+  const privateTestStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
+  const isPrivatePhaseStarted = privateTestStart && new Date() >= privateTestStart;
 
   const { data: allSubmissions } = (await supabase
     .from('submissions')
@@ -228,22 +236,76 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     `)
     .eq('competition_id', id)
     .eq('validation_status', 'valid')
-    .eq('phase', 'public')
     .order('score', { ascending }) // Dynamic sorting based on metric
     .order('submitted_at', { ascending: true })) as { data: any; error: any };
 
-  // Get unique users with their best scores
-  const userBestScores = new Map();
-  allSubmissions?.forEach((sub: any) => {
-    const userId = sub.user_id || sub.team_id;
-    if (!userId) return;
+  // Get unique users with their best scores per phase, then combine
+  let leaderboard: any[] = [];
 
-    if (!userBestScores.has(userId)) {
-      userBestScores.set(userId, sub);
-    }
-  });
+  if (is4Phase && isPrivatePhaseStarted) {
+    // Private phase has started: ONLY show participants with BOTH phase scores
+    const participantPhaseScores = new Map<string, { public?: any; private?: any; participant: any; participantId: string }>();
 
-  const leaderboard = Array.from(userBestScores.values()).slice(0, 10);
+    allSubmissions?.forEach((sub: any) => {
+      const participantId = sub.user_id || sub.team_id;
+      if (!participantId) return;
+
+      if (!participantPhaseScores.has(participantId)) {
+        participantPhaseScores.set(participantId, {
+          participant: sub.users || sub.teams,
+          participantId
+        });
+      }
+
+      const entry = participantPhaseScores.get(participantId)!;
+
+      // Store best score for each phase
+      if (sub.phase === 'public' && !entry.public) {
+        entry.public = sub;
+      } else if (sub.phase === 'private' && !entry.private) {
+        entry.private = sub;
+      }
+    });
+
+    // Calculate combined scores - ONLY for participants with BOTH phases
+    const combinedScores = Array.from(participantPhaseScores.values())
+      .filter(entry => entry.public && entry.private) // MUST have BOTH phase scores
+      .map(entry => {
+        const combinedScore = (entry.public!.score + entry.private!.score) / 2;
+
+        return {
+          ...entry.public, // Use public submission as base
+          score: combinedScore,
+          phase_count: 2,
+          public_score: entry.public!.score,
+          private_score: entry.private!.score
+        };
+      });
+
+    // Sort by combined score
+    combinedScores.sort((a, b) => {
+      if (ascending) {
+        return a.score - b.score; // Lower is better
+      } else {
+        return b.score - a.score; // Higher is better
+      }
+    });
+
+    leaderboard = combinedScores.slice(0, 10);
+  } else {
+    // For 3-phase OR 4-phase before private starts: use public phase scores only
+    const userBestScores = new Map();
+    allSubmissions?.filter((sub: any) => sub.phase === 'public').forEach((sub: any) => {
+      const userId = sub.user_id || sub.team_id;
+      if (!userId) return;
+
+      if (!userBestScores.has(userId)) {
+        userBestScores.set(userId, sub);
+      }
+    });
+
+    leaderboard = Array.from(userBestScores.values()).slice(0, 10);
+  }
 
   // Fetch participant count from view (bypasses RLS)
   const { data: participantData } = (await supabase

@@ -27,6 +27,8 @@ export default function CompetitionTabs({
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [individualLeaderboard, setIndividualLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [leaderboardPhase, setLeaderboardPhase] = useState<'public' | 'private'>('public');
+  const [individualLeaderboardPhase, setIndividualLeaderboardPhase] = useState<'public' | 'private'>('public');
 
   // Fetch user submissions when switching to submissions tab
   useEffect(() => {
@@ -35,19 +37,19 @@ export default function CompetitionTabs({
     }
   }, [activeTab, isRegistered, userId]);
 
-  // Fetch full leaderboard when switching to leaderboard tab
+  // Fetch full leaderboard when switching to leaderboard tab or changing phase
   useEffect(() => {
     if (activeTab === 'leaderboard') {
       fetchFullLeaderboard();
     }
-  }, [activeTab]);
+  }, [activeTab, leaderboardPhase]);
 
-  // Fetch individual leaderboard for team competitions
+  // Fetch individual leaderboard for team competitions when switching tab or changing phase
   useEffect(() => {
     if (activeTab === 'individual_leaderboard' && competition.participation_type === 'team') {
       fetchIndividualLeaderboard();
     }
-  }, [activeTab]);
+  }, [activeTab, individualLeaderboardPhase]);
 
   const fetchUserSubmissions = async () => {
     if (!userId) return;
@@ -127,7 +129,7 @@ export default function CompetitionTabs({
       `)
       .eq('competition_id', competition.id)
       .eq('validation_status', 'valid')
-      .eq('phase', 'public');
+      .eq('phase', leaderboardPhase);
 
     // CRITICAL: Filter by participation type to ensure fairness
     if (isTeamCompetition) {
@@ -184,7 +186,7 @@ export default function CompetitionTabs({
       `)
       .eq('competition_id', competition.id)
       .eq('validation_status', 'valid')
-      .eq('phase', 'public')
+      .eq('phase', individualLeaderboardPhase)
       .not('team_id', 'is', null)
       .order('score', { ascending })
       .order('submitted_at', { ascending: true });
@@ -258,13 +260,25 @@ export default function CompetitionTabs({
       <div className="min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab competition={competition} />}
         {activeTab === 'leaderboard' && (
-          <LeaderboardTab leaderboard={leaderboard} loading={loading} competition={competition} />
+          <LeaderboardTab
+            leaderboard={leaderboard}
+            loading={loading}
+            competition={competition}
+            phase={leaderboardPhase}
+            onPhaseChange={setLeaderboardPhase}
+          />
         )}
         {activeTab === 'individual_leaderboard' && (
-          <IndividualLeaderboardTab leaderboard={individualLeaderboard} loading={loading} competition={competition} />
+          <IndividualLeaderboardTab
+            leaderboard={individualLeaderboard}
+            loading={loading}
+            competition={competition}
+            phase={individualLeaderboardPhase}
+            onPhaseChange={setIndividualLeaderboardPhase}
+          />
         )}
         {activeTab === 'submissions' && (
-          <SubmissionsTab submissions={submissions} loading={loading} />
+          <SubmissionsTab submissions={submissions} loading={loading} competition={competition} />
         )}
       </div>
     </div>
@@ -294,23 +308,142 @@ function OverviewTab({ competition }: { competition: any }) {
 }
 
 // Leaderboard Tab Component
-function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: any[]; loading: boolean; competition: any }) {
+function LeaderboardTab({
+  leaderboard,
+  loading,
+  competition,
+  phase,
+  onPhaseChange
+}: {
+  leaderboard: any[];
+  loading: boolean;
+  competition: any;
+  phase: 'public' | 'private';
+  onPhaseChange: (phase: 'public' | 'private') => void;
+}) {
+  const is4Phase = competition.competition_type === '4-phase';
+  const now = new Date();
+  const publicTestEnd = new Date(competition.public_test_end);
+  const privateTestStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
+  const isPrivatePhaseStarted = privateTestStart && now >= privateTestStart;
+
+  // Store current phase to prevent TypeScript narrowing issues in conditional blocks
+  const currentPhase: 'public' | 'private' = phase;
+
+  // Check if user is trying to view private phase before it starts
+  const showPrivateNotStartedMessage = is4Phase && currentPhase === 'private' && !isPrivatePhaseStarted;
+
   if (loading) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">Loading leaderboard...</div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => onPhaseChange('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => onPhaseChange('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">Loading leaderboard...</div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showPrivateNotStartedMessage) {
+    return (
+      <div>
+        <div className="flex gap-2 mb-6 border-b border-border-default">
+          <button
+            onClick={() => onPhaseChange('public')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'public'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Public Phase
+          </button>
+          <button
+            onClick={() => onPhaseChange('private')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'private'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Private Phase
+          </button>
+        </div>
+        <Card className="p-12">
+          <div className="text-center">
+            <Clock className="w-12 h-12 mx-auto mb-4 text-text-tertiary opacity-30" />
+            <p className="text-lg font-semibold text-text-secondary mb-2">Private Phase Not Started</p>
+            <p className="text-text-tertiary">
+              The private test phase will start after the public phase ends.
+            </p>
+            {privateTestStart && (
+              <p className="text-sm text-text-tertiary mt-2">
+                Starts: {privateTestStart.toLocaleDateString()} at {privateTestStart.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">
-          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>No submissions yet. Be the first to submit!</p>
-        </div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => onPhaseChange('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => onPhaseChange('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">
+            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p>No submissions yet. Be the first to submit!</p>
+          </div>
+        </Card>
+      </div>
     );
   }
 
@@ -320,9 +453,34 @@ function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: an
   const isTeamCompetition = competition.participation_type === 'team';
 
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
+    <div>
+      {is4Phase && (
+        <div className="flex gap-2 mb-6 border-b border-border-default">
+          <button
+            onClick={() => onPhaseChange('public')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'public'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Public Phase
+          </button>
+          <button
+            onClick={() => onPhaseChange('private')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'private'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Private Phase
+          </button>
+        </div>
+      )}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
           <thead className="bg-bg-elevated border-b border-border-default">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
@@ -381,27 +539,147 @@ function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: an
         </table>
       </div>
     </Card>
+    </div>
   );
 }
 
 // Individual Leaderboard Tab Component (for team competitions)
-function IndividualLeaderboardTab({ leaderboard, loading, competition }: { leaderboard: any[]; loading: boolean; competition: any }) {
+function IndividualLeaderboardTab({
+  leaderboard,
+  loading,
+  competition,
+  phase,
+  onPhaseChange
+}: {
+  leaderboard: any[];
+  loading: boolean;
+  competition: any;
+  phase: 'public' | 'private';
+  onPhaseChange: (phase: 'public' | 'private') => void;
+}) {
+  const is4Phase = competition.competition_type === '4-phase';
+  const now = new Date();
+  const publicTestEnd = new Date(competition.public_test_end);
+  const privateTestStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
+  const isPrivatePhaseStarted = privateTestStart && now >= privateTestStart;
+
+  // Store current phase to prevent TypeScript narrowing issues in conditional blocks
+  const currentPhase: 'public' | 'private' = phase;
+
+  // Check if user is trying to view private phase before it starts
+  const showPrivateNotStartedMessage = is4Phase && currentPhase === 'private' && !isPrivatePhaseStarted;
+
   if (loading) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">Loading individual leaderboard...</div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => onPhaseChange('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => onPhaseChange('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">Loading individual leaderboard...</div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showPrivateNotStartedMessage) {
+    return (
+      <div>
+        <div className="flex gap-2 mb-6 border-b border-border-default">
+          <button
+            onClick={() => onPhaseChange('public')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'public'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Public Phase
+          </button>
+          <button
+            onClick={() => onPhaseChange('private')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'private'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Private Phase
+          </button>
+        </div>
+        <Card className="p-12">
+          <div className="text-center">
+            <Clock className="w-12 h-12 mx-auto mb-4 text-text-tertiary opacity-30" />
+            <p className="text-lg font-semibold text-text-secondary mb-2">Private Phase Not Started</p>
+            <p className="text-text-tertiary">
+              The private test phase will start after the public phase ends.
+            </p>
+            {privateTestStart && (
+              <p className="text-sm text-text-tertiary mt-2">
+                Starts: {privateTestStart.toLocaleDateString()} at {privateTestStart.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">
-          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>No submissions yet. Individual members will be ranked here based on their contributions.</p>
-        </div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => onPhaseChange('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => onPhaseChange('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                currentPhase === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">
+            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p>No submissions yet. Individual members will be ranked here based on their contributions.</p>
+          </div>
+        </Card>
+      </div>
     );
   }
 
@@ -410,13 +688,38 @@ function IndividualLeaderboardTab({ leaderboard, loading, competition }: { leade
   const decimals = metricInfo?.decimals || 4;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-bg-elevated border-b border-border-default">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Member</th>
+    <div>
+      {is4Phase && (
+        <div className="flex gap-2 mb-6 border-b border-border-default">
+          <button
+            onClick={() => onPhaseChange('public')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'public'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Public Phase
+          </button>
+          <button
+            onClick={() => onPhaseChange('private')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phase === 'private'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Private Phase
+          </button>
+        </div>
+      )}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-bg-elevated border-b border-border-default">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Member</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Team</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
                 {metricName}
@@ -475,49 +778,173 @@ function IndividualLeaderboardTab({ leaderboard, loading, competition }: { leade
         </table>
       </div>
     </Card>
+    </div>
   );
 }
 
 // Submissions Tab Component
-function SubmissionsTab({ submissions, loading }: { submissions: any[]; loading: boolean }) {
+function SubmissionsTab({ submissions, loading, competition }: { submissions: any[]; loading: boolean; competition: any }) {
+  const [phaseFilter, setPhaseFilter] = useState<'all' | 'public' | 'private'>('all');
+
+  const is4Phase = competition.competition_type === '4-phase';
+
+  // Filter submissions by phase
+  const filteredSubmissions = phaseFilter === 'all'
+    ? submissions
+    : submissions.filter((sub: any) => sub.phase === phaseFilter);
   if (loading) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">Loading submissions...</div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => setPhaseFilter('all')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'all'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              All Phases
+            </button>
+            <button
+              onClick={() => setPhaseFilter('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => setPhaseFilter('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">Loading submissions...</div>
+        </Card>
+      </div>
     );
   }
 
-  if (submissions.length === 0) {
+  if (filteredSubmissions.length === 0) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">
-          <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>No submissions yet. Submit your first solution!</p>
-        </div>
-      </Card>
+      <div>
+        {is4Phase && (
+          <div className="flex gap-2 mb-6 border-b border-border-default">
+            <button
+              onClick={() => setPhaseFilter('all')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'all'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              All Phases
+            </button>
+            <button
+              onClick={() => setPhaseFilter('public')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'public'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Public Phase
+            </button>
+            <button
+              onClick={() => setPhaseFilter('private')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+                phaseFilter === 'private'
+                  ? 'border-primary-blue text-primary-blue'
+                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
+              }`}
+            >
+              Private Phase
+            </button>
+          </div>
+        )}
+        <Card className="p-12">
+          <div className="text-center text-text-tertiary">
+            <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p>No submissions yet{phaseFilter !== 'all' ? ` in ${phaseFilter} phase` : ''}. Submit your first solution!</p>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-bg-elevated border-b border-border-default">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">File</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Status</th>
-              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Score</th>
-              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Best</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-default">
-            {submissions.map((submission) => (
+    <div>
+      {is4Phase && (
+        <div className="flex gap-2 mb-6 border-b border-border-default">
+          <button
+            onClick={() => setPhaseFilter('all')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phaseFilter === 'all'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            All Phases
+          </button>
+          <button
+            onClick={() => setPhaseFilter('public')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phaseFilter === 'public'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Public Phase
+          </button>
+          <button
+            onClick={() => setPhaseFilter('private')}
+            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
+              phaseFilter === 'private'
+                ? 'border-primary-blue text-primary-blue'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Private Phase
+          </button>
+        </div>
+      )}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-bg-elevated border-b border-border-default">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">File</th>
+                {is4Phase && <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Phase</th>}
+                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Status</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Score</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Best</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-default">
+              {filteredSubmissions.map((submission) => (
               <tr key={submission.id} className="transition-colors hover:bg-bg-elevated">
                 <td className="px-6 py-4">
                   <span className="font-medium text-sm">{submission.file_name}</span>
                 </td>
+                {is4Phase && (
+                  <td className="px-6 py-4">
+                    <Badge variant={submission.phase === 'public' ? 'blue' : 'cyan'}>
+                      {submission.phase === 'public' ? 'Public' : 'Private'}
+                    </Badge>
+                  </td>
+                )}
                 <td className="px-6 py-4">
                   <Badge
                     variant={
@@ -555,5 +982,6 @@ function SubmissionsTab({ submissions, loading }: { submissions: any[]; loading:
         </table>
       </div>
     </Card>
+    </div>
   );
 }
