@@ -46,25 +46,70 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
     redirect('/competitions');
   }
 
-  // Check registration status
-  const { data: registration } = (await supabase
-    .from('registrations')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('competition_id', id)
-    .single()) as { data: any };
+  // Check registration status (individual or team)
+  let registration: any = null;
+  let registeredTeamId: string | null = null;
+
+  if (competition.participation_type === 'individual') {
+    // Individual registration
+    const { data: individualReg } = (await supabase
+      .from('registrations')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('competition_id', id)
+      .single()) as { data: any };
+    registration = individualReg;
+  } else {
+    // Team registration - find team where user is a member and team is registered
+    // Optimized: Single query using JOIN instead of N+1 queries
+    const { data: teamMemberships } = (await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)) as { data: any };
+
+    if (teamMemberships && teamMemberships.length > 0) {
+      const teamIds = teamMemberships.map((m: any) => m.team_id);
+
+      // Single query to find approved registration for any of user's teams
+      const { data: teamReg } = (await supabase
+        .from('registrations')
+        .select('*')
+        .eq('competition_id', id)
+        .in('team_id', teamIds)
+        .eq('status', 'approved')
+        .limit(1)
+        .single()) as { data: any };
+
+      if (teamReg) {
+        registration = teamReg;
+        registeredTeamId = teamReg.team_id;
+      }
+    }
+  }
 
   if (!registration || registration.status !== 'approved') {
     redirect(`/competitions/${id}`);
   }
 
-  // Get user's submissions
-  const { data: submissions } = (await supabase
-    .from('submissions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('competition_id', id)
-    .order('submitted_at', { ascending: false })) as { data: any };
+  // Get submissions (individual or team)
+  let submissions: any = null;
+  if (competition.participation_type === 'individual') {
+    const { data: individualSubs } = (await supabase
+      .from('submissions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('competition_id', id)
+      .order('submitted_at', { ascending: false })) as { data: any };
+    submissions = individualSubs;
+  } else if (registeredTeamId) {
+    const { data: teamSubs } = (await supabase
+      .from('submissions')
+      .select('*')
+      .eq('team_id', registeredTeamId)
+      .eq('competition_id', id)
+      .order('submitted_at', { ascending: false })) as { data: any };
+    submissions = teamSubs;
+  }
 
   // Sort submissions by score based on competition metric
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
@@ -154,6 +199,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
           competitionId={id}
           competition={competition}
           submissionCount={submissionCount}
+          teamId={registeredTeamId}
         />
 
         {/* Recent Submissions */}

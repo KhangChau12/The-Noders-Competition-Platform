@@ -94,6 +94,10 @@ export default async function AdminDashboardPage() {
         id,
         title,
         participation_type
+      ),
+      team:teams (
+        id,
+        name
       )
     `
     )
@@ -241,10 +245,10 @@ export default async function AdminDashboardPage() {
                         <td className="px-6 py-4">
                           <div>
                             <div className="font-medium">
-                              {registration.user?.full_name || 'Unknown'}
+                              {registration.team?.name || registration.user?.full_name || 'Unknown'}
                             </div>
                             <div className="text-sm text-text-tertiary">
-                              {registration.user?.email}
+                              {registration.team ? 'Team' : registration.user?.email}
                             </div>
                           </div>
                         </td>

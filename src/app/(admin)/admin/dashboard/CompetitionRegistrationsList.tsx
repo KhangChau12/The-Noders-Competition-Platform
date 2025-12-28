@@ -9,10 +9,21 @@ interface Registration {
   id: string;
   status: 'pending' | 'approved' | 'rejected';
   registered_at: string;
-  user: {
+  user?: {
     id: string;
     full_name: string;
     email: string;
+  };
+  team?: {
+    id: string;
+    name: string;
+    team_members: Array<{
+      users: {
+        id: string;
+        full_name: string;
+        email: string;
+      };
+    }>;
   };
 }
 
@@ -144,37 +155,47 @@ export default function CompetitionRegistrationsList({
 
               {/* Registrations List */}
               <div className="max-h-60 overflow-y-auto">
-                {registrations.map((registration) => (
-                  <div
-                    key={registration.id}
-                    className="px-4 py-2 hover:bg-bg-elevated/30 border-b border-border-default last:border-0 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {registration.user.full_name}
+                {registrations.map((registration) => {
+                  const isTeam = !!registration.team;
+                  const members = registration.team?.team_members || [];
+                  const memberNames = members
+                    .map((m) => m.users.full_name || m.users.email.split('@')[0])
+                    .join(', ');
+
+                  return (
+                    <div
+                      key={registration.id}
+                      className="px-4 py-2 hover:bg-bg-elevated/30 border-b border-border-default last:border-0 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">
+                            {isTeam ? registration.team?.name : registration.user?.full_name}
+                          </div>
+                          <div className="text-xs text-text-tertiary truncate">
+                            {isTeam
+                              ? `${members.length} member${members.length !== 1 ? 's' : ''}: ${memberNames}`
+                              : registration.user?.email}
+                          </div>
                         </div>
-                        <div className="text-xs text-text-tertiary truncate">
-                          {registration.user.email}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge
+                            variant={getStatusBadgeVariant(registration.status)}
+                            className="text-xs"
+                          >
+                            {registration.status}
+                          </Badge>
+                          <span className="text-xs text-text-tertiary">
+                            {new Date(registration.registered_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge
-                          variant={getStatusBadgeVariant(registration.status)}
-                          className="text-xs"
-                        >
-                          {registration.status}
-                        </Badge>
-                        <span className="text-xs text-text-tertiary">
-                          {new Date(registration.registered_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           ) : (

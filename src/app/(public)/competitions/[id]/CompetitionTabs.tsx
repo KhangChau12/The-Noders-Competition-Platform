@@ -14,7 +14,7 @@ interface CompetitionTabsProps {
   userId?: string;
 }
 
-type TabType = 'overview' | 'leaderboard' | 'submissions';
+type TabType = 'overview' | 'leaderboard' | 'individual_leaderboard' | 'submissions';
 
 export default function CompetitionTabs({
   competition,
@@ -25,6 +25,7 @@ export default function CompetitionTabs({
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
+  const [individualLeaderboard, setIndividualLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Fetch user submissions when switching to submissions tab
@@ -41,18 +42,50 @@ export default function CompetitionTabs({
     }
   }, [activeTab]);
 
+  // Fetch individual leaderboard for team competitions
+  useEffect(() => {
+    if (activeTab === 'individual_leaderboard' && competition.participation_type === 'team') {
+      fetchIndividualLeaderboard();
+    }
+  }, [activeTab]);
+
   const fetchUserSubmissions = async () => {
     if (!userId) return;
 
     setLoading(true);
     const supabase = createClient();
 
-    const { data, error } = await supabase
+    // FIXED: For team competitions, fetch team submissions
+    const isTeamCompetition = competition.participation_type === 'team';
+
+    let query = supabase
       .from('submissions')
       .select('*')
-      .eq('competition_id', competition.id)
-      .eq('user_id', userId)
-      .order('submitted_at', { ascending: false });
+      .eq('competition_id', competition.id);
+
+    if (isTeamCompetition) {
+      // For team competitions, get submissions where user is a team member
+      // First get user's team for this competition
+      const { data: teamMembers } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', userId);
+
+      if (teamMembers && teamMembers.length > 0) {
+        const teamIds = teamMembers.map((tm: any) => tm.team_id);
+        query = query.in('team_id', teamIds);
+      } else {
+        // User not in any team, no submissions
+        setSubmissions([]);
+        setLoading(false);
+        return;
+      }
+    } else {
+      // For individual competitions, get user submissions
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query.order('submitted_at', { ascending: false });
 
     if (!error && data) {
       setSubmissions(data);
@@ -68,8 +101,11 @@ export default function CompetitionTabs({
     const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
     const ascending = metricInfo?.higher_is_better === false; // true for MAE/RMSE (lower is better)
 
-    // Fetch all valid submissions and compute best scores client-side
-    const { data: allSubs } = await supabase
+    // FIXED: Separate individual and team leaderboards for fairness!
+    const isTeamCompetition = competition.participation_type === 'team';
+
+    // Build query with participation type filter
+    let query = supabase
       .from('submissions')
       .select(`
         id,
@@ -91,30 +127,104 @@ export default function CompetitionTabs({
       `)
       .eq('competition_id', competition.id)
       .eq('validation_status', 'valid')
-      .eq('phase', 'public')
+      .eq('phase', 'public');
+
+    // CRITICAL: Filter by participation type to ensure fairness
+    if (isTeamCompetition) {
+      query = query.not('team_id', 'is', null); // Only team submissions
+    } else {
+      query = query.not('user_id', 'is', null); // Only individual submissions
+    }
+
+    const { data: allSubs } = await query
       .order('score', { ascending }) // Dynamic sorting based on metric
       .order('submitted_at', { ascending: true });
 
     if (allSubs) {
-      // Get unique users with their best scores
-      const userBestScores = new Map();
+      // Get unique entities (users OR teams) with their best scores
+      const bestScores = new Map();
       allSubs.forEach((sub: any) => {
-        const userId = sub.user_id || sub.team_id;
-        if (!userId) return;
+        const entityId = isTeamCompetition ? sub.team_id : sub.user_id;
+        if (!entityId) return;
 
-        if (!userBestScores.has(userId)) {
-          userBestScores.set(userId, sub);
+        if (!bestScores.has(entityId)) {
+          bestScores.set(entityId, sub);
         }
       });
 
-      setLeaderboard(Array.from(userBestScores.values()).slice(0, 100));
+      setLeaderboard(Array.from(bestScores.values()).slice(0, 100));
     }
     setLoading(false);
   };
 
+  const fetchIndividualLeaderboard = async () => {
+    setLoading(true);
+    const supabase = createClient();
+
+    // Determine sort order based on metric type
+    const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+    const ascending = metricInfo?.higher_is_better === false;
+
+    // For team competitions, show individual member rankings
+    // Get all team submissions, then rank by individual submitters
+    const { data: allSubs } = await supabase
+      .from('submissions')
+      .select(`
+        id,
+        score,
+        submitted_at,
+        submitted_by,
+        team_id,
+        phase,
+        validation_status,
+        teams!submissions_team_id_fkey (
+          id,
+          name
+        )
+      `)
+      .eq('competition_id', competition.id)
+      .eq('validation_status', 'valid')
+      .eq('phase', 'public')
+      .not('team_id', 'is', null)
+      .order('score', { ascending })
+      .order('submitted_at', { ascending: true });
+
+    if (allSubs) {
+      // Get unique individual submitters with their best scores
+      const bestScores = new Map();
+      allSubs.forEach((sub: any) => {
+        const submitterId = sub.submitted_by;
+        if (!submitterId) return;
+
+        if (!bestScores.has(submitterId)) {
+          bestScores.set(submitterId, sub);
+        }
+      });
+
+      // Fetch user details for submitters
+      const submitterIds = Array.from(bestScores.keys());
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', submitterIds);
+
+      // Combine submissions with user data
+      const leaderboardWithUsers = Array.from(bestScores.values()).map((sub: any) => ({
+        ...sub,
+        users: users?.find((u: any) => u.id === sub.submitted_by)
+      }));
+
+      setIndividualLeaderboard(leaderboardWithUsers.slice(0, 100));
+    }
+    setLoading(false);
+  };
+
+  const isTeamCompetition = competition.participation_type === 'team';
+
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview', icon: FileText },
-    { id: 'leaderboard' as TabType, label: 'Leaderboard', icon: Trophy },
+    { id: 'leaderboard' as TabType, label: isTeamCompetition ? 'Team Leaderboard' : 'Leaderboard', icon: Trophy },
+    ...(isTeamCompetition ? [{ id: 'individual_leaderboard' as TabType, label: 'Individual Leaderboard', icon: Trophy }] : []),
     ...(isRegistered ? [{ id: 'submissions' as TabType, label: 'My Submissions', icon: History }] : []),
   ];
 
@@ -150,6 +260,9 @@ export default function CompetitionTabs({
         {activeTab === 'leaderboard' && (
           <LeaderboardTab leaderboard={leaderboard} loading={loading} competition={competition} />
         )}
+        {activeTab === 'individual_leaderboard' && (
+          <IndividualLeaderboardTab leaderboard={individualLeaderboard} loading={loading} competition={competition} />
+        )}
         {activeTab === 'submissions' && (
           <SubmissionsTab submissions={submissions} loading={loading} />
         )}
@@ -176,57 +289,6 @@ function OverviewTab({ competition }: { competition: any }) {
         </div>
       </Card>
 
-      {/* Evaluation */}
-      <Card className="p-8 bg-gradient-to-br from-bg-surface via-bg-elevated to-bg-surface">
-        <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-          <Trophy className="w-7 h-7 text-warning" />
-          Evaluation Criteria
-        </h3>
-        <div className="grid gap-4">
-          {/* Scoring Metric Card */}
-          <div className="group p-6 bg-gradient-to-br from-primary-blue/10 to-accent-cyan/10 rounded-xl border-2 border-primary-blue/30 hover:border-primary-blue/60 transition-all">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-blue/20 rounded-lg">
-                  <Trophy className="w-5 h-5 text-primary-blue" />
-                </div>
-                <div>
-                  <p className="text-sm text-text-tertiary mb-1">Scoring Metric</p>
-                  <p className="text-2xl font-bold text-primary-blue">
-                    {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.name || competition.scoring_metric || 'F1 Score'}
-                  </p>
-                </div>
-              </div>
-              <div className="px-3 py-1 bg-primary-blue/20 rounded-full">
-                <span className="text-xs font-semibold text-primary-blue">
-                  {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false ? 'Lower is Better ↓' : 'Higher is Better ↑'}
-                </span>
-              </div>
-            </div>
-            {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.description && (
-              <p className="text-sm text-text-secondary leading-relaxed mt-2">
-                {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO].description}
-              </p>
-            )}
-          </div>
-
-          {/* Submission Format Card */}
-          <div className="group p-6 bg-gradient-to-br from-accent-cyan/10 to-primary-purple/10 rounded-xl border-2 border-accent-cyan/30 hover:border-accent-cyan/60 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent-cyan/20 rounded-lg">
-                <FileText className="w-5 h-5 text-accent-cyan" />
-              </div>
-              <div>
-                <p className="text-sm text-text-tertiary mb-1">Submission Format</p>
-                <p className="text-xl font-bold text-accent-cyan">CSV File</p>
-              </div>
-            </div>
-            <p className="text-sm text-text-secondary mt-3 ml-11">
-              Maximum file size: <span className="font-semibold text-text-primary">{competition.max_file_size_mb || 10}MB</span>
-            </p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -255,6 +317,7 @@ function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: an
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const metricName = metricInfo?.name || 'Score';
   const decimals = metricInfo?.decimals || 4;
+  const isTeamCompetition = competition.participation_type === 'team';
 
   return (
     <Card className="overflow-hidden">
@@ -263,7 +326,98 @@ function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: an
           <thead className="bg-bg-elevated border-b border-border-default">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Participant</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">
+                {isTeamCompetition ? 'Team' : 'Participant'}
+              </th>
+              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
+                {metricName}
+                {metricInfo?.higher_is_better === false && ' ↓'}
+                {metricInfo?.higher_is_better === true && ' ↑'}
+              </th>
+              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-default">
+            {leaderboard.map((entry, index) => (
+              <tr
+                key={entry.id}
+                className={`
+                  transition-colors hover:bg-bg-elevated
+                  ${index === 0 ? 'bg-warning/5' : ''}
+                  ${index === 1 ? 'bg-text-secondary/5' : ''}
+                  ${index === 2 ? 'bg-phase-registration/5' : ''}
+                `}
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className={`
+                      font-bold text-lg
+                      ${index === 0 ? 'text-warning' : ''}
+                      ${index === 1 ? 'text-text-secondary' : ''}
+                      ${index === 2 ? 'text-phase-registration' : ''}
+                      ${index > 2 ? 'text-text-tertiary' : ''}
+                    `}>
+                      #{index + 1}
+                    </span>
+                    {index < 3 && <Trophy className="w-4 h-4" />}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="font-medium">
+                    {entry.teams?.name || entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <span className="font-mono font-bold text-primary-blue">
+                    {entry.score?.toFixed(decimals) || '0.0000'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right text-sm text-text-tertiary">
+                  {new Date(entry.submitted_at).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+// Individual Leaderboard Tab Component (for team competitions)
+function IndividualLeaderboardTab({ leaderboard, loading, competition }: { leaderboard: any[]; loading: boolean; competition: any }) {
+  if (loading) {
+    return (
+      <Card className="p-12">
+        <div className="text-center text-text-tertiary">Loading individual leaderboard...</div>
+      </Card>
+    );
+  }
+
+  if (leaderboard.length === 0) {
+    return (
+      <Card className="p-12">
+        <div className="text-center text-text-tertiary">
+          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>No submissions yet. Individual members will be ranked here based on their contributions.</p>
+        </div>
+      </Card>
+    );
+  }
+
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const metricName = metricInfo?.name || 'Score';
+  const decimals = metricInfo?.decimals || 4;
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-bg-elevated border-b border-border-default">
+            <tr>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Member</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Team</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
                 {metricName}
                 {metricInfo?.higher_is_better === false && ' ↓'}
@@ -300,6 +454,11 @@ function LeaderboardTab({ leaderboard, loading, competition }: { leaderboard: an
                 <td className="px-6 py-4">
                   <span className="font-medium">
                     {entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="text-sm text-text-tertiary">
+                    {entry.teams?.name || 'Unknown Team'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">

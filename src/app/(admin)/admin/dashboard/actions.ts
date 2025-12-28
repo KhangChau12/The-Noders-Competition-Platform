@@ -15,6 +15,17 @@ export async function getCompetitionRegistrations(competitionId: string) {
         id,
         full_name,
         email
+      ),
+      team:teams (
+        id,
+        name,
+        team_members (
+          users (
+            id,
+            full_name,
+            email
+          )
+        )
       )
     `)
     .eq('competition_id', competitionId)

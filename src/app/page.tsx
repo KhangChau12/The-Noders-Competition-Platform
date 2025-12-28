@@ -189,32 +189,6 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-
-            {/* Quick Stats - Professional Cards */}
-            <div className="mt-16 grid grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <div className="bg-bg-surface/80 backdrop-blur-sm border border-border-default rounded-2xl p-6 hover:border-accent-cyan/50 transition-all">
-                <div className="flex items-center justify-center mb-3">
-                  <Trophy className="w-8 h-8 text-accent-cyan" />
-                </div>
-                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono text-center">
-                  {totalCompetitions || 0}
-                </div>
-                <div className="text-sm text-text-secondary mt-2 text-center font-medium">
-                  Competitions
-                </div>
-              </div>
-              <div className="bg-bg-surface/80 backdrop-blur-sm border border-border-default rounded-2xl p-6 hover:border-primary-blue/50 transition-all">
-                <div className="flex items-center justify-center mb-3">
-                  <Users className="w-8 h-8 text-primary-blue" />
-                </div>
-                <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono text-center">
-                  {totalParticipants || 0}+
-                </div>
-                <div className="text-sm text-text-secondary mt-2 text-center font-medium">
-                  Participants
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -436,10 +410,6 @@ export default async function HomePage() {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
 
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-brand mb-6">
-                <Award className="w-10 h-10 text-white" />
-              </div>
-
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 <span className="gradient-text">
                   Ready for the Challenge?

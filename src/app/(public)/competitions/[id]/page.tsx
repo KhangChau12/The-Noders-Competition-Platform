@@ -106,42 +106,96 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   // Fetch user's registration status if logged in
   let registration = null;
   let submissionCount = { daily: 0, total: 0 };
+  let registeredTeamId: string | null = null;
 
   if (user) {
-    const { data: regData } = (await supabase
-      .from('registrations')
-      .select('*')
-      .eq('competition_id', id)
-      .eq('user_id', user.id)
-      .single()) as { data: any };
+    // Check registration status (individual or team)
+    if (competition.participation_type === 'individual') {
+      // Individual registration
+      const { data: regData } = (await supabase
+        .from('registrations')
+        .select('*')
+        .eq('competition_id', id)
+        .eq('user_id', user.id)
+        .single()) as { data: any };
 
-    registration = regData;
+      registration = regData;
+    } else {
+      // Team registration - check if user is member of a registered team
+      const { data: teamMemberships } = (await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id)) as { data: any };
+
+      if (teamMemberships && teamMemberships.length > 0) {
+        const teamIds = teamMemberships.map((m: any) => m.team_id);
+
+        // Find approved registration for any of user's teams
+        const { data: teamReg } = (await supabase
+          .from('registrations')
+          .select('*')
+          .eq('competition_id', id)
+          .in('team_id', teamIds)
+          .eq('status', 'approved')
+          .limit(1)
+          .single()) as { data: any };
+
+        if (teamReg) {
+          registration = teamReg;
+          registeredTeamId = teamReg.team_id;
+        }
+      }
+    }
 
     // If approved, get submission counts (only VALID submissions count)
     if (registration && registration.status === 'approved') {
-      // Total VALID submissions
-      const { count: totalCount } = await supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('competition_id', id)
-        .eq('user_id', user.id)
-        .eq('validation_status', 'valid');
+      if (competition.participation_type === 'individual') {
+        // Individual submissions
+        const { count: totalCount } = await supabase
+          .from('submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('competition_id', id)
+          .eq('user_id', user.id)
+          .eq('validation_status', 'valid');
 
-      // Daily VALID submissions (today)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: dailyCount } = await supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('competition_id', id)
-        .eq('user_id', user.id)
-        .eq('validation_status', 'valid')
-        .gte('submitted_at', today.toISOString());
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { count: dailyCount } = await supabase
+          .from('submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('competition_id', id)
+          .eq('user_id', user.id)
+          .eq('validation_status', 'valid')
+          .gte('submitted_at', today.toISOString());
 
-      submissionCount = {
-        daily: dailyCount || 0,
-        total: totalCount || 0,
-      };
+        submissionCount = {
+          daily: dailyCount || 0,
+          total: totalCount || 0,
+        };
+      } else if (registeredTeamId) {
+        // Team submissions
+        const { count: totalCount } = await supabase
+          .from('submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('competition_id', id)
+          .eq('team_id', registeredTeamId)
+          .eq('validation_status', 'valid');
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const { count: dailyCount } = await supabase
+          .from('submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('competition_id', id)
+          .eq('team_id', registeredTeamId)
+          .eq('validation_status', 'valid')
+          .gte('submitted_at', today.toISOString());
+
+        submissionCount = {
+          daily: dailyCount || 0,
+          total: totalCount || 0,
+        };
+      }
     }
   }
 
@@ -272,106 +326,22 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Main Content - Left Column (2/3) */}
           <div className="md:col-span-2 lg:col-span-2 space-y-6">
-            {/* Countdown Timer */}
-            {nextDeadline && currentPhase !== 'ended' && (
+            {/* Countdown Timer & Timeline Combined */}
+            {nextDeadline && currentPhase !== 'ended' ? (
               <Card className="p-8">
                 <CountdownTimer
                   targetDate={nextDeadline}
                   label={getCountdownLabel(currentPhase)}
-                  className="w-full"
+                  className="w-full mb-8"
                 />
+                <div className="pt-6 border-t border-border-default">
+                  <CompetitionTimeline competition={competition} compact />
+                </div>
               </Card>
+            ) : (
+              <CompetitionTimeline competition={competition} />
             )}
 
-            {/* Competition Timeline */}
-            <CompetitionTimeline competition={competition} />
-
-            {/* Registration Status */}
-            {user && (
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Registration Status
-                </h3>
-
-                {!registration && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <XCircle className="w-5 h-5 text-text-tertiary" />
-                      <span className="text-text-secondary">Not registered</span>
-                    </div>
-                    {currentPhase !== 'ended' && (
-                      <Link href={`/competitions/${id}/register`}>
-                        <Button variant="primary" size="md">
-                          {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                )}
-
-                {registration?.status === 'pending' && (
-                  <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-lg">
-                    <AlertCircle className="w-5 h-5 text-warning" />
-                    <div>
-                      <p className="font-semibold text-warning">Pending Approval</p>
-                      <p className="text-sm text-text-tertiary">Your registration is being reviewed by admins</p>
-                    </div>
-                  </div>
-                )}
-
-                {registration?.status === 'approved' && (
-                  <div>
-                    <div className="flex items-center gap-3 p-4 bg-success/10 border border-success/20 rounded-lg mb-4">
-                      <CheckCircle2 className="w-5 h-5 text-success" />
-                      <div>
-                        <p className="font-semibold text-success">Registered & Approved</p>
-                        <p className="text-sm text-text-tertiary">You can now download the dataset and submit solutions</p>
-                      </div>
-                    </div>
-
-                    {/* Submission Quota */}
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="p-4 bg-bg-elevated rounded-lg border border-border-default">
-                        <p className="text-sm text-text-tertiary mb-1">Daily Submissions</p>
-                        <p className="text-2xl font-bold">
-                          <span className={dailyLimitReached ? 'text-error' : 'text-primary-blue'}>
-                            {submissionCount.daily}
-                          </span>
-                          <span className="text-text-tertiary">/{competition.daily_submission_limit}</span>
-                        </p>
-                        {dailyLimitReached && (
-                          <p className="text-xs text-error mt-1">Daily limit reached</p>
-                        )}
-                      </div>
-
-                      <div className="p-4 bg-bg-elevated rounded-lg border border-border-default">
-                        <p className="text-sm text-text-tertiary mb-1">Total Submissions</p>
-                        <p className="text-2xl font-bold">
-                          <span className={totalLimitReached ? 'text-error' : 'text-primary-blue'}>
-                            {submissionCount.total}
-                          </span>
-                          <span className="text-text-tertiary">/{competition.total_submission_limit}</span>
-                        </p>
-                        {totalLimitReached && (
-                          <p className="text-xs text-error mt-1">Total limit reached</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {registration?.status === 'rejected' && (
-                  <div className="flex items-center gap-3 p-4 bg-error/10 border border-error/20 rounded-lg">
-                    <XCircle className="w-5 h-5 text-error" />
-                    <div>
-                      <p className="font-semibold text-error">Registration Rejected</p>
-                      <p className="text-sm text-text-tertiary">Your registration was not approved</p>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
 
             {/* Dataset Download & Submit */}
             {canDownloadDataset && (
@@ -444,27 +414,121 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
           {/* Sidebar - Right Column (1/3) */}
           <div className="space-y-6">
-            {/* Phase Indicator */}
-            <PhaseIndicator
-              currentPhase={currentPhase}
-              competitionType={competition.competition_type}
-              phases={{
-                registration: {
-                  start: competition.registration_start,
-                  end: competition.registration_end,
-                },
-                publicTest: {
-                  start: competition.public_test_start,
-                  end: competition.public_test_end,
-                },
-                ...(competition.competition_type === '4-phase' && competition.private_test_start && {
-                  privateTest: {
-                    start: competition.private_test_start,
-                    end: competition.private_test_end || competition.private_test_start,
-                  },
-                }),
-              }}
-            />
+            {/* Registration Status */}
+            {user && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Registration Status
+                </h3>
+
+                {!registration && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <XCircle className="w-5 h-5 text-text-tertiary" />
+                      <span className="text-text-secondary">Not registered</span>
+                    </div>
+                    {currentPhase !== 'ended' && (
+                      <Link href={`/competitions/${id}/register`}>
+                        <Button variant="primary" size="md">
+                          {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+
+                {registration?.status === 'pending' && (
+                  <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                    <AlertCircle className="w-5 h-5 text-warning" />
+                    <div>
+                      <p className="font-semibold text-warning">Pending Approval</p>
+                      <p className="text-sm text-text-tertiary">Your registration is being reviewed by admins</p>
+                    </div>
+                  </div>
+                )}
+
+                {registration?.status === 'approved' && (
+                  <div>
+                    <div className="flex items-center gap-3 p-4 bg-success/10 border border-success/20 rounded-lg mb-4">
+                      <CheckCircle2 className="w-5 h-5 text-success" />
+                      <div>
+                        <p className="font-semibold text-success">Registered & Approved</p>
+                        <p className="text-sm text-text-tertiary">You can now download the dataset and submit solutions</p>
+                      </div>
+                    </div>
+
+                    {/* Submission Quota */}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="p-4 bg-bg-elevated rounded-lg border border-border-default">
+                        <p className="text-sm text-text-tertiary mb-1">Daily Submissions</p>
+                        <p className="text-2xl font-bold">
+                          <span className={dailyLimitReached ? 'text-error' : 'text-primary-blue'}>
+                            {submissionCount.daily}
+                          </span>
+                          <span className="text-text-tertiary">/{competition.daily_submission_limit}</span>
+                        </p>
+                        {dailyLimitReached && (
+                          <p className="text-xs text-error mt-1">Daily limit reached</p>
+                        )}
+                      </div>
+
+                      <div className="p-4 bg-bg-elevated rounded-lg border border-border-default">
+                        <p className="text-sm text-text-tertiary mb-1">Total Submissions</p>
+                        <p className="text-2xl font-bold text-primary-blue">
+                          {submissionCount.total}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {registration?.status === 'rejected' && (
+                  <div className="flex items-center gap-3 p-4 bg-error/10 border border-error/20 rounded-lg">
+                    <XCircle className="w-5 h-5 text-error" />
+                    <div>
+                      <p className="font-semibold text-error">Registration Rejected</p>
+                      <p className="text-sm text-text-tertiary">Your registration was not approved</p>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Evaluation Criteria */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Evaluation Criteria</h3>
+
+              <div className="space-y-4">
+                {/* Scoring Metric */}
+                <div>
+                  <h4 className="text-sm font-semibold text-text-tertiary mb-2">Scoring Metric</h4>
+                  <div className="p-3 bg-bg-elevated rounded-lg border border-border-default">
+                    <p className="font-semibold text-primary-blue mb-1">
+                      {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.name || competition.scoring_metric}
+                    </p>
+                    <p className="text-xs text-text-secondary mb-2">
+                      {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false && 'Lower is Better ↓'}
+                      {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === true && 'Higher is Better ↑'}
+                    </p>
+                    <p className="text-xs text-text-tertiary">
+                      {SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.description || 'Score metric for evaluation'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Submission Format */}
+                <div>
+                  <h4 className="text-sm font-semibold text-text-tertiary mb-2">Submission Format</h4>
+                  <div className="p-3 bg-bg-elevated rounded-lg border border-border-default">
+                    <p className="font-semibold text-primary-blue mb-1">CSV File</p>
+                    <p className="text-xs text-text-tertiary">
+                      Maximum file size: {competition.max_file_size_mb || 10}MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
 
             {/* Leaderboard Preview */}
             <Card className="p-6">
@@ -491,7 +555,9 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                           #{index + 1}
                         </span>
                         <span className="text-sm text-text-secondary truncate">
-                          {entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                          {competition.participation_type === 'team'
+                            ? (entry.teams?.name || 'Unknown Team')
+                            : (entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous')}
                         </span>
                       </div>
                       <span className="font-mono font-bold text-primary-blue">
@@ -507,28 +573,6 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
               )}
             </Card>
 
-            {/* Submission Rules */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Submission Rules</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary-blue mt-1">•</span>
-                  <span>Maximum {competition.daily_submission_limit || 5} submissions per day</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary-blue mt-1">•</span>
-                  <span>Maximum file size: {competition.max_file_size_mb || 10}MB</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary-blue mt-1">•</span>
-                  <span>CSV format required</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary-blue mt-1">•</span>
-                  <span>Evaluated using {competition.scoring_metric || 'F1 Score'}</span>
-                </li>
-              </ul>
-            </Card>
           </div>
         </div>
       </div>

@@ -42,16 +42,82 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
 
   // Allow late registration - no time restriction
 
-  // Check if already registered
-  const { data: existingRegistration } = (await supabase
-    .from('registrations')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('competition_id', id)
-    .single()) as { data: any };
+  // Check if already registered (individual or team)
+  if (competition.participation_type === 'individual') {
+    // Check individual registration
+    const { data: existingRegistration } = (await supabase
+      .from('registrations')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('competition_id', id)
+      .single()) as { data: any };
 
-  if (existingRegistration) {
-    redirect(`/competitions/${id}`);
+    if (existingRegistration) {
+      redirect(`/competitions/${id}`);
+    }
+  } else {
+    // For team competitions, check if any of user's teams are registered
+    const { data: teamMemberships } = (await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)) as { data: any };
+
+    if (teamMemberships && teamMemberships.length > 0) {
+      const teamIds = teamMemberships.map((m: any) => m.team_id);
+      const { data: existingTeamReg } = (await supabase
+        .from('registrations')
+        .select('*')
+        .eq('competition_id', id)
+        .in('team_id', teamIds)
+        .single()) as { data: any };
+
+      if (existingTeamReg) {
+        redirect(`/competitions/${id}`);
+      }
+    }
+  }
+
+  // Fetch user's teams (for team competitions)
+  let userTeams: any[] = [];
+  if (competition.participation_type === 'team') {
+    const { data: teamMemberships } = (await supabase
+      .from('team_members')
+      .select(`
+        *,
+        teams (
+          id,
+          name,
+          leader_id
+        )
+      `)
+      .eq('user_id', user.id)) as { data: any };
+
+    if (teamMemberships && teamMemberships.length > 0) {
+      // Optimized: Get all team IDs and fetch counts in one query
+      const teamIds = teamMemberships.map((m: any) => m.teams.id);
+
+      // Get member counts for all teams at once using a grouped query
+      const { data: memberCounts } = (await supabase
+        .from('team_members')
+        .select('team_id')
+        .in('team_id', teamIds)) as { data: any };
+
+      // Count members per team
+      const countMap = new Map<string, number>();
+      if (memberCounts) {
+        memberCounts.forEach((row: any) => {
+          countMap.set(row.team_id, (countMap.get(row.team_id) || 0) + 1);
+        });
+      }
+
+      // Map teams with their counts
+      userTeams = teamMemberships.map((membership: any) => ({
+        id: membership.teams.id,
+        name: membership.teams.name,
+        member_count: countMap.get(membership.teams.id) || 0,
+        is_leader: membership.teams.leader_id === user.id,
+      }));
+    }
   }
 
   return (
@@ -121,7 +187,13 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
           </div>
         </Card>
 
-        <RegisterForm competitionId={id} />
+        <RegisterForm
+          competitionId={id}
+          participationType={competition.participation_type}
+          minTeamSize={competition.min_team_size}
+          maxTeamSize={competition.max_team_size}
+          userTeams={userTeams}
+        />
       </div>
     </div>
   );

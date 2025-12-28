@@ -21,12 +21,14 @@ interface SubmitFormProps {
     daily: number;
     total: number;
   };
+  teamId?: string | null;
 }
 
 export default function SubmitForm({
   competitionId,
   competition,
   submissionCount,
+  teamId,
 }: SubmitFormProps) {
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -111,7 +113,7 @@ export default function SubmitForm({
     const formData = new FormData();
     formData.append('file', selectedFile);
 
-    const result = await submitSolution(competitionId, formData);
+    const result = await submitSolution(competitionId, formData, teamId);
 
     if (result?.error) {
       setSubmitError(result.error);

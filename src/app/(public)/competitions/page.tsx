@@ -120,12 +120,33 @@ export default function CompetitionsPage() {
         // Fetch user's registration statuses if logged in
         let userRegistrations: Record<string, string> = {};
         if (userId) {
-          const { data: userRegsData } = await supabase
+          // Fetch individual registrations
+          const { data: individualRegsData } = await supabase
             .from('registrations')
             .select('competition_id, status')
             .eq('user_id', userId);
 
-          userRegistrations = (userRegsData || []).reduce(
+          // Fetch team registrations
+          const { data: teamMemberships } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', userId);
+
+          let teamRegsData: any[] = [];
+          if (teamMemberships && teamMemberships.length > 0) {
+            const teamIds = teamMemberships.map((m: any) => m.team_id);
+            const { data: teamRegs } = await supabase
+              .from('registrations')
+              .select('competition_id, status')
+              .in('team_id', teamIds);
+
+            teamRegsData = teamRegs || [];
+          }
+
+          // Combine individual and team registrations
+          const allRegsData = [...(individualRegsData || []), ...teamRegsData];
+
+          userRegistrations = allRegsData.reduce(
             (acc, reg: any) => {
               acc[reg.competition_id] = reg.status;
               return acc;
