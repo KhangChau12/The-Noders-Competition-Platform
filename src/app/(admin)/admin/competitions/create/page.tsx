@@ -284,7 +284,7 @@ export default function CreateCompetitionPage() {
                   required
                 />
                 <p className="text-xs text-text-tertiary mt-1">
-                  When registration opens (first phase begins)
+                  When registration opens (first phase begins) • Time in GMT+7 (Vietnam)
                 </p>
               </div>
 

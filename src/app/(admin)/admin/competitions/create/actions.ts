@@ -107,10 +107,8 @@ export async function createCompetition(formData: FormData) {
   const pubStart = new Date(publicTestStart);
   const pubEnd = new Date(publicTestEnd);
 
-  const now = new Date();
-  if (regStart < now) {
-    return { error: 'Competition start date must be in the future' };
-  }
+  // Removed: No longer validate if competition is in the past
+  // Admins can now create competitions with any start date for testing/historical purposes
 
   if (regStart >= regEnd) {
     return { error: 'Registration start must be before registration end' };
