@@ -61,16 +61,6 @@ function getDaysRemaining(competition: any): number {
 export default async function HomePage() {
   const supabase = await createClient();
 
-  // Fetch featured competitions (registration open)
-  const { data: featuredCompetitions } = await supabase
-    .from('competitions')
-    .select('*')
-    .is('deleted_at', null)
-    .gte('registration_end', new Date().toISOString())
-    .lte('registration_start', new Date().toISOString())
-    .order('created_at', { ascending: false })
-    .limit(3);
-
   // Fetch all competitions for preview
   const { data: allCompetitions } = (await supabase
     .from('competitions')
@@ -108,25 +98,6 @@ export default async function HomePage() {
       return acc;
     },
     {} as Record<string, number>
-  );
-
-  // Get participants and submissions count for each competition
-  const competitionsWithStats = await Promise.all(
-    (featuredCompetitions || []).map(async (competition: any) => {
-      const { count: submissions } = await supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('competition_id', competition.id);
-
-      return {
-        competition,
-        stats: {
-          participants: participantCountsMap[competition.id] || 0,
-          submissions: submissions || 0,
-          daysRemaining: getDaysRemaining(competition),
-        },
-      };
-    })
   );
 
   return (
@@ -192,43 +163,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Featured Competitions Section */}
-      {featuredCompetitions && featuredCompetitions.length > 0 && (
-        <section className="px-6 py-12 sm:py-16 max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy className="w-8 h-8 text-accent-cyan" />
-              <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
-                Featured Competitions
-              </h2>
-            </div>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Register now to join open competitions
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {competitionsWithStats.map(({ competition, stats }) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                phase={getCompetitionPhase(competition)}
-                stats={stats}
-              />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link href="/competitions">
-              <Button variant="outline" size="lg" className="gap-2">
-                View All Competitions
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </section>
-      )}
 
       {/* All Competitions Preview */}
       {allCompetitions && allCompetitions.length > 0 && (
