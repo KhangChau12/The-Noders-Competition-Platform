@@ -117,10 +117,6 @@ export default async function HomePage() {
               <span className="text-text-primary">
                 Competition Platform
               </span>
-              <br />
-              <span className="gradient-text">
-                AI & Machine Learning
-              </span>
             </h1>
 
             {/* Subtitle - Hero subtitle: text-xl md:text-2xl font-light */}
