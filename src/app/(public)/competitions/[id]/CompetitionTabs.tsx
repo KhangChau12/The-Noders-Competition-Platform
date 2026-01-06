@@ -143,18 +143,32 @@ export default function CompetitionTabs({
       .order('submitted_at', { ascending: true });
 
     if (allSubs) {
-      // Get unique entities (users OR teams) with their best scores
+      // Get unique entities (users OR teams) with their best scores and submission counts
       const bestScores = new Map();
+      const submissionCounts = new Map(); // Track submission count per entity
+
       allSubs.forEach((sub: any) => {
         const entityId = isTeamCompetition ? sub.team_id : sub.user_id;
         if (!entityId) return;
+
+        // Count submissions for this entity
+        submissionCounts.set(entityId, (submissionCounts.get(entityId) || 0) + 1);
 
         if (!bestScores.has(entityId)) {
           bestScores.set(entityId, sub);
         }
       });
 
-      setLeaderboard(Array.from(bestScores.values()).slice(0, 100));
+      // Add submission counts to leaderboard entries
+      const leaderboardWithCounts = Array.from(bestScores.values()).map((entry: any) => {
+        const entityId = isTeamCompetition ? entry.team_id : entry.user_id;
+        return {
+          ...entry,
+          submission_count: submissionCounts.get(entityId) || 0
+        };
+      });
+
+      setLeaderboard(leaderboardWithCounts.slice(0, 100));
     }
     setLoading(false);
   };
@@ -192,11 +206,16 @@ export default function CompetitionTabs({
       .order('submitted_at', { ascending: true });
 
     if (allSubs) {
-      // Get unique individual submitters with their best scores
+      // Get unique individual submitters with their best scores and submission counts
       const bestScores = new Map();
+      const submissionCounts = new Map(); // Track submission count per submitter
+
       allSubs.forEach((sub: any) => {
         const submitterId = sub.submitted_by;
         if (!submitterId) return;
+
+        // Count submissions for this submitter
+        submissionCounts.set(submitterId, (submissionCounts.get(submitterId) || 0) + 1);
 
         if (!bestScores.has(submitterId)) {
           bestScores.set(submitterId, sub);
@@ -210,10 +229,11 @@ export default function CompetitionTabs({
         .select('id, full_name, email')
         .in('id', submitterIds);
 
-      // Combine submissions with user data
+      // Combine submissions with user data and submission counts
       const leaderboardWithUsers = Array.from(bestScores.values()).map((sub: any) => ({
         ...sub,
-        users: users?.find((u: any) => u.id === sub.submitted_by)
+        users: users?.find((u: any) => u.id === sub.submitted_by),
+        submission_count: submissionCounts.get(sub.submitted_by) || 0
       }));
 
       setIndividualLeaderboard(leaderboardWithUsers.slice(0, 100));
@@ -487,6 +507,7 @@ function LeaderboardTab({
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">
                 {isTeamCompetition ? 'Team' : 'Participant'}
               </th>
+              <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Submissions</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
                 {metricName}
                 {metricInfo?.higher_is_better === false && ' ↓'}
@@ -523,6 +544,11 @@ function LeaderboardTab({
                 <td className="px-6 py-4">
                   <span className="font-medium">
                     {entry.teams?.name || entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm text-text-tertiary">
+                    {entry.submission_count || 0}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -721,6 +747,7 @@ function IndividualLeaderboardTab({
                 <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Member</th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Team</th>
+              <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Submissions</th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
                 {metricName}
                 {metricInfo?.higher_is_better === false && ' ↓'}
@@ -762,6 +789,11 @@ function IndividualLeaderboardTab({
                 <td className="px-6 py-4">
                   <span className="text-sm text-text-tertiary">
                     {entry.teams?.name || 'Unknown Team'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm text-text-tertiary">
+                    {entry.submission_count || 0}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">

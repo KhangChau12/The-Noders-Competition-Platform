@@ -245,10 +245,14 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   if (is4Phase && isPrivatePhaseStarted) {
     // Private phase has started: ONLY show participants with BOTH phase scores
     const participantPhaseScores = new Map<string, { public?: any; private?: any; participant: any; participantId: string }>();
+    const submissionCounts = new Map<string, number>(); // Track total submissions (both phases)
 
     allSubmissions?.forEach((sub: any) => {
       const participantId = sub.user_id || sub.team_id;
       if (!participantId) return;
+
+      // Count all submissions (both phases)
+      submissionCounts.set(participantId, (submissionCounts.get(participantId) || 0) + 1);
 
       if (!participantPhaseScores.has(participantId)) {
         participantPhaseScores.set(participantId, {
@@ -272,13 +276,15 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
       .filter(entry => entry.public && entry.private) // MUST have BOTH phase scores
       .map(entry => {
         const combinedScore = (entry.public!.score + entry.private!.score) / 2;
+        const participantId = entry.participantId;
 
         return {
           ...entry.public, // Use public submission as base
           score: combinedScore,
           phase_count: 2,
           public_score: entry.public!.score,
-          private_score: entry.private!.score
+          private_score: entry.private!.score,
+          submission_count: submissionCounts.get(participantId) || 0
         };
       });
 
@@ -295,16 +301,28 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   } else {
     // For 3-phase OR 4-phase before private starts: use public phase scores only
     const userBestScores = new Map();
+    const submissionCounts = new Map(); // Track submission count per participant
+
     allSubmissions?.filter((sub: any) => sub.phase === 'public').forEach((sub: any) => {
       const userId = sub.user_id || sub.team_id;
       if (!userId) return;
+
+      // Count submissions
+      submissionCounts.set(userId, (submissionCounts.get(userId) || 0) + 1);
 
       if (!userBestScores.has(userId)) {
         userBestScores.set(userId, sub);
       }
     });
 
-    leaderboard = Array.from(userBestScores.values()).slice(0, 10);
+    // Add submission counts to entries
+    leaderboard = Array.from(userBestScores.values()).map((entry: any) => {
+      const userId = entry.user_id || entry.team_id;
+      return {
+        ...entry,
+        submission_count: submissionCounts.get(userId) || 0
+      };
+    }).slice(0, 10);
   }
 
   // Fetch participant count from view (bypasses RLS)
