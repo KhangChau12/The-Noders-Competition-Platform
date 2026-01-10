@@ -115,7 +115,9 @@ export async function submitSolution(
 
   const { count: dailyCount } = await dailyCountQuery;
 
-  if ((dailyCount || 0) >= (competition.daily_submission_limit || 5)) {
+  // Check daily limit (skip if -1 = unlimited)
+  const dailyLimit = competition.daily_submission_limit ?? 5;
+  if (dailyLimit > 0 && (dailyCount || 0) >= dailyLimit) {
     return { error: 'Daily submission limit reached' };
   }
 

@@ -39,7 +39,8 @@ export async function createCompetition(formData: FormData) {
   const publicTestEnd = formData.get('publicTestEnd') as string;
   const privateTestStart = formData.get('privateTestStart') as string;
   const privateTestEnd = formData.get('privateTestEnd') as string;
-  const dailySubmissionLimit = parseInt(formData.get('dailySubmissionLimit') as string);
+  const dailySubmissionLimit = parseInt(formData.get('dailySubmissionLimit') as string) || -1;
+  const totalSubmissionLimit = parseInt(formData.get('totalSubmissionLimit') as string) || -1;
   const maxFileSizeMb = parseInt(formData.get('maxFileSizeMb') as string);
   const datasetUrl = formData.get('datasetUrl') as string;
   const sampleSubmissionUrl = formData.get('sampleSubmissionUrl') as string;
@@ -163,6 +164,7 @@ export async function createCompetition(formData: FormData) {
       private_test_start: competitionType === '4-phase' ? privateTestStart : null,
       private_test_end: competitionType === '4-phase' ? privateTestEnd : null,
       daily_submission_limit: dailySubmissionLimit,
+      total_submission_limit: totalSubmissionLimit,
       max_file_size_mb: maxFileSizeMb,
       min_team_size: minTeamSize,
       max_team_size: maxTeamSize,
