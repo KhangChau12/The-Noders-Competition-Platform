@@ -148,8 +148,8 @@ export default function SubmitForm({
       return false;
     }
 
-    const dailyLimit = competition.daily_submission_limit ?? -1;
-    if (dailyLimit > 0 && submissionCount.daily >= dailyLimit) {
+    const dailyLimit = competition.daily_submission_limit ?? 15;
+    if (submissionCount.daily >= dailyLimit) {
       return false;
     }
 

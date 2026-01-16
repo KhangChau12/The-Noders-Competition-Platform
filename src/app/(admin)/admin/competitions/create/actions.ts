@@ -39,8 +39,10 @@ export async function createCompetition(formData: FormData) {
   const publicTestEnd = formData.get('publicTestEnd') as string;
   const privateTestStart = formData.get('privateTestStart') as string;
   const privateTestEnd = formData.get('privateTestEnd') as string;
-  const dailySubmissionLimit = parseInt(formData.get('dailySubmissionLimit') as string) || -1;
-  const totalSubmissionLimit = parseInt(formData.get('totalSubmissionLimit') as string) || -1;
+  const dailySubmissionLimitRaw = formData.get('dailySubmissionLimit') as string;
+  const totalSubmissionLimitRaw = formData.get('totalSubmissionLimit') as string;
+  const dailySubmissionLimit = dailySubmissionLimitRaw ? parseInt(dailySubmissionLimitRaw) : 15;
+  const totalSubmissionLimit = totalSubmissionLimitRaw ? parseInt(totalSubmissionLimitRaw) : 10000;
   const maxFileSizeMb = parseInt(formData.get('maxFileSizeMb') as string);
   const datasetUrl = formData.get('datasetUrl') as string;
   const sampleSubmissionUrl = formData.get('sampleSubmissionUrl') as string;

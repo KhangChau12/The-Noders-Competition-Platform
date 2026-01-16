@@ -336,10 +336,10 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
   // Check if user can submit
   const canDownloadDataset = registration?.status === 'approved';
-  const dailyLimit = competition.daily_submission_limit ?? -1;
-  const totalLimit = competition.total_submission_limit ?? -1;
-  const dailyLimitReached = dailyLimit > 0 && submissionCount.daily >= dailyLimit;
-  const totalLimitReached = totalLimit > 0 && submissionCount.total >= totalLimit;
+  const dailyLimit = competition.daily_submission_limit ?? 15;
+  const totalLimit = competition.total_submission_limit ?? 10000;
+  const dailyLimitReached = submissionCount.daily >= dailyLimit;
+  const totalLimitReached = submissionCount.total >= totalLimit;
   const canSubmit = canDownloadDataset &&
                     !dailyLimitReached &&
                     !totalLimitReached &&
@@ -548,7 +548,9 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                           <span className={dailyLimitReached ? 'text-error' : 'text-primary-blue'}>
                             {submissionCount.daily}
                           </span>
-                          <span className="text-text-tertiary">/{competition.daily_submission_limit}</span>
+                          <span className="text-text-tertiary">
+                            /{dailyLimit}
+                          </span>
                         </p>
                         {dailyLimitReached && (
                           <p className="text-xs text-error mt-1">Daily limit reached</p>

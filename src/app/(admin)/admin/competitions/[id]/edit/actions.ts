@@ -41,8 +41,10 @@ export async function updateCompetition(id: string, formData: FormData) {
 
   const datasetUrl = formData.get('datasetUrl') as string;
   const sampleSubmissionUrl = formData.get('sampleSubmissionUrl') as string;
-  const dailySubmissionLimit = parseInt(formData.get('dailySubmissionLimit') as string);
-  const totalSubmissionLimit = parseInt(formData.get('totalSubmissionLimit') as string);
+  const dailySubmissionLimitRaw = formData.get('dailySubmissionLimit') as string;
+  const totalSubmissionLimitRaw = formData.get('totalSubmissionLimit') as string;
+  const dailySubmissionLimit = dailySubmissionLimitRaw ? parseInt(dailySubmissionLimitRaw) : 15;
+  const totalSubmissionLimit = totalSubmissionLimitRaw ? parseInt(totalSubmissionLimitRaw) : 10000;
   const maxFileSizeMb = parseInt(formData.get('maxFileSizeMb') as string);
 
   // Validate required fields
@@ -86,8 +88,8 @@ export async function updateCompetition(id: string, formData: FormData) {
         : null,
       dataset_url: datasetUrl || null,
       sample_submission_url: sampleSubmissionUrl || null,
-      daily_submission_limit: dailySubmissionLimit ?? -1,
-      total_submission_limit: totalSubmissionLimit ?? -1,
+      daily_submission_limit: dailySubmissionLimit,
+      total_submission_limit: totalSubmissionLimit,
       max_file_size_mb: maxFileSizeMb || 10,
       updated_at: new Date().toISOString(),
     })

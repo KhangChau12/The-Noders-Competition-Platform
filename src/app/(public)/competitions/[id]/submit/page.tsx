@@ -172,14 +172,10 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
               <Calendar className="w-5 h-5 text-primary-blue" />
             </div>
             <div className="text-3xl font-bold">
-              {submissionCount.daily} / {competition.daily_submission_limit || 5}
+              {submissionCount.daily} / {competition.daily_submission_limit ?? 15}
             </div>
             <div className="text-xs text-text-tertiary mt-1">
-              {Math.max(
-                0,
-                (competition.daily_submission_limit || 5) - submissionCount.daily
-              )}{' '}
-              remaining today
+              {Math.max(0, (competition.daily_submission_limit ?? 15) - submissionCount.daily)} remaining today
             </div>
             <DailyResetCountdown />
           </Card>

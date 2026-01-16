@@ -21,12 +21,8 @@ const competitionSchema = z.object({
   public_test_end: z.string(),
   private_test_start: z.string().optional(),
   private_test_end: z.string().optional(),
-  daily_submission_limit: z.number().int().refine(val => val === -1 || val > 0, {
-    message: "Must be -1 (unlimited) or positive number"
-  }),
-  total_submission_limit: z.number().int().refine(val => val === -1 || val > 0, {
-    message: "Must be -1 (unlimited) or positive number"
-  }),
+  daily_submission_limit: z.number().int().min(1, "Must be at least 1"),
+  total_submission_limit: z.number().int().min(1, "Must be at least 1"),
   max_file_size_mb: z.number().min(1).max(50),
   min_team_size: z.number().min(1).optional(),
   max_team_size: z.number().min(1).optional(),
@@ -54,8 +50,8 @@ export function CompetitionForm({ initialData, onSubmit, isLoading }: Competitio
     defaultValues: initialData || {
       competition_type: '3-phase',
       participation_type: 'individual',
-      daily_submission_limit: -1,
-      total_submission_limit: -1,
+      daily_submission_limit: 15,
+      total_submission_limit: 10000,
       max_file_size_mb: 10,
       min_team_size: 1,
       max_team_size: 3,
