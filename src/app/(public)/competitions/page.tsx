@@ -18,6 +18,7 @@ import {
   Clock,
   ChevronDown,
   Loader2,
+  Target,
 } from 'lucide-react';
 
 type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
@@ -41,6 +42,8 @@ type Competition = {
 type CompetitionWithStats = Competition & {
   phase: CompetitionPhase;
   participant_count: number;
+  team_count: number;
+  submission_count: number;
   registration_status?: 'not_registered' | 'pending' | 'approved' | 'rejected';
   countdown?: {
     days: number;
@@ -108,10 +111,40 @@ export default function CompetitionsPage() {
           .from('competition_participant_counts')
           .select('competition_id, participant_count');
 
-        // Map to competition IDs
+        // Fetch submission counts
+        const { data: submissionsData } = await supabase
+          .from('submissions')
+          .select('competition_id');
+
+        // Fetch team registration counts (for team competitions)
+        const { data: teamRegistrationsData } = await supabase
+          .from('registrations')
+          .select('competition_id, team_id, status')
+          .not('team_id', 'is', null)
+          .eq('status', 'approved');
+
+        // Map participant counts
         const participantCounts = (participantCountsData || []).reduce(
           (acc, item: any) => {
             acc[item.competition_id] = item.participant_count;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
+        // Map submission counts
+        const submissionCounts = (submissionsData || []).reduce(
+          (acc, item: any) => {
+            acc[item.competition_id] = (acc[item.competition_id] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
+        // Map team counts
+        const teamCounts = (teamRegistrationsData || []).reduce(
+          (acc, item: any) => {
+            acc[item.competition_id] = (acc[item.competition_id] || 0) + 1;
             return acc;
           },
           {} as Record<string, number>
@@ -165,6 +198,8 @@ export default function CompetitionsPage() {
             ...comp,
             phase,
             participant_count: participantCounts[comp.id] || 0,
+            team_count: teamCounts[comp.id] || 0,
+            submission_count: submissionCounts[comp.id] || 0,
             registration_status: userId
               ? (userRegistrations[comp.id] as any) || 'not_registered'
               : undefined,
@@ -351,17 +386,25 @@ export default function CompetitionsPage() {
           </Card>
         )}
 
-        {/* Competitions Grid */}
+        {/* Competitions List */}
         {!loading && filteredAndSortedCompetitions.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedCompetitions.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                isLoggedIn={!!userId}
-              />
-            ))}
-          </div>
+          <Card className="overflow-hidden">
+            <div className="p-6 border-b border-border-default bg-bg-tertiary">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Filter className="w-5 h-5" />
+                All Competitions
+              </h2>
+            </div>
+            <div className="divide-y divide-border-default">
+              {filteredAndSortedCompetitions.map((competition) => (
+                <CompetitionRow
+                  key={competition.id}
+                  competition={competition}
+                  isLoggedIn={!!userId}
+                />
+              ))}
+            </div>
+          </Card>
         )}
       </div>
     </div>
@@ -430,14 +473,16 @@ function getPhaseEndDate(comp: CompetitionWithStats): string | null {
   return null;
 }
 
-// Competition Card Component
-function CompetitionCard({
+// Competition Row Component (list style like admin page)
+function CompetitionRow({
   competition,
   isLoggedIn,
 }: {
   competition: CompetitionWithStats;
   isLoggedIn: boolean;
 }) {
+  const router = useRouter();
+
   const phaseConfig = {
     upcoming: { label: 'Coming Soon', variant: 'secondary' as const },
     registration: { label: 'Registration Open', variant: 'registration' as const },
@@ -453,7 +498,7 @@ function CompetitionCard({
 
     const statusConfig = {
       not_registered: null,
-      pending: { label: 'Pending Approval', variant: 'yellow' as const },
+      pending: { label: 'Pending', variant: 'yellow' as const },
       approved: { label: 'Registered', variant: 'green' as const },
       rejected: { label: 'Rejected', variant: 'red' as const },
     };
@@ -465,88 +510,130 @@ function CompetitionCard({
   };
 
   return (
-    <Link href={`/competitions/${competition.id}`}>
-      <Card className="p-6 hover:border-border-focus transition-all glow-on-hover h-full flex flex-col">
-        {/* Header with Badges */}
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
-          <Badge variant="tech">
-            {competition.scoring_metric.replace('_', ' ').toUpperCase()}
-          </Badge>
-          {competition.participation_type === 'team' && (
-            <Badge variant="outline">Team</Badge>
-          )}
-          {registrationBadge()}
+    <div
+      className="p-6 hover:bg-bg-tertiary/50 transition-colors cursor-pointer"
+      onClick={() => router.push(`/competitions/${competition.id}`)}
+    >
+      <div className="flex items-start justify-between gap-6">
+        <div className="flex-1 min-w-0">
+          {/* Title & Badges */}
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <h3 className="text-xl font-bold">{competition.title}</h3>
+            <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
+            <Badge variant="tech">
+              {competition.scoring_metric.replace('_', ' ').toUpperCase()}
+            </Badge>
+            {competition.participation_type === 'team' && (
+              <Badge variant="outline">Team</Badge>
+            )}
+            {competition.competition_type === '4-phase' && (
+              <Badge variant="outline">4-Phase</Badge>
+            )}
+            {registrationBadge()}
+          </div>
+
+          {/* Description */}
+          <p className="text-text-secondary text-sm mb-4 line-clamp-2">
+            {competition.description}
+          </p>
+
+          {/* Stats */}
+          <div className="flex flex-wrap gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-text-tertiary" />
+              <span className="text-text-secondary">
+                <strong className="text-text-primary">
+                  {competition.participant_count}
+                </strong>{' '}
+                participants
+                {competition.participation_type === 'team' && competition.team_count > 0 && (
+                  <span className="text-text-tertiary ml-1">
+                    ({competition.team_count} teams)
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-text-tertiary" />
+              <span className="text-text-secondary">
+                <strong className="text-text-primary">
+                  {competition.submission_count}
+                </strong>{' '}
+                submissions
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-text-tertiary" />
+              <span className="text-text-secondary">
+                Created {new Date(competition.created_at).toLocaleDateString()}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-text-tertiary" />
+              <span className="text-text-secondary">{competition.scoring_metric}</span>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="mt-3 text-xs text-text-tertiary">
+            Registration:{' '}
+            {new Date(competition.registration_start).toLocaleDateString()} -{' '}
+            {new Date(competition.registration_end).toLocaleDateString()} | Public
+            Test ends: {new Date(competition.public_test_end).toLocaleDateString()}
+            {competition.private_test_end &&
+              ` | Private Test ends: ${new Date(competition.private_test_end).toLocaleDateString()}`}
+          </div>
         </div>
 
-        {/* Title */}
-        <h3 className="text-xl font-bold mb-2 line-clamp-2">{competition.title}</h3>
-
-        {/* Description */}
-        <p className="text-text-secondary mb-4 line-clamp-3 flex-grow">
-          {competition.description}
-        </p>
-
-        {/* Countdown Timer */}
-        {competition.countdown && (
-          <div className="mb-4 p-3 bg-bg-elevated rounded-lg border border-border-default">
+        {/* Countdown or Ended Box (right side) */}
+        {competition.phase === 'ended' ? (
+          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default min-w-[140px]">
+            <div className="flex items-center gap-2 mb-2">
+              <Trophy className="h-4 w-4 text-text-tertiary" />
+              <span className="text-xs text-text-tertiary uppercase font-mono">
+                Status
+              </span>
+            </div>
+            <div className="text-center py-2">
+              <div className="text-sm font-medium text-text-secondary">
+                This competition has ended
+              </div>
+            </div>
+          </div>
+        ) : competition.countdown ? (
+          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default min-w-[140px]">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-primary-blue" />
               <span className="text-xs text-text-tertiary uppercase font-mono">
-                {competition.countdown.label}
+                {competition.countdown.label.replace(' in', '')}
               </span>
             </div>
-            <div className="flex gap-3">
-              <div className="flex-1 text-center">
-                <div className="text-2xl font-bold text-primary-blue font-mono">
+            <div className="flex gap-2 text-center">
+              <div className="flex-1">
+                <div className="text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.days}
                 </div>
                 <div className="text-xs text-text-tertiary">Days</div>
               </div>
-              <div className="flex-1 text-center">
-                <div className="text-2xl font-bold text-primary-blue font-mono">
+              <div className="flex-1">
+                <div className="text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.hours}
                 </div>
-                <div className="text-xs text-text-tertiary">Hours</div>
+                <div className="text-xs text-text-tertiary">Hrs</div>
               </div>
-              <div className="flex-1 text-center">
-                <div className="text-2xl font-bold text-primary-blue font-mono">
+              <div className="flex-1">
+                <div className="text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.minutes}
                 </div>
-                <div className="text-xs text-text-tertiary">Mins</div>
+                <div className="text-xs text-text-tertiary">Min</div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2 p-2 bg-bg-elevated rounded-lg">
-            <Users className="h-4 w-4 text-text-tertiary" />
-            <div>
-              <div className="text-lg font-bold font-mono">{competition.participant_count}</div>
-              <div className="text-xs text-text-tertiary">Participants</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 p-2 bg-bg-elevated rounded-lg">
-            <Calendar className="h-4 w-4 text-text-tertiary" />
-            <div>
-              <div className="text-xs font-medium text-text-secondary">
-                {competition.competition_type === '3-phase' ? '3-Phase' : '4-Phase'}
-              </div>
-              <div className="text-xs text-text-tertiary">Competition</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-border-default">
-          <div className="flex items-center justify-between text-sm text-text-tertiary">
-            <span>Click to view details</span>
-            <Trophy className="h-4 w-4" />
-          </div>
-        </div>
-      </Card>
-    </Link>
+        ) : null}
+      </div>
+    </div>
   );
 }

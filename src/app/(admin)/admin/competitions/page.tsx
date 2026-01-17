@@ -49,18 +49,29 @@ export default async function AdminCompetitionsPage() {
   // Fetch registration counts for each competition
   const { data: registrationsData } = (await supabase
     .from('registrations')
-    .select('competition_id, status')) as { data: any };
+    .select('competition_id, status, team_id')) as { data: any };
+
+  // Fetch participant counts from view (includes team members)
+  const { data: participantCountsData } = (await supabase
+    .from('competition_participant_counts')
+    .select('competition_id, participant_count')) as { data: any };
 
   // Fetch submission counts for each competition
   const { data: submissionsData } = (await supabase
     .from('submissions')
     .select('competition_id')) as { data: any };
 
-  // Process counts
-  const registrationCounts: Record<string, { approved: number; pending: number; total: number }> = {};
+  // Build participant counts map
+  const participantCountsMap: Record<string, number> = {};
+  participantCountsData?.forEach((pc: any) => {
+    participantCountsMap[pc.competition_id] = pc.participant_count;
+  });
+
+  // Process registration counts (for pending/approved teams count)
+  const registrationCounts: Record<string, { approved: number; pending: number; total: number; participants: number }> = {};
   registrationsData?.forEach((reg: any) => {
     if (!registrationCounts[reg.competition_id]) {
-      registrationCounts[reg.competition_id] = { approved: 0, pending: 0, total: 0 };
+      registrationCounts[reg.competition_id] = { approved: 0, pending: 0, total: 0, participants: 0 };
     }
     registrationCounts[reg.competition_id].total++;
     if (reg.status === 'approved') {
@@ -68,6 +79,11 @@ export default async function AdminCompetitionsPage() {
     } else if (reg.status === 'pending') {
       registrationCounts[reg.competition_id].pending++;
     }
+  });
+
+  // Add participant counts from view
+  Object.keys(registrationCounts).forEach((compId) => {
+    registrationCounts[compId].participants = participantCountsMap[compId] || 0;
   });
 
   const submissionCounts: Record<string, number> = {};
@@ -110,7 +126,7 @@ export default async function AdminCompetitionsPage() {
   const competitionsWithStats = competitions?.map((comp: any) => ({
     ...comp,
     phase: getPhase(comp),
-    registrationCount: registrationCounts[comp.id] || { approved: 0, pending: 0, total: 0 },
+    registrationCount: registrationCounts[comp.id] || { approved: 0, pending: 0, total: 0, participants: participantCountsMap[comp.id] || 0 },
     submissionCount: submissionCounts[comp.id] || 0,
   }));
 
@@ -216,9 +232,14 @@ export default async function AdminCompetitionsPage() {
                           <Users className="w-4 h-4 text-text-tertiary" />
                           <span className="text-text-secondary">
                             <strong className="text-text-primary">
-                              {competition.registrationCount.approved}
+                              {competition.registrationCount.participants}
                             </strong>{' '}
-                            approved
+                            participants
+                            {competition.participation_type === 'team' && (
+                              <span className="text-text-tertiary ml-1">
+                                ({competition.registrationCount.approved} teams)
+                              </span>
+                            )}
                           </span>
                           {competition.registrationCount.pending > 0 && (
                             <Badge variant="yellow" className="ml-1">
