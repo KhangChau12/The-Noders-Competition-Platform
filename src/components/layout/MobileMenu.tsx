@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Home, Trophy, Info, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -38,7 +39,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     };
   }, [isOpen]);
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === '/') return pathname === '/';
+    return pathname === path || pathname.startsWith(path);
+  };
+
+  const getIcon = (label: string) => {
+    switch (label) {
+      case 'Home': return <Home className="w-5 h-5" />;
+      case 'Competitions': return <Trophy className="w-5 h-5" />;
+      case 'About': return <Info className="w-5 h-5" />;
+      default: return null;
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -46,144 +59,257 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
         onClick={onClose}
-        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          zIndex: 9998,
+        }}
       />
 
       {/* Menu Panel */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-sm bg-bg-surface border-l border-border-default z-50 lg:hidden transform transition-transform duration-300 ease-out"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Mobile menu"
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '320px',
+          maxWidth: '85vw',
+          height: '100vh',
+          backgroundColor: '#0d1117',
+          zIndex: 9999,
+          overflowY: 'auto',
+        }}
       >
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-default">
-            <span className="text-xl font-brand bg-gradient-brand bg-clip-text text-transparent">
-              Menu
-            </span>
-            <button
-              onClick={onClose}
-              className="p-2 text-text-tertiary hover:text-text-primary transition-colors"
-              aria-label="Close menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* User Info */}
-          {user && (
-            <div className="px-6 py-4 bg-bg-elevated border-b border-border-default">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center text-white font-semibold text-lg">
-                  {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-semibold text-text-primary">
-                    {user.full_name || user.email.split('@')[0]}
-                  </p>
-                  <p className="text-sm text-text-tertiary">{user.email}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto px-6 py-4" aria-label="Mobile navigation">
-            <div className="space-y-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`
-                    block px-4 py-3 rounded-lg font-semibold transition-colors
-                    ${
-                      isActive(link.href)
-                        ? 'bg-primary-blue/10 text-primary-blue'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-bg-elevated'
-                    }
-                  `}
-                  onClick={onClose}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* User Menu Items */}
-            {user && (
-              <>
-                <div className="my-4 border-t border-border-default" />
-                <div className="space-y-2">
-                  <Link
-                    href="/dashboard"
-                    className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold transition-colors"
-                    onClick={onClose}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="block px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold transition-colors"
-                    onClick={onClose}
-                  >
-                    Profile
-                  </Link>
-                  {user.role === 'admin' && (
-                    <Link
-                      href="/admin/dashboard"
-                      className="block px-4 py-3 rounded-lg text-primary-blue hover:bg-primary-blue/10 font-semibold transition-colors"
-                      onClick={onClose}
-                    >
-                      Admin
-                    </Link>
-                  )}
-                </div>
-              </>
-            )}
-          </nav>
-
-          {/* Bottom Actions */}
-          <div className="px-6 py-4 border-t border-border-default">
-            {user ? (
-              <button
-                onClick={() => {
-                  onClose();
-                  onLogout?.();
-                }}
-                className="w-full px-6 py-3 font-semibold text-white bg-error rounded-lg hover:bg-error/90 transition-colors"
-              >
-                Logout
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <Link
-                  href="/login"
-                  className="block w-full px-6 py-3 font-semibold text-center text-text-primary bg-bg-elevated border border-border-default rounded-lg hover:border-primary-blue hover:bg-primary-blue/10 transition-all"
-                  onClick={onClose}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className="block w-full px-6 py-3 font-semibold text-center text-white bg-gradient-brand rounded-lg hover:shadow-lg hover:shadow-primary-blue/30 transition-all"
-                  onClick={onClose}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
+        {/* Header */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '64px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 20px',
+            borderBottom: '1px solid #21262d',
+            backgroundColor: '#0d1117',
+            zIndex: 1,
+          }}
+        >
+          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#22d3ee' }}>Menu</span>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '8px',
+              borderRadius: '8px',
+              color: '#8b949e',
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <X style={{ width: '20px', height: '20px' }} />
+          </button>
         </div>
+
+        {/* User Info */}
+        {user && (
+          <div style={{ padding: '20px', borderBottom: '1px solid #21262d', backgroundColor: '#161b22' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #22d3ee, #3b82f6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  flexShrink: 0,
+                }}
+              >
+                {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontWeight: 600, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.full_name || user.email.split('@')[0]}
+                </p>
+                <p style={{ fontSize: '14px', color: '#8b949e', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ padding: '16px' }}>
+          <p style={{ padding: '0 12px', marginBottom: '12px', fontSize: '12px', fontWeight: 'bold', color: '#484f58', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Navigation
+          </p>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={onClose}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                marginBottom: '4px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                color: isActive(link.href) ? '#22d3ee' : '#c9d1d9',
+                backgroundColor: isActive(link.href) ? 'rgba(34,211,238,0.1)' : 'transparent',
+                textDecoration: 'none',
+              }}
+            >
+              {getIcon(link.label)}
+              <span>{link.label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Account Section */}
+        {user && (
+          <div style={{ padding: '16px', borderTop: '1px solid #21262d' }}>
+            <p style={{ padding: '0 12px', marginBottom: '12px', fontSize: '12px', fontWeight: 'bold', color: '#484f58', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Account
+            </p>
+            <Link
+              href="/dashboard"
+              onClick={onClose}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                marginBottom: '4px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                color: '#c9d1d9',
+                textDecoration: 'none',
+              }}
+            >
+              <LayoutDashboard style={{ width: '20px', height: '20px' }} />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              href="/profile"
+              onClick={onClose}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                marginBottom: '4px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                color: '#c9d1d9',
+                textDecoration: 'none',
+              }}
+            >
+              <User style={{ width: '20px', height: '20px' }} />
+              <span>Profile</span>
+            </Link>
+            {user.role === 'admin' && (
+              <Link
+                href="/admin/dashboard"
+                onClick={onClose}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px',
+                  marginBottom: '4px',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  color: '#22d3ee',
+                  textDecoration: 'none',
+                }}
+              >
+                <Shield style={{ width: '20px', height: '20px' }} />
+                <span>Admin Panel</span>
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Bottom Actions */}
+        <div style={{ padding: '16px', borderTop: '1px solid #21262d', marginTop: '16px' }}>
+          {user ? (
+            <button
+              onClick={() => {
+                onClose();
+                onLogout?.();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                color: 'white',
+                backgroundColor: '#dc2626',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <LogOut style={{ width: '20px', height: '20px' }} />
+              <span>Logout</span>
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={onClose}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '12px',
+                  marginBottom: '12px',
+                  textAlign: 'center',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  color: 'white',
+                  backgroundColor: '#21262d',
+                  border: '1px solid #30363d',
+                  textDecoration: 'none',
+                }}
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                onClick={onClose}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '12px',
+                  textAlign: 'center',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  color: 'white',
+                  background: 'linear-gradient(90deg, #22d3ee, #3b82f6)',
+                  textDecoration: 'none',
+                }}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Spacer for bottom safe area on mobile */}
+        <div style={{ height: '32px' }} />
       </div>
     </>
   );
