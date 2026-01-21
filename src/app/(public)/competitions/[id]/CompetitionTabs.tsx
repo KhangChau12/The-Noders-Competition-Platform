@@ -29,6 +29,39 @@ export default function CompetitionTabs({
   const [finalLeaderboard, setFinalLeaderboard] = useState<any[]>([]);
   const [individualFinalLeaderboard, setIndividualFinalLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userTeamId, setUserTeamId] = useState<string | null>(null);
+
+  // Fetch user's team ID for team competitions
+  useEffect(() => {
+    const fetchUserTeam = async () => {
+      if (!userId || competition.participation_type !== 'team') return;
+
+      const supabase = createClient();
+
+      // First get all user's team memberships
+      const { data: memberships } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', userId);
+
+      if (!memberships || memberships.length === 0) return;
+
+      // Then find which team belongs to this competition
+      const teamIds = memberships.map((m: any) => m.team_id);
+      const { data: teams } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('competition_id', competition.id)
+        .in('id', teamIds)
+        .limit(1);
+
+      if (teams && teams.length > 0) {
+        setUserTeamId((teams[0] as any).id);
+      }
+    };
+
+    fetchUserTeam();
+  }, [userId, competition.id, competition.participation_type]);
 
   // Determine default phase based on competition state
   const getDefaultPhase = (): 'public' | 'private' | 'final' => {
@@ -505,6 +538,11 @@ export default function CompetitionTabs({
             competition={competition}
             phase={leaderboardPhase}
             onPhaseChange={setLeaderboardPhase}
+            userBestScore={getUserBestScore(leaderboard)}
+            userRank={getUserRank(leaderboard)}
+            isRegistered={isRegistered}
+            isLoggedIn={!!userId}
+            userEntityId={competition.participation_type === 'team' ? userTeamId || undefined : userId}
           />
         )}
         {activeTab === 'individual_leaderboard' && (
@@ -515,6 +553,11 @@ export default function CompetitionTabs({
             competition={competition}
             phase={individualLeaderboardPhase}
             onPhaseChange={setIndividualLeaderboardPhase}
+            userBestScore={getUserBestScoreIndividual(individualLeaderboard)}
+            userRank={getUserRankIndividual(individualLeaderboard)}
+            isRegistered={isRegistered}
+            isLoggedIn={!!userId}
+            userId={userId}
           />
         )}
         {activeTab === 'submissions' && (
@@ -523,6 +566,41 @@ export default function CompetitionTabs({
       </div>
     </div>
   );
+
+  // Helper functions to get user's position in leaderboard
+  function getUserBestScore(lb: any[]): number | undefined {
+    const isTeamComp = competition.participation_type === 'team';
+    if (isTeamComp) {
+      if (!userTeamId) return undefined;
+      const teamEntry = lb.find(entry => entry.team_id === userTeamId);
+      return teamEntry?.score;
+    } else {
+      const userEntry = lb.find(entry => entry.user_id === userId);
+      return userEntry?.score;
+    }
+  }
+
+  function getUserRank(lb: any[]): number | undefined {
+    const isTeamComp = competition.participation_type === 'team';
+    if (isTeamComp) {
+      if (!userTeamId) return undefined;
+      const index = lb.findIndex(entry => entry.team_id === userTeamId);
+      return index >= 0 ? index + 1 : undefined;
+    } else {
+      const index = lb.findIndex(entry => entry.user_id === userId);
+      return index >= 0 ? index + 1 : undefined;
+    }
+  }
+
+  function getUserBestScoreIndividual(lb: any[]): number | undefined {
+    const userEntry = lb.find(entry => entry.submitted_by === userId);
+    return userEntry?.score;
+  }
+
+  function getUserRankIndividual(lb: any[]): number | undefined {
+    const index = lb.findIndex(entry => entry.submitted_by === userId);
+    return index >= 0 ? index + 1 : undefined;
+  }
 }
 
 // Overview Tab Component
@@ -604,15 +682,560 @@ function PhaseTabsNav({
   );
 }
 
+// Smart binning function using IQR to focus on data concentration
+function calculateSmartBins(scores: number[], higherIsBetter: boolean): {
+  bins: { min: number; max: number; count: number; hasUser: boolean; isOutlier: boolean }[];
+  focusMin: number;
+  focusMax: number;
+  outlierCount: { low: number; high: number };
+} {
+  const sorted = [...scores].sort((a, b) => a - b);
+  const n = sorted.length;
+
+  // Calculate quartiles
+  const q1Index = Math.floor(n * 0.25);
+  const q3Index = Math.floor(n * 0.75);
+  const q1 = sorted[q1Index];
+  const q3 = sorted[q3Index];
+  const iqr = q3 - q1;
+
+  // Define focus range (expand slightly beyond IQR for context)
+  const focusMin = Math.max(sorted[0], q1 - iqr * 0.5);
+  const focusMax = Math.min(sorted[n - 1], q3 + iqr * 0.5);
+  const focusRange = focusMax - focusMin;
+
+  // Count outliers
+  const lowOutliers = scores.filter(s => s < focusMin);
+  const highOutliers = scores.filter(s => s > focusMax);
+  const mainScores = scores.filter(s => s >= focusMin && s <= focusMax);
+
+  // Create bins for the focus range
+  const binCount = Math.min(12, Math.max(5, Math.ceil(mainScores.length / 2)));
+  const binSize = focusRange === 0 ? 1 : focusRange / binCount;
+
+  const bins: { min: number; max: number; count: number; hasUser: boolean; isOutlier: boolean }[] = [];
+
+  // Add low outlier bin if any
+  if (lowOutliers.length > 0) {
+    bins.push({
+      min: sorted[0],
+      max: focusMin,
+      count: lowOutliers.length,
+      hasUser: false,
+      isOutlier: true
+    });
+  }
+
+  // Add main bins
+  for (let i = 0; i < binCount; i++) {
+    const binMin = focusMin + i * binSize;
+    const binMax = i === binCount - 1 ? focusMax + 0.0001 : focusMin + (i + 1) * binSize;
+    bins.push({
+      min: binMin,
+      max: binMax,
+      count: 0,
+      hasUser: false,
+      isOutlier: false
+    });
+  }
+
+  // Add high outlier bin if any
+  if (highOutliers.length > 0) {
+    bins.push({
+      min: focusMax,
+      max: sorted[n - 1],
+      count: highOutliers.length,
+      hasUser: false,
+      isOutlier: true
+    });
+  }
+
+  // Fill main bins with scores
+  mainScores.forEach(score => {
+    const startIndex = lowOutliers.length > 0 ? 1 : 0;
+    const binIndex = Math.min(
+      Math.floor((score - focusMin) / binSize),
+      binCount - 1
+    ) + startIndex;
+    if (bins[binIndex] && !bins[binIndex].isOutlier) {
+      bins[binIndex].count++;
+    }
+  });
+
+  return {
+    bins,
+    focusMin,
+    focusMax,
+    outlierCount: { low: lowOutliers.length, high: highOutliers.length }
+  };
+}
+
+// Score Distribution Chart Component
+function ScoreDistributionChart({
+  scores,
+  userBestScore,
+  userRank,
+  isRegistered,
+  isLoggedIn,
+  totalParticipants,
+  competition
+}: {
+  scores: number[];
+  userBestScore?: number;
+  userRank?: number;
+  isRegistered: boolean;
+  isLoggedIn: boolean;
+  totalParticipants: number;
+  competition: any;
+}) {
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  if (scores.length === 0) return null;
+
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const higherIsBetter = metricInfo?.higher_is_better !== false;
+  const decimals = metricInfo?.decimals || 4;
+
+  // Use smart binning for better distribution visualization
+  const { bins, focusMin, focusMax, outlierCount } = calculateSmartBins(scores, higherIsBetter);
+
+  // Mark user's bin
+  if (userBestScore !== undefined) {
+    for (const bin of bins) {
+      if (userBestScore >= bin.min && userBestScore < bin.max) {
+        bin.hasUser = true;
+        break;
+      }
+      // Handle edge case for max value
+      if (userBestScore === bin.max && bin === bins[bins.length - 1]) {
+        bin.hasUser = true;
+      }
+    }
+  }
+
+  const maxCount = Math.max(...bins.map(b => b.count));
+
+  // Calculate stats
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const sortedScores = [...scores].sort((a, b) => a - b);
+  const median = sortedScores.length % 2 === 0
+    ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
+    : sortedScores[Math.floor(sortedScores.length / 2)];
+
+  // Calculate median position for line indicator
+  const mainBinsStartIndex = outlierCount.low > 0 ? 1 : 0;
+  const mainBinsEndIndex = bins.length - (outlierCount.high > 0 ? 1 : 0);
+  const medianPosition = focusMax !== focusMin
+    ? ((median - focusMin) / (focusMax - focusMin)) * 100
+    : 50;
+  const medianInRange = median >= focusMin && median <= focusMax;
+
+  return (
+    <Card className="p-4 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3v18h18" />
+            <path d="M7 16v-4" />
+            <path d="M11 16v-8" />
+            <path d="M15 16v-6" />
+            <path d="M19 16v-10" />
+          </svg>
+          Score Distribution
+          <span className="text-xs font-normal text-text-tertiary ml-2">
+            {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
+          </span>
+        </h3>
+        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+          <span>Participants: <span className="font-semibold text-text-secondary">{totalParticipants}</span></span>
+          <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
+          <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
+        </div>
+      </div>
+
+      {/* Histogram */}
+      <div className="relative flex items-end gap-1 mb-2" style={{ height: '120px' }}>
+        {/* Median line indicator */}
+        {medianInRange && (
+          <div
+            className="absolute bottom-0 top-0 w-0.5 bg-cyan-400 z-10 opacity-60"
+            style={{
+              left: `calc(${outlierCount.low > 0 ? '8% + ' : ''}${medianPosition * (outlierCount.low > 0 && outlierCount.high > 0 ? 0.84 : outlierCount.low > 0 || outlierCount.high > 0 ? 0.92 : 1)}%)`
+            }}
+            title={`Median: ${median.toFixed(decimals)}`}
+          />
+        )}
+
+        {bins.map((bin, index) => {
+          const heightPercent = maxCount > 0 ? (bin.count / maxCount) * 100 : 0;
+          const isHovered = hoveredBar === index;
+          const displayHeight = bin.count > 0 ? Math.max(heightPercent, 6) : 0;
+          const heightPx = (displayHeight / 100) * 120;
+          const isOutlierBin = bin.isOutlier;
+
+          return (
+            <div
+              key={index}
+              className={`relative group cursor-pointer ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
+              style={{ minWidth: isOutlierBin ? '24px' : '12px' }}
+              onMouseEnter={() => setHoveredBar(index)}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
+              <div
+                className={`
+                  w-full rounded-t-sm transition-all duration-200
+                  ${bin.hasUser
+                    ? 'bg-gradient-to-t from-warning to-yellow-400'
+                    : isOutlierBin
+                      ? 'bg-gradient-to-t from-slate-500 to-slate-400'
+                      : 'bg-gradient-to-t from-primary-blue to-cyan-400'
+                  }
+                  ${isHovered ? 'opacity-100' : 'opacity-80'}
+                `}
+                style={{ height: `${heightPx}px` }}
+              />
+
+              {/* Tooltip */}
+              {isHovered && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap">
+                  <div className="bg-bg-primary border border-border-default rounded-lg px-3 py-2 shadow-lg">
+                    <div className="text-xs font-mono text-text-secondary">
+                      {isOutlierBin ? (
+                        index === 0 && outlierCount.low > 0 ? `< ${focusMin.toFixed(2)} (outliers)` : `> ${focusMax.toFixed(2)} (outliers)`
+                      ) : (
+                        `${bin.min.toFixed(2)} - ${bin.max.toFixed(2)}`
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold text-text-primary">
+                      {bin.count} {bin.count === 1 ? 'participant' : 'participants'}
+                    </div>
+                    {bin.hasUser && (
+                      <div className="text-xs text-warning font-medium mt-1">
+                        Your score is here
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* X-axis labels */}
+      <div className="flex justify-between text-xs text-text-tertiary font-mono px-1">
+        <span>{sortedScores[0].toFixed(2)}</span>
+        <span className="text-cyan-400">{median.toFixed(2)}</span>
+        <span>{sortedScores[sortedScores.length - 1].toFixed(2)}</span>
+      </div>
+
+      {/* User position info */}
+      <div className="mt-4 pt-4 border-t border-border-default">
+        {isLoggedIn && isRegistered ? (
+          userBestScore !== undefined ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-warning" />
+                </div>
+                <div>
+                  <div className="text-xs text-text-tertiary">Your Best Score</div>
+                  <div className="font-mono font-bold text-warning">{userBestScore.toFixed(decimals)}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-text-tertiary">Your Rank</div>
+                <div className="font-bold text-text-primary">
+                  #{userRank} <span className="text-text-tertiary font-normal">/ {totalParticipants}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-text-tertiary">
+                  {higherIsBetter ? 'Behind Leader' : 'Above Leader'}
+                </div>
+                <div className="font-mono text-sm text-text-secondary">
+                  {higherIsBetter
+                    ? (sortedScores[sortedScores.length - 1] - userBestScore).toFixed(decimals)
+                    : (userBestScore - sortedScores[0]).toFixed(decimals)
+                  }
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-text-tertiary">
+              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm">You haven't submitted yet</div>
+                <div className="text-xs">Submit your solution to see your position!</div>
+              </div>
+            </div>
+          )
+        ) : isLoggedIn ? (
+          <div className="flex items-center gap-3 text-text-tertiary">
+            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-sm">Register to participate</div>
+              <div className="text-xs">Join this competition to submit your solution!</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 text-text-tertiary">
+            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-sm">Login to participate</div>
+              <div className="text-xs">Create an account or login to join this competition!</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// Final Score Distribution Chart Component (uses average scores)
+function FinalScoreDistributionChart({
+  data,
+  userEntityId,
+  isRegistered,
+  isLoggedIn,
+  competition
+}: {
+  data: any[];
+  userEntityId?: string;
+  isRegistered: boolean;
+  isLoggedIn: boolean;
+  competition: any;
+}) {
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  // Only show entries that have both scores (with average)
+  const entriesWithAverage = data.filter(entry => entry.average !== null);
+  if (entriesWithAverage.length === 0) return null;
+
+  const scores = entriesWithAverage.map(entry => entry.average as number);
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const higherIsBetter = metricInfo?.higher_is_better !== false;
+  const decimals = metricInfo?.decimals || 4;
+
+  // Use smart binning for better distribution visualization
+  const { bins, focusMin, focusMax, outlierCount } = calculateSmartBins(scores, higherIsBetter);
+
+  // Find user's entry and score
+  const userEntry = userEntityId ? data.find(entry => entry.entityId === userEntityId) : null;
+  const userAverage = userEntry?.average;
+  const userRank = userEntry ? entriesWithAverage.findIndex(e => e.entityId === userEntityId) + 1 : undefined;
+
+  // Mark user's bin
+  if (userAverage !== undefined && userAverage !== null) {
+    for (const bin of bins) {
+      if (userAverage >= bin.min && userAverage < bin.max) {
+        bin.hasUser = true;
+        break;
+      }
+      // Handle edge case for max value
+      if (userAverage === bin.max && bin === bins[bins.length - 1]) {
+        bin.hasUser = true;
+      }
+    }
+  }
+
+  const maxCount = Math.max(...bins.map(b => b.count));
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const sortedScores = [...scores].sort((a, b) => a - b);
+  const median = sortedScores.length % 2 === 0
+    ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
+    : sortedScores[Math.floor(sortedScores.length / 2)];
+
+  // Calculate median position for line indicator
+  const medianPosition = focusMax !== focusMin
+    ? ((median - focusMin) / (focusMax - focusMin)) * 100
+    : 50;
+  const medianInRange = median >= focusMin && median <= focusMax;
+
+  return (
+    <Card className="p-4 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3v18h18" />
+            <path d="M7 16v-4" />
+            <path d="M11 16v-8" />
+            <path d="M15 16v-6" />
+            <path d="M19 16v-10" />
+          </svg>
+          Final Score Distribution (Average)
+          <span className="text-xs font-normal text-text-tertiary ml-2">
+            {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
+          </span>
+        </h3>
+        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+          <span>Complete: <span className="font-semibold text-text-secondary">{entriesWithAverage.length}</span></span>
+          <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
+          <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
+        </div>
+      </div>
+
+      {/* Histogram */}
+      <div className="relative flex items-end gap-1 mb-2" style={{ height: '120px' }}>
+        {/* Median line indicator */}
+        {medianInRange && (
+          <div
+            className="absolute bottom-0 top-0 w-0.5 bg-cyan-400 z-10 opacity-60"
+            style={{
+              left: `calc(${outlierCount.low > 0 ? '8% + ' : ''}${medianPosition * (outlierCount.low > 0 && outlierCount.high > 0 ? 0.84 : outlierCount.low > 0 || outlierCount.high > 0 ? 0.92 : 1)}%)`
+            }}
+            title={`Median: ${median.toFixed(decimals)}`}
+          />
+        )}
+
+        {bins.map((bin, index) => {
+          const heightPercent = maxCount > 0 ? (bin.count / maxCount) * 100 : 0;
+          const isHovered = hoveredBar === index;
+          const displayHeight = bin.count > 0 ? Math.max(heightPercent, 6) : 0;
+          const heightPx = (displayHeight / 100) * 120;
+          const isOutlierBin = bin.isOutlier;
+
+          return (
+            <div
+              key={index}
+              className={`relative group cursor-pointer ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
+              style={{ minWidth: isOutlierBin ? '24px' : '12px' }}
+              onMouseEnter={() => setHoveredBar(index)}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
+              <div
+                className={`
+                  w-full rounded-t-sm transition-all duration-200
+                  ${bin.hasUser
+                    ? 'bg-gradient-to-t from-warning to-yellow-400'
+                    : isOutlierBin
+                      ? 'bg-gradient-to-t from-slate-500 to-slate-400'
+                      : 'bg-gradient-to-t from-primary-blue to-cyan-400'
+                  }
+                  ${isHovered ? 'opacity-100' : 'opacity-80'}
+                `}
+                style={{ height: `${heightPx}px` }}
+              />
+
+              {isHovered && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap">
+                  <div className="bg-bg-primary border border-border-default rounded-lg px-3 py-2 shadow-lg">
+                    <div className="text-xs font-mono text-text-secondary">
+                      {isOutlierBin ? (
+                        index === 0 && outlierCount.low > 0 ? `< ${focusMin.toFixed(2)} (outliers)` : `> ${focusMax.toFixed(2)} (outliers)`
+                      ) : (
+                        `${bin.min.toFixed(2)} - ${bin.max.toFixed(2)}`
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold text-text-primary">
+                      {bin.count} {bin.count === 1 ? 'participant' : 'participants'}
+                    </div>
+                    {bin.hasUser && (
+                      <div className="text-xs text-warning font-medium mt-1">Your average is here</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between text-xs text-text-tertiary font-mono px-1">
+        <span>{sortedScores[0].toFixed(2)}</span>
+        <span className="text-cyan-400">{median.toFixed(2)}</span>
+        <span>{sortedScores[sortedScores.length - 1].toFixed(2)}</span>
+      </div>
+
+      {/* User position info */}
+      <div className="mt-4 pt-4 border-t border-border-default">
+        {isLoggedIn && isRegistered ? (
+          userAverage !== undefined && userAverage !== null ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-warning" />
+                </div>
+                <div>
+                  <div className="text-xs text-text-tertiary">Your Final Average</div>
+                  <div className="font-mono font-bold text-warning">{userAverage.toFixed(decimals)}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-text-tertiary">Final Rank</div>
+                <div className="font-bold text-text-primary">
+                  #{userRank} <span className="text-text-tertiary font-normal">/ {entriesWithAverage.length}</span>
+                </div>
+              </div>
+            </div>
+          ) : userEntry ? (
+            <div className="flex items-center gap-3 text-text-tertiary">
+              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm">Missing scores for final ranking</div>
+                <div className="text-xs">You need both public and private scores for final ranking</div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-text-tertiary">
+              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm">You didn't participate</div>
+                <div className="text-xs">No submissions found for this competition</div>
+              </div>
+            </div>
+          )
+        ) : isLoggedIn ? (
+          <div className="flex items-center gap-3 text-text-tertiary">
+            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-sm">You weren't registered</div>
+              <div className="text-xs">This competition has ended</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 text-text-tertiary">
+            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-sm">Login to see your results</div>
+              <div className="text-xs">If you participated, login to view your final ranking</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 // Final Leaderboard Table Component
 function FinalLeaderboardTable({
   data,
   competition,
-  isIndividual
+  isIndividual,
+  userEntityId,
+  isRegistered,
+  isLoggedIn
 }: {
   data: any[];
   competition: any;
   isIndividual: boolean;
+  userEntityId?: string;
+  isRegistered: boolean;
+  isLoggedIn: boolean;
 }) {
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const decimals = metricInfo?.decimals || 4;
@@ -630,7 +1253,15 @@ function FinalLeaderboardTable({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <>
+      <FinalScoreDistributionChart
+        data={data}
+        userEntityId={userEntityId}
+        isRegistered={isRegistered}
+        isLoggedIn={isLoggedIn}
+        competition={competition}
+      />
+      <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-bg-elevated border-b border-border-default">
@@ -727,6 +1358,7 @@ function FinalLeaderboardTable({
         </table>
       </div>
     </Card>
+    </>
   );
 }
 
@@ -737,7 +1369,12 @@ function LeaderboardTab({
   loading,
   competition,
   phase,
-  onPhaseChange
+  onPhaseChange,
+  userBestScore,
+  userRank,
+  isRegistered,
+  isLoggedIn,
+  userEntityId
 }: {
   leaderboard: any[];
   finalLeaderboard: any[];
@@ -745,6 +1382,11 @@ function LeaderboardTab({
   competition: any;
   phase: 'public' | 'private' | 'final';
   onPhaseChange: (phase: 'public' | 'private' | 'final') => void;
+  userBestScore?: number;
+  userRank?: number;
+  isRegistered: boolean;
+  isLoggedIn: boolean;
+  userEntityId?: string;
 }) {
   const is4Phase = competition.competition_type === '4-phase';
   const now = new Date();
@@ -759,6 +1401,9 @@ function LeaderboardTab({
   // Show tabs based on competition phase
   const showFinalTab = is4Phase && !!isCompetitionEnded;
   const showPrivateTab = is4Phase && !!isPrivatePhaseStarted;
+
+  // Extract scores for distribution chart
+  const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
   if (loading) {
     return (
@@ -798,7 +1443,14 @@ function LeaderboardTab({
     return (
       <div>
         {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <FinalLeaderboardTable data={finalLeaderboard} competition={competition} isIndividual={false} />
+        <FinalLeaderboardTable
+          data={finalLeaderboard}
+          competition={competition}
+          isIndividual={false}
+          userEntityId={userEntityId}
+          isRegistered={isRegistered}
+          isLoggedIn={isLoggedIn}
+        />
       </div>
     );
   }
@@ -825,6 +1477,17 @@ function LeaderboardTab({
   return (
     <div>
       {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
+
+      {/* Score Distribution Chart */}
+      <ScoreDistributionChart
+        scores={scores}
+        userBestScore={userBestScore}
+        userRank={userRank}
+        isRegistered={isRegistered}
+        isLoggedIn={isLoggedIn}
+        totalParticipants={leaderboard.length}
+        competition={competition}
+      />
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -903,7 +1566,12 @@ function IndividualLeaderboardTab({
   loading,
   competition,
   phase,
-  onPhaseChange
+  onPhaseChange,
+  userBestScore,
+  userRank,
+  isRegistered,
+  isLoggedIn,
+  userId
 }: {
   leaderboard: any[];
   finalLeaderboard: any[];
@@ -911,6 +1579,11 @@ function IndividualLeaderboardTab({
   competition: any;
   phase: 'public' | 'private' | 'final';
   onPhaseChange: (phase: 'public' | 'private' | 'final') => void;
+  userBestScore?: number;
+  userRank?: number;
+  isRegistered: boolean;
+  isLoggedIn: boolean;
+  userId?: string;
 }) {
   const is4Phase = competition.competition_type === '4-phase';
   const now = new Date();
@@ -923,6 +1596,9 @@ function IndividualLeaderboardTab({
   const showPrivateNotStartedMessage = is4Phase && currentPhase === 'private' && !isPrivatePhaseStarted;
   const showFinalTab = is4Phase && !!isCompetitionEnded;
   const showPrivateTab = is4Phase && !!isPrivatePhaseStarted;
+
+  // Extract scores for distribution chart
+  const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
   if (loading) {
     return (
@@ -962,7 +1638,14 @@ function IndividualLeaderboardTab({
     return (
       <div>
         {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <FinalLeaderboardTable data={finalLeaderboard} competition={competition} isIndividual={true} />
+        <FinalLeaderboardTable
+          data={finalLeaderboard}
+          competition={competition}
+          isIndividual={true}
+          userEntityId={userId}
+          isRegistered={isRegistered}
+          isLoggedIn={isLoggedIn}
+        />
       </div>
     );
   }
@@ -988,6 +1671,18 @@ function IndividualLeaderboardTab({
   return (
     <div>
       {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
+
+      {/* Score Distribution Chart */}
+      <ScoreDistributionChart
+        scores={scores}
+        userBestScore={userBestScore}
+        userRank={userRank}
+        isRegistered={isRegistered}
+        isLoggedIn={isLoggedIn}
+        totalParticipants={leaderboard.length}
+        competition={competition}
+      />
+
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
