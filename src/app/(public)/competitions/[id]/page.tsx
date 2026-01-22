@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import CountdownTimer from '@/components/competition/CountdownTimer';
 import PhaseIndicator from '@/components/competition/PhaseIndicator';
-import CompetitionTimeline from '@/components/competition/CompetitionTimeline';
+import HorizontalTimeline from '@/components/competition/HorizontalTimeline';
 import CompetitionTabs from './CompetitionTabs';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
 import {
@@ -408,20 +408,25 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Main Content - Left Column (2/3) */}
           <div className="md:col-span-2 lg:col-span-2 space-y-6">
-            {/* Countdown Timer & Timeline Combined */}
+            {/* Countdown Timer & Timeline */}
             {nextDeadline && currentPhase !== 'ended' ? (
-              <Card className="p-8">
+              <Card className="p-6">
                 <CountdownTimer
                   targetDate={nextDeadline}
                   label={getCountdownLabel(currentPhase)}
-                  className="w-full mb-8"
+                  className="w-full mb-6"
                 />
-                <div className="pt-6 border-t border-border-default">
-                  <CompetitionTimeline competition={competition} compact />
+                <div className="pt-4 border-t border-border-default">
+                  <HorizontalTimeline competition={competition} />
                 </div>
               </Card>
             ) : (
-              <CompetitionTimeline competition={competition} />
+              <Card className="p-6">
+                <div className="text-center mb-4">
+                  <span className="text-text-tertiary">Competition Ended</span>
+                </div>
+                <HorizontalTimeline competition={competition} />
+              </Card>
             )}
 
 

@@ -12,11 +12,11 @@ import {
   Target,
   Clock,
   TrendingUp,
-  Calendar,
   CheckCircle2,
   AlertCircle,
   Plus,
   Settings,
+  Award,
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -373,10 +373,10 @@ export default async function AdminDashboardPage() {
                   Create New Competition
                 </Button>
               </Link>
-              <Link href="/competitions" className="block">
+              <Link href="/admin/certificates" className="block">
                 <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  View Public Site
+                  <Award className="w-4 h-4 mr-2" />
+                  Add Certificate
                 </Button>
               </Link>
             </div>
