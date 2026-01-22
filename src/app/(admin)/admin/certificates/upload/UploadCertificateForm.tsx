@@ -49,6 +49,7 @@ export default function UploadCertificateForm({
 
   const [competitionId, setCompetitionId] = useState(selectedCompetitionId || '');
   const [prefix, setPrefix] = useState(selectedCompetitionId ? (prefixMap[selectedCompetitionId] || '') : '');
+  const [suffix, setSuffix] = useState(generateCode(4));
   const [recipientName, setRecipientName] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -87,7 +88,8 @@ export default function UploadCertificateForm({
     e.preventDefault();
     setError(null);
 
-    if (!competitionId || !prefix || !recipientName || !file) {
+    // Validate inputs
+    if (!competitionId || !prefix || !suffix || !recipientName || !file) {
       setError('Please fill in all fields');
       return;
     }
@@ -96,7 +98,7 @@ export default function UploadCertificateForm({
 
     try {
       // Generate verification code
-      const code = `${prefix}-${generateCode(4)}`;
+      const code = `${prefix}-${suffix}`;
 
       // Get file extension
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
@@ -152,6 +154,7 @@ export default function UploadCertificateForm({
 
       // Reset form for next upload
       setRecipientName('');
+      setSuffix(generateCode(4));
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -271,6 +274,32 @@ export default function UploadCertificateForm({
         )}
       </div>
 
+      {/* Suffix Input */}
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Certificate Code Suffix
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={suffix}
+            onChange={(e) => setSuffix(e.target.value.toUpperCase())}
+            placeholder="XXXX"
+            className="flex-1 px-4 py-3 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:border-primary-blue font-mono uppercase"
+            maxLength={10}
+            required
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSuffix(generateCode(4))}
+            title="Generate Random Suffix"
+          >
+            Random
+          </Button>
+        </div>
+      </div>
+
       {/* Recipient Name */}
       <div>
         <label className="block text-sm font-medium mb-2">Recipient Name</label>
@@ -353,10 +382,10 @@ export default function UploadCertificateForm({
       )}
 
       {/* Preview Code */}
-      {prefix && (
+      {prefix && suffix && (
         <div className="p-4 bg-bg-tertiary rounded-lg">
-          <div className="text-sm text-text-tertiary mb-1">Preview verification code format:</div>
-          <code className="font-mono text-accent-cyan">{prefix}-XXXX</code>
+          <div className="text-sm text-text-tertiary mb-1">Preview verification code:</div>
+          <code className="font-mono text-accent-cyan">{prefix}-{suffix}</code>
         </div>
       )}
 
@@ -366,7 +395,7 @@ export default function UploadCertificateForm({
         variant="primary"
         size="lg"
         className="w-full"
-        disabled={uploading || !competitionId || !prefix || !recipientName || !file}
+        disabled={uploading || !competitionId || !prefix || !suffix || !recipientName || !file}
       >
         {uploading ? (
           <>
