@@ -7,60 +7,32 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
+      <section className="relative overflow-hidden py-12 lg:py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-blue/10 via-accent-cyan/5 to-transparent" />
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center">
             {/* Main Title - Hero title: text-5xl md:text-7xl font-extrabold */}
-            <h1 className="text-5xl md:text-7xl font-brand leading-tight mb-6">
+            <h1 className="text-5xl md:text-7xl font-brand leading-tight mb-4">
               <span className="gradient-text">
-                THE NODERS PTNK
+                Competition Platform
               </span>
             </h1>
 
             {/* Subtitle - Hero subtitle: text-xl md:text-2xl font-light */}
             <p className="text-xl md:text-2xl font-light text-text-secondary mb-6 max-w-3xl mx-auto">
-              Technology Community with students from PTNK
+              The official AI/ML training & competition arena for The Noders PTNK
             </p>
 
-            {/* Tagline */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-bg-elevated/80 backdrop-blur-sm rounded-full border border-border-default mb-8">
-              <Sparkles className="w-5 h-5 text-primary-blue" />
-              <span className="text-base md:text-lg font-semibold gradient-text tracking-wide">
-                Connecting Minds • Creating Intelligence
-              </span>
-            </div>
-
             {/* Description - Large body text: text-lg */}
-            <div className="max-w-3xl mx-auto mb-8 space-y-4">
+            <div className="max-w-3xl mx-auto space-y-4">
               <p className="text-lg text-text-secondary leading-relaxed">
-                Where innovation meets collaboration at VNUHCM High School for the Gifted.
-                Just like nodes in a neural network collaborate to create powerful intelligence,
-                we connect to build an outstanding developer community.
-              </p>
-
-              <p className="text-lg text-text-secondary leading-relaxed">
-                This competition platform is created as a playground for our community -
-                a place where members can challenge themselves, learn from each other,
-                and grow together in AI & Machine Learning.
+                Built for students to tackle real-world challenges, master standard model training workflows, 
+                and receive instant feedback via our automated scoring system.
               </p>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
-                <Button variant="primary" size="lg" className="group">
-                  Get Started
-                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <Link href="/competitions">
-                <Button variant="outline" size="lg">
-                  Explore Competitions
-                </Button>
-              </Link>
-            </div>
+
           </div>
         </div>
 
