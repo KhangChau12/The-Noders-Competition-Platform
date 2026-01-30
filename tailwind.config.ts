@@ -49,6 +49,21 @@ const config: Config = {
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)',
       },
+      keyframes: {
+        levitate: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+      },
+      animation: {
+        levitate: 'levitate 6s ease-in-out infinite',
+        'shimmer': 'shimmer 1.5s infinite',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+      },
       boxShadow: {
         'glow-blue-sm': '0 0 10px rgba(37, 99, 235, 0.3)',
         'glow-blue-md': '0 0 20px rgba(37, 99, 235, 0.4)',
@@ -64,16 +79,6 @@ const config: Config = {
       },
       borderRadius: {
         '4xl': '2rem',
-      },
-      animation: {
-        'shimmer': 'shimmer 1.5s infinite',
-        'pulse-slow': 'pulse 3s ease-in-out infinite',
-      },
-      keyframes: {
-        shimmer: {
-          '0%': { backgroundPosition: '200% 0' },
-          '100%': { backgroundPosition: '-200% 0' },
-        },
       },
     },
   },
