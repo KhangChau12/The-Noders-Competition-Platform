@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#1a2332]/80 backdrop-blur-md border-b border-gray-700/50">
-      <div className="relative h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative h-16 w-full px-4 sm:px-6 lg:px-8">
         {/* Logo - Absolute Left */}
         <div className="absolute left-4 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2">
           <Link href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="flex items-center">

@@ -169,7 +169,7 @@ export default async function HomePage() {
                </div>
 
                {/* Foreground: Feature Card 1 - Top Left */}
-               <div className="absolute top-[-15%] left-[0%] lg:-left-[15%] w-[45%] z-30 animate-levitate [animation-delay:1.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+               <div className="absolute top-[-15%] left-[0%] lg:-left-[15%] w-[45%] z-10 animate-levitate [animation-delay:1.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
                    <div className="w-full flex items-center justify-center relative overflow-hidden">
                         <img src="/hero-images/feature-1.png" alt="Feature 1" className="w-full h-auto object-contain" />
                    </div>
@@ -183,7 +183,7 @@ export default async function HomePage() {
                </div>
 
                {/* Background: Feature Card 3 - Top Right (New) */}
-               <div className="absolute -top-[5%] right-[0%] lg:-right-[2%] w-[28%] z-10 animate-levitate [animation-delay:0.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
+               <div className="absolute -top-[5%] right-[0%] lg:-right-[2%] w-[28%] z-30 animate-levitate [animation-delay:0.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
                    <div className="w-full flex items-center justify-center relative overflow-hidden">
                         <img src="/hero-images/feature-3.png" alt="Feature 3" className="w-full h-auto object-contain" />
                    </div>
