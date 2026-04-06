@@ -55,15 +55,6 @@ export default function Footer() {
                   Dashboard
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-text-secondary hover:text-primary-blue transition-colors text-sm font-medium flex items-center gap-2 group"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary-blue/30 group-hover:bg-primary-blue transition-colors"></span>
-                  About
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

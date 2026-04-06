@@ -109,6 +109,41 @@ export const SCORING_METRIC_INFO = {
   },
 } as const;
 
+// Practice problem difficulties
+export const PRACTICE_DIFFICULTIES = {
+  BEGINNER:     'beginner',
+  INTERMEDIATE: 'intermediate',
+  ADVANCED:     'advanced',
+} as const;
+
+export const PRACTICE_DIFFICULTY_INFO = {
+  beginner: {
+    label: 'Beginner',
+    color: 'text-success',
+    bgColor: 'bg-success/10',
+    borderColor: 'border-success/20',
+  },
+  intermediate: {
+    label: 'Intermediate',
+    color: 'text-warning',
+    bgColor: 'bg-warning/10',
+    borderColor: 'border-warning/20',
+  },
+  advanced: {
+    label: 'Advanced',
+    color: 'text-error',
+    bgColor: 'bg-error/10',
+    borderColor: 'border-error/20',
+  },
+} as const;
+
+// Default limits for practice problems
+export const DEFAULT_PRACTICE_LIMITS = {
+  DAILY: 15,
+  TOTAL: 0,          // 0 = unlimited
+  MAX_FILE_SIZE_MB: 10,
+} as const;
+
 // Date formats
 export const DATE_FORMATS = {
   SHORT: 'MMM d, yyyy',

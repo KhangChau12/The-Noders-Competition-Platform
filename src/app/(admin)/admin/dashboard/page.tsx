@@ -17,6 +17,7 @@ import {
   Plus,
   Settings,
   Award,
+  BookOpen,
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -112,6 +113,12 @@ export default async function AdminDashboardPage() {
     .from('submissions')
     .select('*', { count: 'exact', head: true });
 
+  // Fetch total practice problems
+  const { count: totalPracticeProblems } = await (supabase as any)
+    .from('practice_problems')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null);
+
   // Fetch recent submissions
   const { data: recentSubmissions, error: submissionsError } = (await supabase
     .from('submissions')
@@ -164,7 +171,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
           <Card className="p-6 border-l-4 border-primary-blue">
             <div className="flex items-center justify-between mb-2">
               <div className="text-text-tertiary text-sm">Total Competitions</div>
@@ -209,6 +216,17 @@ export default async function AdminDashboardPage() {
               {totalSubmissions || 0}
             </div>
             <div className="text-xs text-text-tertiary mt-1">All time</div>
+          </Card>
+
+          <Card className="p-6 border-l-4 border-phase-registration">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-text-tertiary text-sm">Practice Problems</div>
+              <BookOpen className="w-5 h-5 text-phase-registration" />
+            </div>
+            <div className="text-3xl font-bold text-phase-registration">
+              {totalPracticeProblems || 0}
+            </div>
+            <div className="text-xs text-text-tertiary mt-1">Published problems</div>
           </Card>
         </div>
 
@@ -377,6 +395,18 @@ export default async function AdminDashboardPage() {
                 <Button variant="outline" className="w-full justify-start">
                   <Award className="w-4 h-4 mr-2" />
                   Add Certificate
+                </Button>
+              </Link>
+              <Link href="/admin/practice" className="block">
+                <Button variant="outline" className="w-full justify-start">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Manage Practice Problems
+                </Button>
+              </Link>
+              <Link href="/admin/practice/create" className="block">
+                <Button variant="outline" className="w-full justify-start">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Practice Problem
                 </Button>
               </Link>
             </div>

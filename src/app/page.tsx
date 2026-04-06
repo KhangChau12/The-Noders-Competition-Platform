@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Code2,
   Brain,
+  Shield,
 } from 'lucide-react';
 
 // Helper function to calculate competition phase
@@ -163,8 +164,8 @@ export default async function HomePage() {
                {/* Center Hub: Main Dashboard - Anchor */}
                <div className="w-[85%] lg:w-[80%] z-20 animate-levitate shadow-2xl shadow-primary-blue/10 rounded-xl border border-white/10 overflow-hidden bg-bg-surface/80 backdrop-blur-md relative">
                    {/* Main Dashboard Image - Auto Height based on image ratio */}
-                   <div className="w-full flex items-center justify-center relative overflow-hidden group">
-                        <img src="/hero-images/dashboard.png" alt="Main Dashboard" className="w-full h-auto object-contain" />
+                   <div className="w-full flex items-center justify- relative overflow-hidden group">
+                        <img src="/hero-images/dashboard.png" alt="Maincenter Dashboard" className="w-full h-auto object-contain" />
                    </div>
                </div>
 
@@ -372,26 +373,223 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA Section */}
+      {/* What We Provide Section */}
       <section className="px-6 py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto">
-          <Card className="p-12 text-center bg-gradient-to-br from-bg-surface to-bg-elevated border-primary-blue/20 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">What we provide</h2>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              Core features that make our platform powerful and easy to use
+            </p>
+          </div>
 
-            <div className="relative">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                <span className="gradient-text">
-                  Ready for the Challenge?
-                </span>
-              </h2>
-
-              <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
-                Join thousands of data scientists and ML engineers in exciting AI challenges.
-                Start your journey today!
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-blue to-primary-blue/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Trophy className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-primary-blue transition-colors">
+                Professional Competitions
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                AI/ML competition system with multiple phases and international standards
               </p>
+            </Card>
 
-              <div className="flex gap-4 justify-center flex-wrap">
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent-cyan to-accent-cyan/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-accent-cyan transition-colors">
+                Automatic Scoring
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Automatic scoring system with F1 Score and instant feedback
+              </p>
+            </Card>
+
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-success to-success/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-success transition-colors">
+                Real-Time Leaderboards
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Public and private leaderboards with real-time updates
+              </p>
+            </Card>
+
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-warning to-warning/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-warning transition-colors">
+                Team Competition
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Support for individual and team competitions with member management
+              </p>
+            </Card>
+
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-error to-error/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-error transition-colors">
+                High Security
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Security system with email verification and data encryption
+              </p>
+            </Card>
+
+            <Card className="group p-6 transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-phase-registration to-phase-registration/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-phase-registration transition-colors">
+                Detailed Analytics
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Dashboard with statistics and insights for participants
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Competition Format Section */}
+      <section className="px-6 py-12 sm:py-16 bg-bg-elevated/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">Competition Format</h2>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              Two flexible competition formats for different needs
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* 3-Phase Competition */}
+            <Card className="p-8 bg-gradient-to-br from-primary-blue/5 to-transparent border-primary-blue/30 transition-all duration-300">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-gradient-brand rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-lg">3</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-text-primary mb-1">3-Phase Competition</h3>
+                  <p className="text-sm text-primary-blue font-semibold">For short-term competitions</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-registration/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-registration font-bold text-sm">1</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-registration">Registration</h4>
+                    <p className="text-text-secondary text-sm">Participants register and prepare</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-public/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-public font-bold text-sm">2</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-public">Public Phase</h4>
+                    <p className="text-text-secondary text-sm">Main competition with real-time leaderboard</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-ended/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-ended font-bold text-sm">3</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-ended">Ended</h4>
+                    <p className="text-text-secondary text-sm">Results announced and rankings determined</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* 4-Phase Competition */}
+            <Card className="p-8 bg-gradient-to-br from-accent-cyan/5 to-transparent border-accent-cyan/30 transition-all duration-300">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-accent-cyan to-primary-blue rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-lg">4</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-text-primary mb-1">4-Phase Competition</h3>
+                  <p className="text-sm text-accent-cyan font-semibold">For professional competitions</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-registration/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-registration font-bold text-sm">1</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-registration">Registration</h4>
+                    <p className="text-text-secondary text-sm">Participants register and prepare</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-public/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-public font-bold text-sm">2</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-public">Public Test</h4>
+                    <p className="text-text-secondary text-sm">Compete with public leaderboard</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-private/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-private font-bold text-sm">3</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-private">Private Test</h4>
+                    <p className="text-text-secondary text-sm">Private leaderboard to prevent overfitting</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-phase-ended/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-phase-ended font-bold text-sm">4</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-phase-ended">Ended</h4>
+                    <p className="text-text-secondary text-sm">Final results based on private test scores</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA + Contact Section */}
+      <section className="px-6 py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
+          {/* CTA Card */}
+          <Card className="p-10 bg-gradient-to-br from-bg-surface to-bg-elevated border-primary-blue/20 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
+            <div className="relative">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-brand mb-5">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                <span className="gradient-text">Ready for the Challenge?</span>
+              </h2>
+              <p className="text-text-secondary leading-relaxed mb-8">
+                Join our community of data scientists and ML engineers. Build, train, and compete — start your journey today.
+              </p>
+              <div className="flex gap-3 flex-wrap">
                 <Link href="/signup">
                   <Button variant="primary" size="lg" className="gap-2">
                     <Zap className="w-5 h-5" />
@@ -404,6 +602,44 @@ export default async function HomePage() {
                     View Competitions
                   </Button>
                 </Link>
+              </div>
+            </div>
+          </Card>
+
+          {/* Contact Card */}
+          <Card className="p-10 bg-gradient-to-br from-bg-surface to-bg-elevated border-accent-cyan/20 relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.04)_1px,transparent_1px)] bg-[size:30px_30px]" />
+            <div className="relative">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-accent-cyan to-primary-blue mb-5">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">Contact Us</h2>
+              <p className="text-text-secondary leading-relaxed mb-8">
+                Have questions or need support? We're here to help — reach out to us anytime.
+              </p>
+              <div className="flex flex-col gap-3">
+                <a
+                  href="mailto:thenodersptnk@gmail.com"
+                  className="inline-flex items-center gap-3 px-5 py-3 bg-gradient-brand text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary-blue/30 transition-all duration-300 w-fit"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  thenodersptnk@gmail.com
+                </a>
+                <a
+                  href="https://thenodersptnk.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 px-5 py-3 bg-bg-elevated border border-border-default text-text-primary font-semibold rounded-xl hover:border-accent-cyan hover:bg-accent-cyan/5 hover:text-accent-cyan transition-all duration-300 w-fit"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  thenodersptnk.com
+                </a>
               </div>
             </div>
           </Card>

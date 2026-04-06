@@ -7,13 +7,105 @@ console.log('CSV Validation Function Started')
 
 serve(async (req) => {
   try {
-    // Parse request
-    const { submissionId } = await req.json()
+    // Parse request — submissionType distinguishes competition vs practice submissions
+    const { submissionId, submissionType = 'competition' } = await req.json()
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // -----------------------------------------------------------------------
+    // Branch: Practice submission
+    // -----------------------------------------------------------------------
+    if (submissionType === 'practice') {
+      // Get practice submission + problem
+      const { data: submission, error: submissionError } = await supabase
+        .from('practice_submissions')
+        .select(`*, problem:practice_problems(*)`)
+        .eq('id', submissionId)
+        .single()
+
+      if (submissionError) {
+        throw new Error(`Failed to fetch practice submission: ${submissionError.message}`)
+      }
+
+      // Download submission file
+      const { data: submissionFile, error: fileError } = await supabase.storage
+        .from('submissions')
+        .download(submission.file_path)
+
+      if (fileError) {
+        throw new Error(`Failed to download submission: ${fileError.message}`)
+      }
+
+      // Get answer key for this practice problem
+      const { data: answerKey, error: answerKeyError } = await supabase
+        .from('practice_test_datasets')
+        .select('file_path')
+        .eq('problem_id', submission.problem_id)
+        .single()
+
+      if (answerKeyError) {
+        throw new Error(`Practice answer key not found: ${answerKeyError.message}`)
+      }
+
+      // Download answer key
+      const { data: answerFile, error: answerFileError } = await supabase.storage
+        .from('answer-keys')
+        .download(answerKey.file_path)
+
+      if (answerFileError) {
+        throw new Error(`Failed to download answer key: ${answerFileError.message}`)
+      }
+
+      // Parse CSV files
+      const submissionText = await submissionFile.text()
+      const answerText = await answerFile.text()
+      const submissionRows = parseCSV(submissionText)
+      const answerRows = parseCSV(answerText)
+
+      // Validate
+      const validation = validateCSV(submissionRows, answerRows)
+
+      if (!validation.valid) {
+        await supabase
+          .from('practice_submissions')
+          .update({
+            validation_status: 'invalid',
+            validation_errors: validation.errors,
+            processed_at: new Date().toISOString(),
+          })
+          .eq('id', submissionId)
+
+        return new Response(
+          JSON.stringify({ success: false, errors: validation.errors }),
+          { headers: { 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+
+      // Calculate score
+      const scoringMetric = submission.problem.scoring_metric || 'f1_score'
+      const score = calculateScore(submissionRows, answerRows, scoringMetric)
+
+      await supabase
+        .from('practice_submissions')
+        .update({
+          validation_status: 'valid',
+          score: score,
+          processed_at: new Date().toISOString(),
+        })
+        .eq('id', submissionId)
+
+      return new Response(
+        JSON.stringify({ success: true, score: score }),
+        { headers: { 'Content-Type': 'application/json' }, status: 200 }
+      )
+    }
+
+    // -----------------------------------------------------------------------
+    // Branch: Competition submission (original flow)
+    // -----------------------------------------------------------------------
 
     // Get submission details
     const { data: submission, error: submissionError } = await supabase

@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Trophy, Info, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
+import { Home, Trophy, BookOpen, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     switch (label) {
       case 'Home': return <Home className="w-5 h-5" />;
       case 'Competitions': return <Trophy className="w-5 h-5" />;
-      case 'About': return <Info className="w-5 h-5" />;
+      case 'Practice': return <BookOpen className="w-5 h-5" />;
       default: return null;
     }
   };

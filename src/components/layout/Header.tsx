@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/competitions', label: 'Competitions' },
-    { href: '/about', label: 'About' },
+    { href: '/practice', label: 'Practice' },
   ];
 
   return (
