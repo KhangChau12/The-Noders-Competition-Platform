@@ -266,12 +266,14 @@ export default function CompetitionsPage() {
   }, [competitions, searchQuery, filterStatus, sortBy]);
 
   return (
-    <div className="min-h-screen px-4 py-12">
+    <div className="min-h-screen px-4 sm:px-6 py-10 sm:py-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="font-brand text-5xl mb-4 gradient-text">Competitions</h1>
-          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-4 gradient-text leading-tight">
+            Competitions
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mx-auto px-2">
             Browse active competitions and start your AI journey
           </p>
         </div>
@@ -291,12 +293,12 @@ export default function CompetitionsPage() {
           </div>
 
           {/* Filter and Sort Controls */}
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto justify-center"
               aria-expanded={showFilters}
               aria-label="Toggle filters"
             >
@@ -314,7 +316,7 @@ export default function CompetitionsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-3 py-2 bg-bg-surface border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
+                className="w-full sm:w-auto px-3 py-2 bg-bg-surface border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
                 aria-label="Sort competitions"
               >
                 <option value="latest">Latest</option>
@@ -375,9 +377,9 @@ export default function CompetitionsPage() {
 
         {/* Empty State */}
         {!loading && filteredAndSortedCompetitions.length === 0 && (
-          <Card className="p-12 text-center">
-            <Trophy className="h-16 w-16 mx-auto mb-4 text-text-tertiary" />
-            <h3 className="text-xl font-bold text-text-primary mb-2">No competitions found</h3>
+          <Card className="p-8 sm:p-12 text-center">
+            <Trophy className="h-14 w-14 sm:h-16 sm:w-16 mx-auto mb-4 text-text-tertiary" />
+            <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-2">No competitions found</h3>
             <p className="text-text-secondary">
               {searchQuery || filterStatus !== 'all'
                 ? 'Try adjusting your filters or search query'
@@ -389,8 +391,8 @@ export default function CompetitionsPage() {
         {/* Competitions List */}
         {!loading && filteredAndSortedCompetitions.length > 0 && (
           <Card className="overflow-hidden">
-            <div className="p-6 border-b border-border-default bg-bg-tertiary">
-              <h2 className="text-xl font-bold flex items-center gap-2">
+            <div className="p-4 sm:p-6 border-b border-border-default bg-bg-tertiary">
+              <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                 <Filter className="w-5 h-5" />
                 All Competitions
               </h2>
@@ -511,14 +513,16 @@ function CompetitionRow({
 
   return (
     <div
-      className="p-6 hover:bg-bg-tertiary/50 transition-colors cursor-pointer"
+      className="p-4 sm:p-6 hover:bg-bg-tertiary/50 transition-colors cursor-pointer"
       onClick={() => router.push(`/competitions/${competition.id}`)}
     >
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5 xl:gap-6">
         <div className="flex-1 min-w-0">
           {/* Title & Badges */}
-          <div className="flex items-center gap-3 mb-3 flex-wrap">
-            <h3 className="text-xl font-bold">{competition.title}</h3>
+          <div className="flex items-start gap-3 mb-3 flex-wrap">
+            <h3 className="text-lg sm:text-xl font-bold leading-snug max-w-full">
+              {competition.title}
+            </h3>
             <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
             <Badge variant="tech">
               {competition.scoring_metric.replace('_', ' ').toUpperCase()}
@@ -538,8 +542,8 @@ function CompetitionRow({
           </p>
 
           {/* Stats */}
-          <div className="flex flex-wrap gap-6 text-sm">
-            <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-wrap gap-3 sm:gap-4 xl:gap-6 text-sm">
+            <div className="flex items-center gap-2 min-w-0">
               <Users className="w-4 h-4 text-text-tertiary" />
               <span className="text-text-secondary">
                 <strong className="text-text-primary">
@@ -554,7 +558,7 @@ function CompetitionRow({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Target className="w-4 h-4 text-text-tertiary" />
               <span className="text-text-secondary">
                 <strong className="text-text-primary">
@@ -564,21 +568,21 @@ function CompetitionRow({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Calendar className="w-4 h-4 text-text-tertiary" />
               <span className="text-text-secondary">
                 Created {new Date(competition.created_at).toLocaleDateString()}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Trophy className="w-4 h-4 text-text-tertiary" />
               <span className="text-text-secondary">{competition.scoring_metric}</span>
             </div>
           </div>
 
           {/* Timeline */}
-          <div className="mt-3 text-xs text-text-tertiary">
+          <div className="mt-3 text-xs text-text-tertiary leading-relaxed">
             Registration:{' '}
             {new Date(competition.registration_start).toLocaleDateString()} -{' '}
             {new Date(competition.registration_end).toLocaleDateString()} | Public
@@ -590,7 +594,7 @@ function CompetitionRow({
 
         {/* Countdown or Ended Box (right side) */}
         {competition.phase === 'ended' ? (
-          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default min-w-[140px]">
+          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default w-full xl:w-[170px] min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <Trophy className="h-4 w-4 text-text-tertiary" />
               <span className="text-xs text-text-tertiary uppercase font-mono">
@@ -604,28 +608,28 @@ function CompetitionRow({
             </div>
           </div>
         ) : competition.countdown ? (
-          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default min-w-[140px]">
+          <div className="flex-shrink-0 p-3 bg-bg-elevated rounded-lg border border-border-default w-full xl:w-[170px] min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-primary-blue" />
               <span className="text-xs text-text-tertiary uppercase font-mono">
                 {competition.countdown.label.replace(' in', '')}
               </span>
             </div>
-            <div className="flex gap-2 text-center">
-              <div className="flex-1">
-                <div className="text-lg font-bold text-primary-blue font-mono">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.days}
                 </div>
                 <div className="text-xs text-text-tertiary">Days</div>
               </div>
-              <div className="flex-1">
-                <div className="text-lg font-bold text-primary-blue font-mono">
+              <div>
+                <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.hours}
                 </div>
                 <div className="text-xs text-text-tertiary">Hrs</div>
               </div>
-              <div className="flex-1">
-                <div className="text-lg font-bold text-primary-blue font-mono">
+              <div>
+                <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
                   {competition.countdown.minutes}
                 </div>
                 <div className="text-xs text-text-tertiary">Min</div>

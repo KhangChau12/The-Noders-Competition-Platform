@@ -103,7 +103,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen">
       {/* Hero Section with Split Screen Design */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-bg-primary py-24 lg:py-24">
+      <section className="relative min-h-[calc(100vh-64px)] lg:min-h-[90vh] flex items-center overflow-hidden bg-bg-primary py-16 sm:py-20 lg:py-24">
         {/* Background: Blurred glow orbs */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary-blue/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-accent-cyan/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
@@ -111,19 +111,19 @@ export default async function HomePage() {
         {/* Grid Background Overlay */}
          <div className="absolute inset-0 bg-[linear-gradient(rgba(51,65,85,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(51,65,85,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-8 items-center relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10 lg:gap-8 items-center relative z-10">
           {/* Left Column - Typography & CTA */}
-          <div className="text-center lg:text-left pt-6 lg:pt-0 lg:-ml-12">
-            <h1 className="font-brand text-4xl lg:text-5xl leading-tight mb-4">
-              <span className="text-text-primary block mb-1">
+          <div className="text-center lg:text-left pt-2 sm:pt-4 lg:pt-0 mx-auto lg:mx-0 max-w-2xl">
+            <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4">
+              <span className="text-text-primary block mb-1 text-[0.92em] sm:text-[0.96em] lg:text-[1em]">
                 The Noders
               </span>
-              <span className="text-transparent bg-clip-text bg-gradient-brand">
+              <span className="text-transparent bg-clip-text bg-gradient-brand text-[1.02em] sm:text-[1.06em] lg:text-[1em]">
                 Competition Platform
               </span>
             </h1>
 
-            <p className="text-lg lg:text-xl font-light text-text-secondary mb-6 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg lg:text-xl font-light text-text-secondary mb-6 leading-relaxed mx-auto lg:mx-0 max-w-xl sm:max-w-2xl">
               Join <span className="font-brand text-primary-blue">The Noders Community</span>. Challenge yourself with real-world AI competitions,
               compete fairly and learn from the best.
             </p>

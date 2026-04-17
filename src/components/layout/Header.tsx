@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         {/* Logo - Absolute Left */}
         <div className="absolute left-4 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2">
           <Link href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
-            <span className="text-3xl font-brand text-white">
+            <span className="text-xl sm:text-2xl lg:text-[1.65rem] leading-none font-brand text-white">
               The Noders <span className="text-[#3b9eff]">Community</span>
             </span>
           </Link>
