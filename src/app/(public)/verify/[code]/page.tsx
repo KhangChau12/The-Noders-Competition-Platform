@@ -92,7 +92,7 @@ export default async function VerifyResultPage({ params }: Props) {
             Certificate Verified
           </h1>
           <p className="text-text-secondary text-sm">
-            This certificate is authentic and was issued by The Noders PTNK
+            This certificate is authentic and was issued by The Noders Community
           </p>
         </div>
 

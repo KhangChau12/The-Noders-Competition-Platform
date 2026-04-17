@@ -24,8 +24,8 @@ const shrikhand = Shrikhand({
 
 export const metadata: Metadata = {
   title: 'The Noders Competition Platform',
-  description: 'Official AI & ML competition platform by The Noders PTNK - Compete in challenges, test your skills, and climb the leaderboard',
-  keywords: ['AI', 'competition', 'machine learning', 'data science', 'The Noders PTNK'],
+  description: 'Official AI & ML competition platform by The Noders Community - Compete in challenges, test your skills, and climb the leaderboard',
+  keywords: ['AI', 'competition', 'machine learning', 'data science', 'The Noders Community'],
 };
 
 // Force dynamic rendering to prevent caching issues with auth

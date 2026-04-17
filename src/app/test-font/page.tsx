@@ -18,7 +18,7 @@ export default function TestFontPage() {
             1. Direct Shrikhand from next/font (với className)
           </div>
           <h2 className={`${shrikhand.className} text-5xl text-primary-blue`}>
-            The Noders PTNK Competition
+            The Noders Community Competition
           </h2>
         </div>
 
@@ -28,7 +28,7 @@ export default function TestFontPage() {
             2. Using font-brand class (Tailwind config)
           </div>
           <h2 className="font-brand text-5xl text-accent-cyan">
-            The Noders PTNK Competition
+            The Noders Community Competition
           </h2>
         </div>
 
@@ -38,7 +38,7 @@ export default function TestFontPage() {
             3. Default font-sans (Nunito)
           </div>
           <h2 className="font-sans text-5xl text-text-primary">
-            The Noders PTNK Competition
+            The Noders Community Competition
           </h2>
         </div>
 
@@ -48,7 +48,7 @@ export default function TestFontPage() {
             4. System font (để so sánh)
           </div>
           <h2 className="text-5xl text-text-primary" style={{ fontFamily: 'system-ui' }}>
-            The Noders PTNK Competition
+            The Noders Community Competition
           </h2>
         </div>
 

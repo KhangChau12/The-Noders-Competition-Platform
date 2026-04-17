@@ -125,7 +125,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-lg lg:text-xl font-light text-text-secondary mb-6 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Join <span className="font-brand text-primary-blue">The Noders PTNK</span> community. Challenge yourself with real-world AI competitions,
+              Join <span className="font-brand text-primary-blue">The Noders Community</span>. Challenge yourself with real-world AI competitions,
               compete fairly and learn from the best.
             </p>
 

@@ -12,7 +12,7 @@ export default function Footer() {
               The Noders
             </h3>
             <p className="text-sm text-text-tertiary leading-relaxed mb-4">
-              The Noders Competition Platform - Official AI competition platform of The Noders PTNK club for data scientists and ML practitioners.
+              The Noders Competition Platform - Official AI competition platform of The Noders Community for data scientists and ML practitioners.
             </p>
             <div className="flex gap-3">
               <a href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-bg-surface border border-border-default hover:border-primary-blue hover:bg-primary-blue/10 flex items-center justify-center transition-all group" title="Official Website">
@@ -62,7 +62,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="pt-8 border-t border-border-default">
           <p className="text-text-tertiary text-sm text-center">
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-text-secondary">The Noders PTNK</span>. All rights reserved.
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-text-secondary">The Noders Community</span>. All rights reserved.
           </p>
         </div>
       </div>
