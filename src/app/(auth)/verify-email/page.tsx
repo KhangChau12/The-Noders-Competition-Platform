@@ -133,7 +133,7 @@ export default function VerifyEmailPage({
           <div className="mt-8 text-sm text-text-tertiary">
             Need help?{' '}
             <a
-              href="mailto:thenodersptnk@gmail.com"
+              href="mailto:phuckhangtdn@gmail.com"
               className="text-primary-blue hover:underline font-semibold"
             >
               Contact us

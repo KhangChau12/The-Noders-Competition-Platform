@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Code2,
   Brain,
-  Shield,
 } from 'lucide-react';
 
 // Helper function to calculate competition phase
@@ -201,6 +200,77 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Quick Statistics Section */}
+      <section className="px-4 sm:px-6 py-12 sm:py-16 bg-bg-surface/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10 sm:mb-12">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <BarChart3 className="w-8 h-8 text-accent-cyan" />
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
+                Platform Statistics
+              </h2>
+            </div>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              A quick snapshot of activity across the platform.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/60 bg-bg-surface/70 backdrop-blur-sm p-5 sm:p-6 shadow-lg shadow-black/10 hover:border-primary-blue/40 transition-all duration-300 min-h-[180px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Trophy className="absolute -bottom-6 -right-6 h-24 w-24 text-primary-blue/10 pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+              <div className="relative flex h-full flex-col justify-end pr-10 sm:pr-12">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-1 relative z-10">
+                  {totalCompetitions || 0}
+                </div>
+                <div className="text-[10px] md:text-[11px] font-semibold text-text-secondary uppercase tracking-[0.14em] md:tracking-[0.18em] leading-tight relative z-10">
+                  Total Competitions
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/60 bg-bg-surface/70 backdrop-blur-sm p-5 sm:p-6 shadow-lg shadow-black/10 hover:border-primary-blue/40 transition-all duration-300 min-h-[180px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Users className="absolute -bottom-6 -right-6 h-24 w-24 text-accent-cyan/10 pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+              <div className="relative flex h-full flex-col justify-end pr-10 sm:pr-12">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-1 relative z-10">
+                  {totalParticipants || 0}+
+                </div>
+                <div className="text-[10px] md:text-[11px] font-semibold text-text-secondary uppercase tracking-[0.14em] md:tracking-[0.18em] leading-tight relative z-10">
+                  Total Participants
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/60 bg-bg-surface/70 backdrop-blur-sm p-5 sm:p-6 shadow-lg shadow-black/10 hover:border-primary-blue/40 transition-all duration-300 min-h-[180px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Target className="absolute -bottom-6 -right-6 h-24 w-24 text-success/10 pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+              <div className="relative flex h-full flex-col justify-end pr-10 sm:pr-12">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-1 relative z-10">
+                  {totalSubmissions || 0}
+                </div>
+                <div className="text-[10px] md:text-[11px] font-semibold text-text-secondary uppercase tracking-[0.14em] md:tracking-[0.18em] leading-tight relative z-10">
+                  Total Submissions
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/60 bg-bg-surface/70 backdrop-blur-sm p-5 sm:p-6 shadow-lg shadow-black/10 hover:border-primary-blue/40 transition-all duration-300 min-h-[180px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Clock className="absolute -bottom-6 -right-6 h-24 w-24 text-warning/10 pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6" />
+              <div className="relative flex h-full flex-col justify-end pr-10 sm:pr-12">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-1 relative z-10">
+                  &lt;1s
+                </div>
+                <div className="text-[10px] md:text-[11px] font-semibold text-text-secondary uppercase tracking-[0.14em] md:tracking-[0.18em] leading-tight relative z-10">
+                  Scoring Speed
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* All Competitions Preview */}
       {allCompetitions && allCompetitions.length > 0 && (
         <section className="px-6 py-12 sm:py-16 bg-bg-surface/50">
@@ -310,72 +380,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Quick Statistics Section */}
-      <section className="px-6 py-12 sm:py-16 bg-bg-surface/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <BarChart3 className="w-8 h-8 text-accent-cyan" />
-              <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
-                Platform Statistics
-              </h2>
-            </div>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Join our thriving AI community
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {/* Total Competitions */}
-            <Card className="p-6 text-center hover:border-primary-blue transition-all duration-300">
-              <Trophy className="w-12 h-12 text-accent-cyan mx-auto mb-4" />
-              <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-2">
-                {totalCompetitions || 0}
-              </div>
-              <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Total Competitions
-              </div>
-            </Card>
-
-            {/* Total Participants */}
-            <Card className="p-6 text-center hover:border-primary-blue transition-all duration-300">
-              <Users className="w-12 h-12 text-accent-cyan mx-auto mb-4" />
-              <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-2">
-                {totalParticipants || 0}+
-              </div>
-              <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Total Participants
-              </div>
-            </Card>
-
-            {/* Total Submissions */}
-            <Card className="p-6 text-center hover:border-primary-blue transition-all duration-300">
-              <Target className="w-12 h-12 text-accent-cyan mx-auto mb-4" />
-              <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-2">
-                {totalSubmissions || 0}
-              </div>
-              <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Total Submissions
-              </div>
-            </Card>
-
-            {/* Avg Response Time (placeholder) */}
-            <Card className="p-6 text-center hover:border-primary-blue transition-all duration-300">
-              <Clock className="w-12 h-12 text-accent-cyan mx-auto mb-4" />
-              <div className="text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-2">
-                &lt;1s
-              </div>
-              <div className="text-sm text-text-tertiary uppercase tracking-wider">
-                Scoring Speed
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* What We Provide Section */}
-      <section className="px-6 py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto">
+      <section className="px-4 sm:px-6 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">What we provide</h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
@@ -383,79 +390,43 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-blue to-primary-blue/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Trophy className="w-6 h-6 text-white" />
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
+              <Trophy className="absolute right-4 top-4 h-24 w-24 text-primary-blue/10 transition-transform duration-300 group-hover:scale-110" />
+              <div className="relative flex h-full flex-col justify-end pr-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-blue/80 mb-2">Competition</p>
+                <h3 className="text-xl font-semibold text-text-primary mb-2">Professional Competitions</h3>
+                <p className="text-sm leading-relaxed text-text-secondary">AI/ML competition system with multiple phases and international standards.</p>
               </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-primary-blue transition-colors">
-                Professional Competitions
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                AI/ML competition system with multiple phases and international standards
-              </p>
-            </Card>
+            </div>
 
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent-cyan to-accent-cyan/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Zap className="w-6 h-6 text-white" />
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
+              <Zap className="absolute right-4 top-4 h-24 w-24 text-accent-cyan/10 transition-transform duration-300 group-hover:scale-110" />
+              <div className="relative flex h-full flex-col justify-end pr-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-cyan/80 mb-2">Scoring</p>
+                <h3 className="text-xl font-semibold text-text-primary mb-2">Automatic Scoring</h3>
+                <p className="text-sm leading-relaxed text-text-secondary">Automatic scoring system with F1 Score and instant feedback.</p>
               </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-accent-cyan transition-colors">
-                Automatic Scoring
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Automatic scoring system with F1 Score and instant feedback
-              </p>
-            </Card>
+            </div>
 
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-success to-success/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Target className="w-6 h-6 text-white" />
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
+              <Target className="absolute right-4 top-4 h-24 w-24 text-success/10 transition-transform duration-300 group-hover:scale-110" />
+              <div className="relative flex h-full flex-col justify-end pr-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-success/80 mb-2">Leaderboard</p>
+                <h3 className="text-xl font-semibold text-text-primary mb-2">Real-Time Leaderboards</h3>
+                <p className="text-sm leading-relaxed text-text-secondary">Public and private leaderboards with real-time updates.</p>
               </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-success transition-colors">
-                Real-Time Leaderboards
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Public and private leaderboards with real-time updates
-              </p>
-            </Card>
+            </div>
 
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-warning to-warning/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6 text-white" />
+            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
+              <Users className="absolute right-4 top-4 h-24 w-24 text-warning/10 transition-transform duration-300 group-hover:scale-110" />
+              <div className="relative flex h-full flex-col justify-end pr-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning/80 mb-2">Collaboration</p>
+                <h3 className="text-xl font-semibold text-text-primary mb-2">Team Competition</h3>
+                <p className="text-sm leading-relaxed text-text-secondary">Support for individual and team competitions with member management.</p>
               </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-warning transition-colors">
-                Team Competition
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Support for individual and team competitions with member management
-              </p>
-            </Card>
-
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-error to-error/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-error transition-colors">
-                High Security
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Security system with email verification and data encryption
-              </p>
-            </Card>
-
-            <Card className="group p-6 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-br from-phase-registration to-phase-registration/70 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Award className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2 group-hover:text-phase-registration transition-colors">
-                Detailed Analytics
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Dashboard with statistics and insights for participants
-              </p>
-            </Card>
-          </div>
+            </div>
+            </div>
         </div>
       </section>
 
@@ -575,71 +546,88 @@ export default async function HomePage() {
 
       {/* Final CTA + Contact Section */}
       <section className="px-6 py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
-          {/* CTA Card */}
-          <Card className="p-10 bg-gradient-to-br from-bg-surface to-bg-elevated border-primary-blue/20 relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:30px_30px]" />
-            <div className="relative">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-brand mb-5">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                <span className="gradient-text">Ready for the Challenge?</span>
-              </h2>
-              <p className="text-text-secondary leading-relaxed mb-8">
-                Join our community of data scientists and ML engineers. Build, train, and compete — start your journey today.
-              </p>
-              <div className="flex gap-3 flex-wrap">
-                <Link href="/signup">
-                  <Button variant="primary" size="lg" className="gap-2">
-                    <Zap className="w-5 h-5" />
-                    Sign Up Now
-                  </Button>
-                </Link>
-                <Link href="/competitions">
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <Trophy className="w-5 h-5" />
-                    View Competitions
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </Card>
+        <div className="max-w-6xl mx-auto">
+          <Card className="relative overflow-hidden border-primary-blue/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_38%),linear-gradient(135deg,rgba(30,41,59,0.96),rgba(15,23,42,0.98))] p-8 sm:p-10 shadow-2xl shadow-primary-blue/10">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
+            <div className="absolute -right-8 top-0 h-44 w-44 rounded-full bg-primary-blue/20 blur-3xl" />
+            <div className="absolute -left-8 bottom-0 h-44 w-44 rounded-full bg-accent-cyan/15 blur-3xl" />
 
-          {/* Contact Card */}
-          <Card className="p-10 bg-gradient-to-br from-bg-surface to-bg-elevated border-accent-cyan/20 relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.04)_1px,transparent_1px)] bg-[size:30px_30px]" />
-            <div className="relative">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-accent-cyan to-primary-blue mb-5">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+            <div className="relative grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-stretch">
+              <div className="flex h-full flex-col justify-between gap-8">
+                <div className="space-y-5">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-primary-blue/20 bg-primary-blue/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-cyan">
+                    <Zap className="h-3.5 w-3.5" />
+                    Join the next competition
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-text-primary leading-tight">
+                      Ready to compete at a higher level?
+                    </h2>
+                    <p className="max-w-2xl text-sm sm:text-base leading-7 text-text-secondary">
+                      Join the community, test your ideas on real problems, and track your progress with structured competitions.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 text-sm text-text-secondary sm:grid-cols-2">
+                    <div className="rounded-xl border border-border-default/70 bg-bg-primary/40 px-4 py-3 backdrop-blur-sm">
+                      <span className="block font-semibold text-text-primary">Structured events</span>
+                      Clear phases, transparent scoring, and clean leaderboards.
+                    </div>
+                    <div className="rounded-xl border border-border-default/70 bg-bg-primary/40 px-4 py-3 backdrop-blur-sm">
+                      <span className="block font-semibold text-text-primary">Practical growth</span>
+                      Build skills through challenges that reflect real workflows.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/signup">
+                    <Button variant="primary" size="lg" className="gap-2 rounded-full px-6 shadow-lg shadow-primary-blue/20">
+                      <Zap className="w-5 h-5" />
+                      Join now
+                    </Button>
+                  </Link>
+                  <Link href="/competitions">
+                    <Button variant="outline" size="lg" className="gap-2 rounded-full border-white/10 bg-white/5 px-6 backdrop-blur-sm hover:border-accent-cyan hover:text-accent-cyan">
+                      <Trophy className="w-5 h-5" />
+                      Explore competitions
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">Contact Us</h2>
-              <p className="text-text-secondary leading-relaxed mb-8">
-                Have questions or need support? We're here to help — reach out to us anytime.
-              </p>
-              <div className="flex flex-col gap-3">
-                <a
-                  href="mailto:thenodersptnk@gmail.com"
-                  className="inline-flex items-center gap-3 px-5 py-3 bg-gradient-brand text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary-blue/30 transition-all duration-300 w-fit"
-                >
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  thenodersptnk@gmail.com
-                </a>
-                <a
-                  href="https://thenodersptnk.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 px-5 py-3 bg-bg-elevated border border-border-default text-text-primary font-semibold rounded-xl hover:border-accent-cyan hover:bg-accent-cyan/5 hover:text-accent-cyan transition-all duration-300 w-fit"
-                >
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                  </svg>
-                  thenodersptnk.com
-                </a>
+
+              <div className="rounded-2xl border border-accent-cyan/20 bg-bg-primary/35 p-6 backdrop-blur-sm">
+                <div className="flex h-full flex-col justify-between gap-6">
+                  <div className="space-y-5">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-accent-cyan/20 bg-accent-cyan/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-cyan">
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8" />
+                      </svg>
+                      Founder contact
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-xl sm:text-2xl font-bold text-text-primary leading-tight">Contact the founder directly</h3>
+                      <p className="text-sm sm:text-base leading-7 text-text-secondary">
+                        For partnership, support, or club-related questions, contact the founder of The Noders Community.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <a
+                      href="mailto:phuckhangtdn@gmail.com"
+                      className="group inline-flex w-full items-center justify-center gap-3 rounded-full border border-accent-cyan/30 bg-gradient-brand px-5 py-3 font-semibold text-white shadow-lg shadow-primary-blue/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-accent-cyan/20"
+                    >
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      phuckhangtdn@gmail.com
+                    </a>
+                    <div className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border-default bg-bg-elevated/70 px-4 py-2 text-sm text-text-secondary backdrop-blur-sm">
+                      <span className="h-2 w-2 rounded-full bg-accent-cyan" />
+                      Official website: thenodersptnk.com
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </Card>

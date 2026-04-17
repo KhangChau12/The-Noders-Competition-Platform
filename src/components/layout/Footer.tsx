@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="font-shrikhand text-2xl gradient-text mb-3">
-              The Noders
+              The Noders Community
             </h3>
             <p className="text-sm text-text-tertiary leading-relaxed mb-4">
               The Noders Competition Platform - Official AI competition platform of The Noders Community for data scientists and ML practitioners.
@@ -18,7 +18,7 @@ export default function Footer() {
               <a href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-bg-surface border border-border-default hover:border-primary-blue hover:bg-primary-blue/10 flex items-center justify-center transition-all group" title="Official Website">
                 <Globe className="w-4 h-4 text-text-secondary group-hover:text-primary-blue transition-colors" />
               </a>
-              <a href="mailto:thenodersptnk@gmail.com" className="w-9 h-9 rounded-lg bg-bg-surface border border-border-default hover:border-primary-blue hover:bg-primary-blue/10 flex items-center justify-center transition-all group" title="Contact Email">
+              <a href="mailto:phuckhangtdn@gmail.com" className="w-9 h-9 rounded-lg bg-bg-surface border border-border-default hover:border-primary-blue hover:bg-primary-blue/10 flex items-center justify-center transition-all group" title="Contact Founder">
                 <Mail className="w-4 h-4 text-text-secondary group-hover:text-primary-blue transition-colors" />
               </a>
             </div>
