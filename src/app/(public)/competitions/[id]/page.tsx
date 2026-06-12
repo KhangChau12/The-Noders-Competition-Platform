@@ -346,12 +346,12 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
                     (currentPhase === 'public_test' || currentPhase === 'private_test');
 
   return (
-    <div className="min-h-screen px-4 py-8">
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-8">
-          {/* Badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          {/* Phase badge + format meta */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <Badge
               variant={
                 currentPhase === 'registration' ? 'registration' :
@@ -366,22 +366,23 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
               {currentPhase === 'private_test' && 'Private Test Phase'}
               {currentPhase === 'ended' && 'Ended'}
             </Badge>
-            <Badge variant="outline">{competition.participation_type}</Badge>
-            <Badge variant="outline">{competition.competition_type}</Badge>
+            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
+              {competition.participation_type} &middot; {competition.competition_type}
+            </span>
           </div>
 
           {/* Title */}
-          <h1 className="font-brand text-4xl sm:text-5xl lg:text-6xl mb-4 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl mb-4 gradient-text leading-tight">
             {competition.title}
           </h1>
 
           {/* Description */}
-          <p className="text-xl text-text-secondary mb-8 max-w-4xl">
+          <p className="text-base sm:text-lg lg:text-xl text-text-secondary mb-6 sm:mb-8 max-w-4xl">
             {competition.description}
           </p>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap gap-6 text-text-secondary">
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm sm:text-base text-text-secondary">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5" />
               <span>
@@ -433,8 +434,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
             {/* Dataset Download & Submit */}
             {canDownloadDataset && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Download className="w-5 h-5" />
+                <h3 className="text-lg font-semibold mb-4">
                   Dataset & Submission
                 </h3>
 
@@ -504,20 +504,19 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
             {/* Registration Status */}
             {user && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
+                <h3 className="text-lg font-semibold mb-4">
                   Registration Status
                 </h3>
 
                 {!registration && (
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <XCircle className="w-5 h-5 text-text-tertiary" />
+                      <XCircle className="w-5 h-5 text-text-tertiary shrink-0" />
                       <span className="text-text-secondary">Not registered</span>
                     </div>
                     {currentPhase !== 'ended' && (
-                      <Link href={`/competitions/${id}/register`}>
-                        <Button variant="primary" size="md">
+                      <Link href={`/competitions/${id}/register`} className="block">
+                        <Button variant="primary" size="md" className="w-full">
                           {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
                         </Button>
                       </Link>
@@ -621,8 +620,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
             {/* Leaderboard Preview */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
+              <h3 className="text-lg font-semibold mb-4">
                 Top Participants
               </h3>
 

@@ -34,7 +34,7 @@ export default async function PracticeTagsPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="font-brand text-4xl gradient-text mb-2">Manage Tags</h1>
+          <h1 className="font-brand text-3xl sm:text-4xl gradient-text mb-2 leading-tight">Manage Tags</h1>
           <p className="text-text-secondary">
             Create and manage tags used to categorize practice problems.
           </p>

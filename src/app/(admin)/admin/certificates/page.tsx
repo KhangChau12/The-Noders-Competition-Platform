@@ -69,17 +69,17 @@ export default async function AdminCertificatesPage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+            <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
               Certificate Management
             </h1>
             <p className="text-text-secondary">
               Upload and manage certificates for verification
             </p>
           </div>
-          <Link href="/admin/certificates/upload">
-            <Button variant="primary" size="lg">
+          <Link href="/admin/certificates/upload" className="shrink-0">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto">
               <Plus className="w-5 h-5 mr-2" />
               Upload Certificate
             </Button>
@@ -88,9 +88,8 @@ export default async function AdminCertificatesPage() {
 
         {/* Competitions List */}
         <Card className="overflow-hidden">
-          <div className="p-6 border-b border-border-default bg-bg-tertiary">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Award className="w-5 h-5" />
+          <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
+            <h2 className="text-xl font-bold">
               Certificates by Competition
             </h2>
           </div>
@@ -103,7 +102,7 @@ export default async function AdminCertificatesPage() {
                   href={`/admin/certificates/${competition.id}`}
                   className="block"
                 >
-                  <div className="p-6 hover:bg-bg-tertiary/50 transition-colors flex items-center justify-between">
+                  <div className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors flex flex-wrap items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold">{competition.title}</h3>

@@ -10,16 +10,14 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import {
   Search,
-  Filter,
   SortAsc,
-  Calendar,
-  Users,
   Trophy,
   Clock,
-  ChevronDown,
   Loader2,
-  Target,
+  ArrowRight,
+  Crown,
 } from 'lucide-react';
+import { SCORING_METRIC_INFO } from '@/lib/constants';
 
 type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
 
@@ -44,6 +42,7 @@ type CompetitionWithStats = Competition & {
   participant_count: number;
   team_count: number;
   submission_count: number;
+  leader: { name: string; score: number } | null;
   registration_status?: 'not_registered' | 'pending' | 'approved' | 'rejected';
   countdown?: {
     days: number;
@@ -72,7 +71,6 @@ export default function CompetitionsPage() {
   const [sortBy, setSortBy] = useState<SortOption>(
     (searchParams.get('sort') as SortOption) || 'latest'
   );
-  const [showFilters, setShowFilters] = useState(false);
 
   // Get current user
   useEffect(() => {
@@ -115,6 +113,16 @@ export default function CompetitionsPage() {
           .from('submissions')
           .select('competition_id');
 
+        // Fetch best valid scores (with names) to surface the current leader / winner per competition
+        const { data: bestScoresData } = await supabase
+          .from('submissions')
+          .select(
+            'competition_id, score, phase, user_id, team_id, users!submissions_user_id_fkey(full_name), teams!submissions_team_id_fkey(name)'
+          )
+          .eq('is_best_score', true)
+          .eq('validation_status', 'valid')
+          .not('score', 'is', null);
+
         // Fetch team registration counts (for team competitions)
         const { data: teamRegistrationsData } = await supabase
           .from('registrations')
@@ -139,6 +147,12 @@ export default function CompetitionsPage() {
           },
           {} as Record<string, number>
         );
+
+        // Group best scores by competition
+        const bestByComp: Record<string, any[]> = {};
+        (bestScoresData || []).forEach((row: any) => {
+          (bestByComp[row.competition_id] ??= []).push(row);
+        });
 
         // Map team counts
         const teamCounts = (teamRegistrationsData || []).reduce(
@@ -199,6 +213,7 @@ export default function CompetitionsPage() {
             participant_count: participantCounts[comp.id] || 0,
             team_count: teamCounts[comp.id] || 0,
             submission_count: submissionCounts[comp.id] || 0,
+            leader: getLeader(comp, phase, bestByComp[comp.id] || []),
             registration_status: userId
               ? (userRegistrations[comp.id] as any) || 'not_registered'
               : undefined,
@@ -218,9 +233,35 @@ export default function CompetitionsPage() {
     fetchCompetitions();
   }, [supabase, userId]);
 
+  const isFiltering = Boolean(searchQuery.trim()) || filterStatus !== 'all';
+
+  // Spotlight: the most urgent competition currently open (or soon opening) for registration.
+  // Hidden while the user is actively filtering/searching.
+  const spotlight = useMemo(() => {
+    if (isFiltering) return null;
+    const open = competitions
+      .filter((c) => c.phase === 'registration')
+      .sort(
+        (a, b) =>
+          new Date(a.registration_end).getTime() - new Date(b.registration_end).getTime()
+      );
+    if (open.length > 0) return open[0];
+    const upcoming = competitions
+      .filter((c) => c.phase === 'upcoming')
+      .sort(
+        (a, b) =>
+          new Date(a.registration_start).getTime() - new Date(b.registration_start).getTime()
+      );
+    return upcoming[0] ?? null;
+  }, [competitions, isFiltering]);
+
   // Filter and sort competitions
   const filteredAndSortedCompetitions = useMemo(() => {
     let filtered = competitions;
+
+    if (spotlight) {
+      filtered = filtered.filter((comp) => comp.id !== spotlight.id);
+    }
 
     // Search filter
     if (searchQuery.trim()) {
@@ -262,60 +303,93 @@ export default function CompetitionsPage() {
     });
 
     return sorted;
-  }, [competitions, searchQuery, filterStatus, sortBy]);
+  }, [competitions, searchQuery, filterStatus, sortBy, spotlight]);
+
+  // Live vs past split (only used when not filtering)
+  const liveCompetitions = useMemo(
+    () => filteredAndSortedCompetitions.filter((c) => c.phase !== 'ended'),
+    [filteredAndSortedCompetitions]
+  );
+  const pastCompetitions = useMemo(
+    () => filteredAndSortedCompetitions.filter((c) => c.phase === 'ended'),
+    [filteredAndSortedCompetitions]
+  );
+
+  // Header stats
+  const stats = useMemo(() => {
+    const active = competitions.filter((c) => c.phase !== 'ended').length;
+    const participants = competitions.reduce((sum, c) => sum + c.participant_count, 0);
+    const submissions = competitions.reduce((sum, c) => sum + c.submission_count, 0);
+    return { active, participants, submissions };
+  }, [competitions]);
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-10 sm:py-12">
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10 sm:mb-12">
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-4 gradient-text leading-tight">
+        <div className="relative mb-6 sm:mb-10 overflow-hidden">
+          <Trophy className="absolute -top-4 -right-6 h-32 w-32 text-primary-blue/10 rotate-[10deg] pointer-events-none hidden sm:block [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.25))]" />
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2">
+            Compete · Learn · Win
+          </p>
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl gradient-text leading-tight mb-3">
             Competitions
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mx-auto px-2">
+          <p className="text-sm sm:text-lg text-text-secondary max-w-2xl mb-3 sm:mb-4">
             Browse active competitions and start your AI journey
           </p>
+          {!loading && competitions.length > 0 && (
+            <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
+              {stats.active} active
+              {' · '}{stats.participants} participant{stats.participants !== 1 ? 's' : ''}
+              {' · '}{stats.submissions} submission{stats.submissions !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
-        {/* Search and Filter Bar */}
-        <div className="mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
+        {/* Toolbar: search row, then status + sort sharing one row on phones */}
+        <div className="flex flex-col lg:flex-row gap-2.5 sm:gap-3 mb-6 sm:mb-8 lg:items-center">
+          <div className="relative flex-1 lg:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-tertiary" />
             <Input
               type="text"
-              placeholder="Search competitions by name or description..."
+              placeholder="Search competitions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 pr-4"
             />
           </div>
 
-          {/* Filter and Sort Controls */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2 w-full sm:w-auto justify-center"
-              aria-expanded={showFilters}
-              aria-label="Toggle filters"
-            >
-              <Filter className="h-4 w-4" aria-hidden="true" />
-              Filters
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
-                aria-hidden="true"
-              />
-            </Button>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Status segmented control */}
+            <div className="flex flex-1 sm:flex-none rounded-lg border border-border-default bg-bg-surface p-1 overflow-x-auto scrollbar-none min-w-0">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'registration', label: 'Registering' },
+                { value: 'ongoing', label: 'Ongoing' },
+                { value: 'ended', label: 'Ended' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setFilterStatus(option.value as FilterStatus)}
+                  className={`flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
+                    filterStatus === option.value
+                      ? 'bg-primary-blue text-white'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <SortAsc className="h-4 w-4 text-text-tertiary" aria-hidden="true" />
+            {/* Sort */}
+            <div className="flex items-center gap-2 shrink-0">
+              <SortAsc className="hidden sm:block h-4 w-4 text-text-tertiary" aria-hidden="true" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="w-full sm:w-auto px-3 py-2 bg-bg-surface border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
+                className="px-2 sm:px-3 py-2.5 sm:py-2 max-w-[110px] sm:max-w-none bg-bg-surface border border-border-default rounded-lg text-[13px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
                 aria-label="Sort competitions"
               >
                 <option value="latest">Latest</option>
@@ -323,48 +397,7 @@ export default function CompetitionsPage() {
                 <option value="most_participants">Most Participants</option>
               </select>
             </div>
-
-            {/* Active Filters Count */}
-            {(searchQuery || filterStatus !== 'all') && (
-              <span className="text-sm text-text-tertiary">
-                {filteredAndSortedCompetitions.length} result
-                {filteredAndSortedCompetitions.length !== 1 ? 's' : ''}
-              </span>
-            )}
           </div>
-
-          {/* Expandable Filters */}
-          {showFilters && (
-            <Card className="p-4">
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Status
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: 'all', label: 'All' },
-                      { value: 'registration', label: 'Registering' },
-                      { value: 'ongoing', label: 'Ongoing' },
-                      { value: 'ended', label: 'Ended' },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setFilterStatus(option.value as FilterStatus)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          filterStatus === option.value
-                            ? 'bg-primary-blue text-white'
-                            : 'bg-bg-elevated text-text-secondary hover:bg-bg-surface border border-border-default'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
         </div>
 
         {/* Loading State */}
@@ -374,13 +407,18 @@ export default function CompetitionsPage() {
           </div>
         )}
 
+        {/* Spotlight */}
+        {!loading && spotlight && (
+          <SpotlightCard competition={spotlight} isLoggedIn={!!userId} />
+        )}
+
         {/* Empty State */}
-        {!loading && filteredAndSortedCompetitions.length === 0 && (
+        {!loading && !spotlight && filteredAndSortedCompetitions.length === 0 && (
           <Card className="p-8 sm:p-12 text-center">
             <Trophy className="h-14 w-14 sm:h-16 sm:w-16 mx-auto mb-4 text-text-tertiary" />
             <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-2">No competitions found</h3>
             <p className="text-text-secondary">
-              {searchQuery || filterStatus !== 'all'
+              {isFiltering
                 ? 'Try adjusting your filters or search query'
                 : 'Check back soon for new competitions'}
             </p>
@@ -389,28 +427,32 @@ export default function CompetitionsPage() {
 
         {/* Competitions Grid */}
         {!loading && filteredAndSortedCompetitions.length > 0 && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1">
-              <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-primary-blue" />
-                All Competitions
-              </h2>
-              <p className="text-sm text-text-tertiary">
-                {filteredAndSortedCompetitions.length} competition
-                {filteredAndSortedCompetitions.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-              {filteredAndSortedCompetitions.map((competition) => (
-                <CompetitionGridCard
-                  key={competition.id}
-                  competition={competition}
+          isFiltering ? (
+            <CompetitionSection
+              title="Results"
+              competitions={filteredAndSortedCompetitions}
+              isLoggedIn={!!userId}
+            />
+          ) : (
+            <div className="space-y-8 sm:space-y-12">
+              {liveCompetitions.length > 0 && (
+                <CompetitionSection
+                  kicker="Open · Running · Upcoming"
+                  title={spotlight ? 'More Competitions' : 'Live & Upcoming'}
+                  competitions={liveCompetitions}
                   isLoggedIn={!!userId}
                 />
-              ))}
+              )}
+              {pastCompetitions.length > 0 && (
+                <CompetitionSection
+                  kicker="Archive"
+                  title="Past Competitions"
+                  competitions={pastCompetitions}
+                  isLoggedIn={!!userId}
+                />
+              )}
             </div>
-          </div>
+          )
         )}
       </div>
     </div>
@@ -470,6 +512,32 @@ function getCountdown(
   return { days, hours, minutes, label };
 }
 
+// Current leader (ongoing) or winner (ended) from best valid scores.
+// Ended competitions prefer the private-test leaderboard when it has entries.
+function getLeader(
+  comp: Competition,
+  phase: CompetitionPhase,
+  rows: any[]
+): { name: string; score: number } | null {
+  if (rows.length === 0) return null;
+  const privateRows = rows.filter((r) => r.phase === 'private');
+  const pool =
+    phase === 'ended' && privateRows.length > 0
+      ? privateRows
+      : rows.filter((r) => r.phase === 'public');
+  if (pool.length === 0) return null;
+  const higherIsBetter =
+    SCORING_METRIC_INFO[comp.scoring_metric as keyof typeof SCORING_METRIC_INFO]
+      ?.higher_is_better !== false;
+  const best = [...pool].sort((a, b) =>
+    higherIsBetter ? b.score - a.score : a.score - b.score
+  )[0];
+  const team = Array.isArray(best.teams) ? best.teams[0] : best.teams;
+  const user = Array.isArray(best.users) ? best.users[0] : best.users;
+  const name = team?.name ?? user?.full_name ?? 'Anonymous';
+  return { name, score: best.score };
+}
+
 // Helper function to get phase end date for sorting
 function getPhaseEndDate(comp: CompetitionWithStats): string | null {
   if (comp.phase === 'ended') return null;
@@ -477,6 +545,181 @@ function getPhaseEndDate(comp: CompetitionWithStats): string | null {
   if (comp.phase === 'public_test') return comp.public_test_end;
   if (comp.phase === 'private_test') return comp.private_test_end;
   return null;
+}
+
+// Overall timeline progress (registration start -> final end), clamped to [0, 100]
+function getTimelineProgress(comp: Competition): number {
+  const start = new Date(comp.registration_start).getTime();
+  const end = new Date(comp.private_test_end ?? comp.public_test_end).getTime();
+  if (end <= start) return 0;
+  const elapsed = Date.now() - start;
+  return Math.min(100, Math.max(0, (elapsed / (end - start)) * 100));
+}
+
+const PHASE_CONFIG = {
+  upcoming: { label: 'Coming Soon', variant: 'secondary' as const },
+  registration: { label: 'Registration Open', variant: 'registration' as const },
+  public_test: { label: 'Public Test', variant: 'public' as const },
+  private_test: { label: 'Private Test', variant: 'private' as const },
+  ended: { label: 'Ended', variant: 'ended' as const },
+};
+
+function RegistrationStatusBadge({
+  competition,
+  isLoggedIn,
+}: {
+  competition: CompetitionWithStats;
+  isLoggedIn: boolean;
+}) {
+  if (!isLoggedIn || !competition.registration_status) return null;
+
+  const statusConfig = {
+    not_registered: null,
+    pending: { label: 'Pending', variant: 'yellow' as const },
+    approved: { label: 'Registered', variant: 'green' as const },
+    rejected: { label: 'Rejected', variant: 'red' as const },
+  };
+
+  const config = statusConfig[competition.registration_status];
+  if (!config) return null;
+
+  return <Badge variant={config.variant}>{config.label}</Badge>;
+}
+
+// Featured competition with a large countdown and CTA
+function SpotlightCard({
+  competition,
+  isLoggedIn,
+}: {
+  competition: CompetitionWithStats;
+  isLoggedIn: boolean;
+}) {
+  const phaseInfo = PHASE_CONFIG[competition.phase];
+  const isOpen = competition.phase === 'registration';
+  const notRegistered =
+    !competition.registration_status || competition.registration_status === 'not_registered';
+
+  return (
+    <section className="mb-8 sm:mb-12">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2.5 sm:mb-3 px-1">
+        {isOpen ? 'Registration closing soon' : 'Up next'}
+      </p>
+      <Link href={`/competitions/${competition.id}`} className="group block">
+        <Card className="relative overflow-hidden p-5 sm:p-8 bg-bg-surface ring-1 ring-primary-blue/35 shadow-glow-blue-sm hover:-translate-y-1 hover:shadow-lg">
+          <Trophy className="absolute -bottom-8 -right-8 h-44 w-44 text-primary-blue/[0.07] rotate-[-12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]" />
+          <div className="relative grid lg:grid-cols-[1fr_300px] gap-6 lg:gap-10 items-center">
+            {/* Left: info */}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
+                <Badge variant="tech">
+                  {competition.scoring_metric.replace('_', ' ').toUpperCase()}
+                </Badge>
+                {competition.participation_type === 'team' && <Badge variant="outline">Team</Badge>}
+                {competition.competition_type === '4-phase' && (
+                  <Badge variant="outline">4-Phase</Badge>
+                )}
+                <RegistrationStatusBadge competition={competition} isLoggedIn={isLoggedIn} />
+              </div>
+
+              <h2 className="text-xl sm:text-3xl font-bold leading-snug text-text-primary mb-2 sm:mb-3 group-hover:text-primary-blue transition-colors">
+                {competition.title}
+              </h2>
+              <p className="text-sm sm:text-base text-text-secondary leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4">
+                {competition.description}
+              </p>
+
+              <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
+                {competition.participant_count} participant{competition.participant_count !== 1 ? 's' : ''}
+                {competition.participation_type === 'team' && competition.team_count > 0 && (
+                  <> · {competition.team_count} team{competition.team_count !== 1 ? 's' : ''}</>
+                )}
+                {' · '}{competition.submission_count} submission{competition.submission_count !== 1 ? 's' : ''}
+                {' · '}
+                {new Date(competition.registration_start).toLocaleDateString()} –{' '}
+                {new Date(
+                  competition.private_test_end ?? competition.public_test_end
+                ).toLocaleDateString()}
+              </p>
+            </div>
+
+            {/* Right: countdown + CTA */}
+            <div className="bg-bg-elevated/60 border border-border-subtle/50 rounded-xl p-4 sm:p-5 text-center">
+              {competition.countdown ? (
+                <>
+                  <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary mb-3 flex items-center justify-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-primary-blue" />
+                    {competition.countdown.label.replace(' in', '')}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 mb-5">
+                    {[
+                      { value: competition.countdown.days, unit: 'Days' },
+                      { value: competition.countdown.hours, unit: 'Hrs' },
+                      { value: competition.countdown.minutes, unit: 'Min' },
+                    ].map(({ value, unit }) => (
+                      <div key={unit}>
+                        <div className="text-2xl sm:text-3xl font-bold text-primary-blue font-mono">
+                          {value}
+                        </div>
+                        <div className="text-[11px] uppercase tracking-wide text-text-tertiary">
+                          {unit}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+              <Button variant="primary" className="w-full gap-2" size="md">
+                {isOpen && notRegistered ? 'Register now' : 'View details'}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    </section>
+  );
+}
+
+// Titled section wrapping a grid of competition cards
+function CompetitionSection({
+  kicker,
+  title,
+  competitions,
+  isLoggedIn,
+}: {
+  kicker?: string;
+  title: string;
+  competitions: CompetitionWithStats[];
+  isLoggedIn: boolean;
+}) {
+  return (
+    <section className="space-y-4 sm:space-y-5">
+      <div className="flex items-end justify-between gap-2 px-1">
+        <div>
+          {kicker && (
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-1">
+              {kicker}
+            </p>
+          )}
+          <h2 className="text-lg sm:text-xl font-bold">{title}</h2>
+        </div>
+        <p className="text-sm text-text-tertiary shrink-0">
+          {competitions.length} competition{competitions.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+        {competitions.map((competition) => (
+          <CompetitionGridCard
+            key={competition.id}
+            competition={competition}
+            isLoggedIn={isLoggedIn}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 // Competition Card Component (marketplace-style grid)
@@ -487,142 +730,97 @@ function CompetitionGridCard({
   competition: CompetitionWithStats;
   isLoggedIn: boolean;
 }) {
-  const phaseConfig = {
-    upcoming: { label: 'Coming Soon', variant: 'secondary' as const },
-    registration: { label: 'Registration Open', variant: 'registration' as const },
-    public_test: { label: 'Public Test', variant: 'public' as const },
-    private_test: { label: 'Private Test', variant: 'private' as const },
-    ended: { label: 'Ended', variant: 'ended' as const },
-  };
-
-  const phaseInfo = phaseConfig[competition.phase];
-
-  const registrationBadge = () => {
-    if (!isLoggedIn || !competition.registration_status) return null;
-
-    const statusConfig = {
-      not_registered: null,
-      pending: { label: 'Pending', variant: 'yellow' as const },
-      approved: { label: 'Registered', variant: 'green' as const },
-      rejected: { label: 'Rejected', variant: 'red' as const },
-    };
-
-    const config = statusConfig[competition.registration_status];
-    if (!config) return null;
-
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+  const phaseInfo = PHASE_CONFIG[competition.phase];
+  const progress = getTimelineProgress(competition);
+  const start = new Date(competition.registration_start);
+  const end = new Date(competition.private_test_end ?? competition.public_test_end);
+  const decimals =
+    SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]
+      ?.decimals ?? 4;
+  const showLeader =
+    competition.leader &&
+    (competition.phase === 'ended' ||
+      competition.phase === 'public_test' ||
+      competition.phase === 'private_test');
 
   return (
     <Link href={`/competitions/${competition.id}`} className="group block h-full">
       <Card
-        className={`h-full p-5 sm:p-6 bg-bg-surface shadow-md transition-all duration-200 border-border-default hover:border-border-focus hover:-translate-y-1 hover:shadow-lg ${
+        className={`h-full p-4 sm:p-6 bg-bg-surface shadow-md transition-all duration-200 border-border-default hover:border-border-focus hover:-translate-y-1 hover:shadow-lg ${
           competition.phase === 'registration' ? 'ring-1 ring-primary-blue/35 shadow-glow-blue-sm' : ''
         }`}
       >
-        <div className="h-full flex flex-col gap-4">
+        <div className="h-full flex flex-col gap-3.5 sm:gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
             <Badge variant="tech">{competition.scoring_metric.replace('_', ' ').toUpperCase()}</Badge>
             {competition.participation_type === 'team' && <Badge variant="outline">Team</Badge>}
             {competition.competition_type === '4-phase' && <Badge variant="outline">4-Phase</Badge>}
-            {registrationBadge()}
+            <RegistrationStatusBadge competition={competition} isLoggedIn={isLoggedIn} />
           </div>
 
           <div>
             <h3 className="text-lg sm:text-xl font-bold leading-snug text-text-primary mb-2 line-clamp-2 group-hover:text-primary-blue transition-colors">
               {competition.title}
             </h3>
-            <p className="text-sm text-text-secondary leading-relaxed line-clamp-3">
+            <p className="text-sm text-text-secondary leading-relaxed line-clamp-2">
               {competition.description}
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div>
-              <div className="flex items-center gap-2 text-text-tertiary">
-                <Users className="w-4 h-4" />
-                <span>Participants</span>
-              </div>
-              <p className="font-bold text-text-primary mt-1">
-                {competition.participant_count}
-                {competition.participation_type === 'team' && competition.team_count > 0
-                  ? ` (${competition.team_count} teams)`
-                  : ''}
-              </p>
+          {/* Timeline */}
+          <div>
+            <div className="relative h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full"
+                style={{ width: `${progress}%` }}
+              />
             </div>
-
-            <div>
-              <div className="flex items-center gap-2 text-text-tertiary">
-                <Target className="w-4 h-4" />
-                <span>Submissions</span>
-              </div>
-              <p className="font-bold text-text-primary mt-1">{competition.submission_count}</p>
-            </div>
-          </div>
-
-          <div className="text-xs text-text-secondary space-y-1.5">
-            <p>
-              <span className="text-text-tertiary">Registration:</span>{' '}
-              {new Date(competition.registration_start).toLocaleDateString()} -{' '}
-              {new Date(competition.registration_end).toLocaleDateString()}
-            </p>
-            <p>
-              <span className="text-text-tertiary">Public Test ends:</span>{' '}
-              {new Date(competition.public_test_end).toLocaleDateString()}
-            </p>
-            {competition.private_test_end && (
-              <p>
-                <span className="text-text-tertiary">Private Test ends:</span>{' '}
-                {new Date(competition.private_test_end).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-auto border-t border-border-subtle/60 pt-4 space-y-3">
-            {competition.phase === 'ended' ? (
-              <div className="px-1 py-1 text-sm text-text-secondary flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-text-tertiary" />
-                This competition has ended
-              </div>
-            ) : competition.countdown ? (
-              <div className="px-1 py-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-primary-blue" />
-                  <span className="text-xs uppercase font-mono text-text-tertiary">
-                    {competition.countdown.label.replace(' in', '')}
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-1.5 text-[11px] text-text-tertiary">
+              <span className="order-1">{start.toLocaleDateString()}</span>
+              {competition.countdown ? (
+                // Drops to its own centered line on phones, sits between the dates on larger screens
+                <span className="order-3 sm:order-2 w-full sm:w-auto flex items-center justify-center gap-1 text-text-secondary">
+                  <Clock className="h-3 w-3 text-primary-blue" />
+                  {competition.countdown.label.toLowerCase()}{' '}
+                  <span className="font-mono font-semibold text-primary-blue">
+                    {competition.countdown.days}d {competition.countdown.hours}h
                   </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
-                      {competition.countdown.days}
-                    </div>
-                    <div className="text-[11px] text-text-tertiary">Days</div>
-                  </div>
-                  <div>
-                    <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
-                      {competition.countdown.hours}
-                    </div>
-                    <div className="text-[11px] text-text-tertiary">Hrs</div>
-                  </div>
-                  <div>
-                    <div className="text-base sm:text-lg font-bold text-primary-blue font-mono">
-                      {competition.countdown.minutes}
-                    </div>
-                    <div className="text-[11px] text-text-tertiary">Min</div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-text-tertiary">
-                <Calendar className="w-4 h-4" />
-                Created {new Date(competition.created_at).toLocaleDateString()}
-              </div>
-              <span className="text-primary-blue font-semibold">View details</span>
+                </span>
+              ) : (
+                <span className="order-2">{competition.phase === 'ended' ? 'Ended' : ''}</span>
+              )}
+              <span className="order-2 sm:order-3">{end.toLocaleDateString()}</span>
             </div>
+          </div>
+
+          {/* Leader / winner */}
+          {showLeader && (
+            <div className="flex items-center gap-2 text-xs rounded-lg border border-border-subtle/50 bg-bg-elevated/40 px-2.5 py-1.5 sm:px-3 sm:py-2">
+              <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
+              <span className="font-mono uppercase tracking-wide text-text-tertiary shrink-0">
+                {competition.phase === 'ended' ? 'Winner' : 'Leading'}
+              </span>
+              <span className="font-semibold text-text-primary truncate">
+                {competition.leader!.name}
+              </span>
+              <span className="font-mono text-accent-cyan ml-auto shrink-0">
+                {competition.leader!.score.toFixed(decimals)}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-auto border-t border-border-subtle/60 pt-3 flex items-center justify-between gap-3 text-sm">
+            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary truncate">
+              {competition.participant_count} participant{competition.participant_count !== 1 ? 's' : ''}
+              {competition.participation_type === 'team' && competition.team_count > 0 && (
+                <> · {competition.team_count} team{competition.team_count !== 1 ? 's' : ''}</>
+              )}
+              {' · '}{competition.submission_count} subs
+            </span>
+            <span className="font-semibold text-primary-blue shrink-0 group-hover:translate-x-0.5 transition-transform">
+              View &rarr;
+            </span>
           </div>
         </div>
       </Card>

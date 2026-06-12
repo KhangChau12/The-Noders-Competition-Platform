@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { signUp } from './actions';
 import { validatePassword } from '@/lib/utils/validation';
+import { Rocket } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -55,14 +56,13 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-bg-primary via-bg-surface to-bg-primary">
-      <Card className="w-full max-w-md p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-brand mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-          </div>
-          <h1 className="font-bold text-3xl mb-2 text-text-primary">
+      <Card className="relative w-full max-w-md p-6 sm:p-8 shadow-2xl overflow-hidden">
+        <Rocket
+          className="absolute -top-10 -right-10 h-40 w-40 text-accent-cyan/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(6,182,212,0.35))]"
+          aria-hidden="true"
+        />
+        <div className="relative text-center mb-8">
+          <h1 className="font-brand text-3xl mb-3 gradient-text">
             Join Now
           </h1>
           <p className="text-text-secondary">
@@ -82,7 +82,7 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="relative space-y-5">
           <div>
             <label htmlFor="fullName" className="block text-sm font-semibold mb-2 text-text-primary">
               Full Name

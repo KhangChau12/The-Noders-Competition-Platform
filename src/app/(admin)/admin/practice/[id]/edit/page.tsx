@@ -40,7 +40,7 @@ export default async function EditPracticeProblemPage({ params }: Props) {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
             Edit Practice Problem
           </h1>
           <p className="text-text-secondary line-clamp-1">{problem.title}</p>

@@ -100,7 +100,7 @@ export default async function VerifyResultPage({ params }: Props) {
           {/* Certificate Preview - Main Area */}
           <div className="lg:col-span-2">
             <Card className="overflow-hidden">
-              <div className="p-4 border-b border-border-default bg-bg-tertiary flex items-center justify-between">
+              <div className="p-4 border-b border-border-default bg-bg-elevated flex items-center justify-between">
                 <span className="text-sm font-medium text-text-secondary">Certificate Preview</span>
                 <a
                   href={fileUrl || '#'}
@@ -154,9 +154,7 @@ export default async function VerifyResultPage({ params }: Props) {
             {/* Details */}
             <Card className="p-4 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-warning/20 flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-warning" />
-                </div>
+                <User className="w-4 h-4 text-warning mt-0.5 shrink-0" />
                 <div>
                   <div className="text-xs text-text-tertiary">Recipient</div>
                   <div className="font-semibold">{certificate.recipient_name}</div>
@@ -164,9 +162,7 @@ export default async function VerifyResultPage({ params }: Props) {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary-blue/20 flex items-center justify-center flex-shrink-0">
-                  <Trophy className="w-4 h-4 text-primary-blue" />
-                </div>
+                <Trophy className="w-4 h-4 text-primary-blue mt-0.5 shrink-0" />
                 <div>
                   <div className="text-xs text-text-tertiary">Competition</div>
                   <div className="font-medium text-sm">
@@ -176,9 +172,7 @@ export default async function VerifyResultPage({ params }: Props) {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-accent-cyan/20 flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-4 h-4 text-accent-cyan" />
-                </div>
+                <Calendar className="w-4 h-4 text-accent-cyan mt-0.5 shrink-0" />
                 <div>
                   <div className="text-xs text-text-tertiary">Issue Date</div>
                   <div className="font-medium text-sm">

@@ -199,7 +199,7 @@ export default function UploadCertificateForm({
             </code>
             <button
               onClick={copyCode}
-              className="p-2 hover:bg-bg-tertiary rounded-lg transition-colors"
+              className="p-2 hover:bg-bg-elevated rounded-lg transition-colors"
               title="Copy code"
             >
               {copiedCode ? (
@@ -383,7 +383,7 @@ export default function UploadCertificateForm({
 
       {/* Preview Code */}
       {prefix && suffix && (
-        <div className="p-4 bg-bg-tertiary rounded-lg">
+        <div className="p-4 bg-bg-elevated rounded-lg">
           <div className="text-sm text-text-tertiary mb-1">Preview verification code:</div>
           <code className="font-mono text-accent-cyan">{prefix}-{suffix}</code>
         </div>

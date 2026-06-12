@@ -5,17 +5,14 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import RegistrationActions from './RegistrationActions';
-import CompetitionRegistrationsList from './CompetitionRegistrationsList';
 import {
   Trophy,
   Users,
   Target,
   Clock,
   TrendingUp,
-  CheckCircle2,
   AlertCircle,
   Plus,
-  Settings,
   Award,
   BookOpen,
 } from 'lucide-react';
@@ -153,17 +150,17 @@ export default async function AdminDashboardPage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+            <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
               Admin Dashboard
             </h1>
             <p className="text-text-secondary">
               Manage competitions, users, and registrations
             </p>
           </div>
-          <Link href="/admin/competitions/create">
-            <Button variant="primary" size="lg">
+          <Link href="/admin/competitions/create" className="shrink-0">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto">
               <Plus className="w-5 h-5 mr-2" />
               Create Competition
             </Button>
@@ -171,70 +168,27 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-          <Card className="p-6 border-l-4 border-primary-blue">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Competitions</div>
-              <Trophy className="w-5 h-5 text-primary-blue" />
-            </div>
-            <div className="text-3xl font-bold text-primary-blue">
-              {totalCompetitions || 0}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">
-              {activeCompetitions?.length || 0} active
-            </div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-accent-cyan">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Users</div>
-              <Users className="w-5 h-5 text-accent-cyan" />
-            </div>
-            <div className="text-3xl font-bold text-accent-cyan">
-              {totalUsers || 0}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">Registered participants</div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-warning">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Pending Approvals</div>
-              <Clock className="w-5 h-5 text-warning" />
-            </div>
-            <div className="text-3xl font-bold text-warning">
-              {pendingRegistrations?.length || 0}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">Need review</div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-success">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Submissions</div>
-              <Target className="w-5 h-5 text-success" />
-            </div>
-            <div className="text-3xl font-bold text-success">
-              {totalSubmissions || 0}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">All time</div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-phase-registration">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Practice Problems</div>
-              <BookOpen className="w-5 h-5 text-phase-registration" />
-            </div>
-            <div className="text-3xl font-bold text-phase-registration">
-              {totalPracticeProblems || 0}
-            </div>
-            <div className="text-xs text-text-tertiary mt-1">Published problems</div>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-10">
+          {[
+            { Icon: Trophy, value: totalCompetitions || 0, label: 'Competitions', sub: `${activeCompetitions?.length || 0} active`, accent: 'text-primary-blue/15' },
+            { Icon: Users, value: totalUsers || 0, label: 'Users', sub: 'Registered', accent: 'text-accent-cyan/15' },
+            { Icon: Clock, value: pendingRegistrations?.length || 0, label: 'Pending', sub: 'Need review', accent: 'text-warning/15' },
+            { Icon: TrendingUp, value: totalSubmissions || 0, label: 'Submissions', sub: 'All time', accent: 'text-success/15' },
+            { Icon: BookOpen, value: totalPracticeProblems || 0, label: 'Practice', sub: 'Problems', accent: 'text-phase-registration/15' },
+          ].map(({ Icon, value, label, sub, accent }) => (
+            <Card key={label} className="relative overflow-hidden p-4 sm:p-5">
+              <Icon className={`absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 ${accent} rotate-[-8deg] pointer-events-none`} />
+              <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5">{value}</p>
+              <p className="relative text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
+              <p className="relative text-[11px] text-text-tertiary mt-0.5">{sub}</p>
+            </Card>
+          ))}
         </div>
 
         {/* Pending Registrations */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <AlertCircle className="w-6 h-6 text-warning" />
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold">
               Pending Registrations
             </h2>
             <Badge variant="yellow">{pendingRegistrations?.length || 0} pending</Badge>
@@ -244,23 +198,23 @@ export default async function AdminDashboardPage() {
             {pendingRegistrations && pendingRegistrations.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-bg-tertiary border-b border-border-default">
+                  <thead className="bg-bg-elevated border-b border-border-default">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">User</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">User</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">
                         Competition
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Type</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">Type</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">
                         Registered At
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-default">
                     {pendingRegistrations.map((registration: any) => (
-                      <tr key={registration.id} className="hover:bg-bg-tertiary/50">
-                        <td className="px-6 py-4">
+                      <tr key={registration.id} className="hover:bg-bg-elevated/50">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                           <div>
                             <div className="font-medium">
                               {registration.team?.name || registration.user?.full_name || 'Unknown'}
@@ -270,17 +224,17 @@ export default async function AdminDashboardPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                           <div className="font-medium">
                             {registration.competition?.title || 'Unknown'}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                           <Badge variant="tech">
                             {registration.competition?.participation_type || 'individual'}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-sm text-text-secondary">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm text-text-secondary">
                           {new Date(registration.registered_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
@@ -289,7 +243,7 @@ export default async function AdminDashboardPage() {
                             minute: '2-digit',
                           })}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4">
                           <RegistrationActions registrationId={registration.id} />
                         </td>
                       </tr>
@@ -309,161 +263,124 @@ export default async function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Recent Submissions & Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Recent Submissions & Admin Nav */}
+        <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
           {/* Recent Submissions */}
           <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-accent-cyan" />
-              Recent Submissions
-            </h2>
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <h2 className="text-xl font-bold">Recent Submissions</h2>
+              <span className="text-xs font-mono text-text-tertiary uppercase tracking-wide">Last 10</span>
+            </div>
 
             {recentSubmissions && recentSubmissions.length > 0 ? (
-              <div className="space-y-4">
+              <div className="divide-y divide-border-default">
                 {recentSubmissions.map((submission: any) => (
-                  <div
-                    key={submission.id}
-                    className="flex items-start justify-between p-4 bg-bg-tertiary rounded-lg border border-border-default"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium mb-1">
+                  <div key={submission.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
                         {submission.users?.full_name || 'Unknown User'}
                       </div>
-                      <div className="text-sm text-text-secondary mb-2">
+                      <div className="text-xs text-text-tertiary truncate">
                         {submission.competitions?.title || 'Unknown Competition'}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-text-tertiary">
-                        <span className="flex items-center gap-1">
-                          <Target className="w-3 h-3" />
-                          Score: {submission.score?.toFixed(4) || 'Pending'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {new Date(submission.submitted_at).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                        <Badge
-                          variant={
-                            submission.validation_status === 'valid' ? 'green' :
-                            submission.validation_status === 'invalid' ? 'red' : 'yellow'
-                          }
-                          className="text-xs"
-                        >
-                          {submission.validation_status}
-                        </Badge>
-                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {submission.is_best_score && (
-                        <Badge variant="success">Best</Badge>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {submission.score !== null && (
+                        <span className="font-mono text-sm font-bold text-text-primary">
+                          {submission.score?.toFixed(4)}
+                        </span>
                       )}
+                      <Badge
+                        variant={
+                          submission.validation_status === 'valid' ? 'green' :
+                          submission.validation_status === 'invalid' ? 'red' : 'yellow'
+                        }
+                      >
+                        {submission.validation_status}
+                      </Badge>
+                      <span className="text-xs text-text-tertiary hidden sm:block">
+                        {new Date(submission.submitted_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-text-tertiary">
-                <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No submissions yet</p>
+              <div className="text-center py-12 text-text-tertiary">
+                <Target className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="text-sm">No submissions yet</p>
               </div>
             )}
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Settings className="w-6 h-6 text-primary-blue" />
-              Quick Actions
-            </h2>
+          {/* Admin Navigation */}
+          <div className="space-y-4 lg:sticky lg:top-24">
+            {/* Competitions */}
+            <Card className="p-5">
+              <h3 className="font-semibold text-sm uppercase tracking-wider text-text-tertiary mb-3">Competitions</h3>
+              <div className="space-y-1">
+                <Link href="/admin/competitions" className="flex items-center justify-between p-2.5 rounded-lg hover:bg-bg-elevated transition-colors group">
+                  <div className="flex items-center gap-2.5 text-sm font-medium">
+                    <Trophy className="w-4 h-4 text-primary-blue" />
+                    Manage All
+                  </div>
+                  <span className="text-xs text-text-tertiary group-hover:text-text-secondary">{totalCompetitions || 0}</span>
+                </Link>
+                <Link href="/admin/competitions/create" className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-bg-elevated transition-colors text-sm font-medium">
+                  <Plus className="w-4 h-4 text-text-tertiary" />
+                  Create New
+                </Link>
+              </div>
+            </Card>
 
-            <div className="space-y-3">
-              <Link href="/admin/competitions" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Manage Competitions
-                </Button>
-              </Link>
-              <Link href="/admin/competitions/create" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Competition
-                </Button>
-              </Link>
-              <Link href="/admin/certificates" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Award className="w-4 h-4 mr-2" />
-                  Add Certificate
-                </Button>
-              </Link>
-              <Link href="/admin/practice" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Manage Practice Problems
-                </Button>
-              </Link>
-              <Link href="/admin/practice/create" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Practice Problem
-                </Button>
-              </Link>
-            </div>
+            {/* Practice */}
+            <Card className="p-5">
+              <h3 className="font-semibold text-sm uppercase tracking-wider text-text-tertiary mb-3">Practice</h3>
+              <div className="space-y-1">
+                <Link href="/admin/practice" className="flex items-center justify-between p-2.5 rounded-lg hover:bg-bg-elevated transition-colors group">
+                  <div className="flex items-center gap-2.5 text-sm font-medium">
+                    <BookOpen className="w-4 h-4 text-primary-blue" />
+                    Manage Problems
+                  </div>
+                  <span className="text-xs text-text-tertiary group-hover:text-text-secondary">{totalPracticeProblems || 0}</span>
+                </Link>
+                <Link href="/admin/practice/create" className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-bg-elevated transition-colors text-sm font-medium">
+                  <Plus className="w-4 h-4 text-text-tertiary" />
+                  Create Problem
+                </Link>
+              </div>
+            </Card>
 
-            {/* Active Competitions Quick View */}
-            <div className="mt-6 pt-6 border-t border-border-default">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-                Active Competitions
-              </h3>
-              {competitions && competitions.length > 0 ? (
-                <div className="space-y-2">
-                  {competitions.slice(0, 5).map((comp: any) => {
-                    // Determine phase for each competition
-                    const nowDate = new Date();
-                    const regStart = new Date(comp.registration_start);
-                    const regEnd = new Date(comp.registration_end);
-                    const publicEnd = new Date(comp.public_test_end);
-                    const privateEnd = comp.private_test_end ? new Date(comp.private_test_end) : null;
+            {/* Certificates */}
+            <Card className="p-5">
+              <h3 className="font-semibold text-sm uppercase tracking-wider text-text-tertiary mb-3">Certificates</h3>
+              <div className="space-y-1">
+                <Link href="/admin/certificates" className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-bg-elevated transition-colors text-sm font-medium">
+                  <Award className="w-4 h-4 text-primary-blue" />
+                  Manage Certificates
+                </Link>
+                <Link href="/admin/certificates/upload" className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-bg-elevated transition-colors text-sm font-medium">
+                  <Plus className="w-4 h-4 text-text-tertiary" />
+                  Upload Certificate
+                </Link>
+              </div>
+            </Card>
 
-                    let phase = 'ended';
-                    let phaseColor = 'text-text-tertiary';
-
-                    if (nowDate < regStart) {
-                      phase = 'upcoming';
-                      phaseColor = 'text-text-tertiary';
-                    } else if (nowDate < regEnd) {
-                      phase = 'registration';
-                      phaseColor = 'text-warning';
-                    } else if (nowDate < publicEnd) {
-                      phase = 'public test';
-                      phaseColor = 'text-primary-blue';
-                    } else if (privateEnd && nowDate < privateEnd) {
-                      phase = 'private test';
-                      phaseColor = 'text-accent-cyan';
-                    } else {
-                      phase = 'ended';
-                      phaseColor = 'text-text-tertiary';
-                    }
-
-                    return (
-                      <CompetitionRegistrationsList
-                        key={comp.id}
-                        competitionId={comp.id}
-                        competitionTitle={comp.title}
-                        phase={phase}
-                        phaseColor={phaseColor}
-                        endDate={privateEnd || publicEnd}
-                      />
-                    );
-                  })}
+            {/* Pending alert */}
+            {(pendingRegistrations?.length || 0) > 0 && (
+              <Card className="p-5 border-warning/30 bg-warning/5">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-warning">
+                      {pendingRegistrations?.length} pending approval{(pendingRegistrations?.length || 0) > 1 ? 's' : ''}
+                    </p>
+                    <p className="text-xs text-text-tertiary mt-0.5">Registrations waiting for review</p>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-sm text-text-tertiary">No competitions yet</p>
-              )}
-            </div>
-          </Card>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>

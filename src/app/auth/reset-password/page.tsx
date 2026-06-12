@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { updatePassword } from '@/app/(auth)/reset-password/actions';
 import { validatePassword } from '@/lib/utils/validation';
+import { Lock } from 'lucide-react';
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -90,22 +91,13 @@ export default function UpdatePasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-brand flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h1 className="font-brand text-4xl mb-2 gradient-text">
+      <Card className="relative w-full max-w-md p-6 sm:p-8 overflow-hidden">
+        <Lock
+          className="absolute -top-10 -right-10 h-40 w-40 text-primary-blue/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]"
+          aria-hidden="true"
+        />
+        <div className="relative text-center mb-8">
+          <h1 className="font-brand text-3xl sm:text-4xl mb-3 gradient-text">
             Set New Password
           </h1>
           <p className="text-text-secondary">
@@ -119,7 +111,7 @@ export default function UpdatePasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="relative space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium mb-2">
               New Password

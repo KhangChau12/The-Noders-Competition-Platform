@@ -158,14 +158,14 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
             <ArrowLeft className="w-4 h-4" />
             Back to Competition
           </Link>
-          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
             Submit Solution
           </h1>
           <p className="text-text-secondary">{competition.title}</p>
         </div>
 
         {/* Submission Quota */}
-        <div className="grid sm:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
           <Card className="p-6 border-l-4 border-primary-blue">
             <div className="flex items-center justify-between mb-2">
               <div className="text-text-tertiary text-sm">Daily Submissions</div>
@@ -199,9 +199,8 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
         />
 
         {/* Recent Submissions */}
-        <Card className="p-8 mt-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Target className="w-6 h-6 text-accent-cyan" />
+        <Card className="p-5 sm:p-8 mt-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6">
             My Submissions
           </h2>
 
@@ -225,7 +224,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
                   {sortedSubmissions.map((submission: any, index: number) => (
                     <tr
                       key={submission.id}
-                      className={`hover:bg-bg-tertiary/50 ${submission.is_best_score ? 'bg-success/5' : ''}`}
+                      className={`hover:bg-bg-elevated/50 ${submission.is_best_score ? 'bg-success/5' : ''}`}
                     >
                       <td className="px-4 py-3">
                         <span className={`font-semibold ${index === 0 && submission.score !== null ? 'text-warning' : ''}`}>

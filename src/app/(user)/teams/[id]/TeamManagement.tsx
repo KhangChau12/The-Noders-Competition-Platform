@@ -135,8 +135,7 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       {/* Add Member Card */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-primary-blue" />
+          <h3 className="text-xl font-bold">
             Add Team Members
           </h3>
           {!showAddMember && (
@@ -242,8 +241,7 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       {/* Edit Team Card */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <Edit3 className="w-5 h-5 text-accent-cyan" />
+          <h3 className="text-xl font-bold">
             Edit Team Information
           </h3>
           {!showEditTeam && (
@@ -326,8 +324,7 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       <Card className="p-6 border-error/30">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-xl font-bold flex items-center gap-2 text-error">
-              <AlertCircle className="w-5 h-5" />
+            <h3 className="text-xl font-bold text-error">
               Danger Zone
             </h3>
             <p className="text-sm text-text-tertiary mt-1">

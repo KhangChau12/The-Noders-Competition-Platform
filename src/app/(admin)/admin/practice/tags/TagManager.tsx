@@ -64,8 +64,7 @@ export default function TagManager({ tags }: Props) {
     <div className="space-y-6">
       {/* Create new tag */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5 text-primary-blue" />
+        <h2 className="text-lg font-semibold mb-4">
           Add New Tag
         </h2>
         <form onSubmit={handleCreate} className="flex gap-3">
@@ -86,9 +85,8 @@ export default function TagManager({ tags }: Props) {
 
       {/* Existing tags */}
       <Card className="overflow-hidden">
-        <div className="p-6 border-b border-border-default bg-bg-tertiary">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Tag className="w-5 h-5" />
+        <div className="p-6 border-b border-border-default bg-bg-elevated">
+          <h2 className="text-lg font-semibold">
             All Tags ({tags.length})
           </h2>
         </div>
@@ -101,7 +99,7 @@ export default function TagManager({ tags }: Props) {
         ) : (
           <div className="divide-y divide-border-default">
             {tags.map((tag) => (
-              <div key={tag.id} className="flex items-center justify-between px-6 py-4 hover:bg-bg-tertiary/50">
+              <div key={tag.id} className="flex items-center justify-between px-6 py-4 hover:bg-bg-elevated/50">
                 {editingId === tag.id ? (
                   <div className="flex items-center gap-3 flex-1 mr-4">
                     <Input

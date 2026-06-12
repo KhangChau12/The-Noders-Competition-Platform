@@ -71,7 +71,7 @@ function Table<T extends Record<string, any>>({
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-4 py-4 font-semibold text-sm text-text-secondary ${
+                className={`px-3 sm:px-4 py-3 sm:py-4 font-semibold text-sm text-text-secondary whitespace-nowrap ${
                   alignClasses[column.align || 'left']
                 } ${column.sortable ? 'cursor-pointer hover:text-text-primary transition-colors select-none' : ''}`}
                 onClick={() => handleSort(column.key, column.sortable)}
@@ -120,7 +120,7 @@ function Table<T extends Record<string, any>>({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={`px-4 py-4 text-sm text-text-primary ${
+                      className={`px-3 sm:px-4 py-3 sm:py-4 text-sm text-text-primary ${
                         alignClasses[column.align || 'left']
                       }`}
                     >

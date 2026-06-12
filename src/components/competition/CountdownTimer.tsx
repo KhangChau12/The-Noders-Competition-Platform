@@ -17,6 +17,8 @@ interface TimeRemaining {
   isExpired: boolean;
 }
 
+const TIME_UNITS = ['Days', 'Hours', 'Minutes', 'Seconds'] as const;
+
 const CountdownTimer: React.FC<CountdownTimerProps> = ({
   targetDate,
   label = 'Time Remaining',
@@ -72,61 +74,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     return () => clearInterval(timer);
   }, [targetDate, onComplete]);
 
-  // Prevent hydration mismatch by not rendering timer until mounted
-  if (!isMounted) {
-    return (
-      <div className={`${className}`}>
-        {label && (
-          <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide text-center mb-4">
-            {label}
-          </h3>
-        )}
-        <div className="flex items-center justify-center gap-3 sm:gap-4">
-          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
-            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
-              --
-            </span>
-            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
-              Days
-            </span>
-          </div>
-          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
-          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
-            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
-              --
-            </span>
-            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
-              Hours
-            </span>
-          </div>
-          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
-          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
-            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
-              --
-            </span>
-            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
-              Minutes
-            </span>
-          </div>
-          <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
-          <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
-            <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
-              --
-            </span>
-            <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
-              Seconds
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const formatNumber = (num: number): string => {
-    return num.toString().padStart(2, '0');
-  };
-
-  if (timeRemaining.isExpired) {
+  if (timeRemaining.isExpired && isMounted) {
     return (
       <div className={`text-center ${className}`}>
         <div className="inline-block px-6 py-3 bg-bg-surface border border-border-default rounded-lg">
@@ -138,61 +86,35 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     );
   }
 
-  const timeUnits = [
-    { value: timeRemaining.days, label: 'Days' },
-    { value: timeRemaining.hours, label: 'Hours' },
-    { value: timeRemaining.minutes, label: 'Minutes' },
-    { value: timeRemaining.seconds, label: 'Seconds' },
-  ];
+  const formatNumber = (num: number): string => num.toString().padStart(2, '0');
+
+  // Render "--" until mounted to avoid hydration mismatch
+  const values = isMounted
+    ? [timeRemaining.days, timeRemaining.hours, timeRemaining.minutes, timeRemaining.seconds].map(formatNumber)
+    : ['--', '--', '--', '--'];
 
   return (
-    <div className={`${className}`}>
+    <div className={className}>
       {label && (
-        <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide text-center mb-4">
+        <h3 className="text-xs sm:text-sm font-semibold text-text-tertiary uppercase tracking-widest text-center mb-4">
           {label}
         </h3>
       )}
 
-      <div className="flex items-center justify-center gap-3 sm:gap-4">
-        {timeUnits.map((unit, index) => (
-          <React.Fragment key={unit.label}>
-            <div className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-3 py-4 sm:px-6 min-w-[70px] sm:min-w-[90px]">
-              <span className="text-3xl sm:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none">
-                {formatNumber(unit.value)}
-              </span>
-              <span className="text-xs sm:text-sm text-text-tertiary uppercase tracking-wider mt-2">
-                {unit.label}
-              </span>
-            </div>
-
-            {index < timeUnits.length - 1 && (
-              <span className="text-2xl sm:text-3xl font-bold text-text-tertiary">:</span>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-
-      {/* Progress Bar (optional visual) */}
-      <div className="mt-6">
-        <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 max-w-md mx-auto">
+        {TIME_UNITS.map((unit, index) => (
           <div
-            className="h-full bg-gradient-brand transition-all duration-1000 ease-linear"
-            style={{
-              width: `${Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((timeRemaining.days * 24 * 60 * 60 +
-                    timeRemaining.hours * 60 * 60 +
-                    timeRemaining.minutes * 60 +
-                    timeRemaining.seconds) /
-                    (7 * 24 * 60 * 60)) *
-                    100
-                )
-              )}%`,
-            }}
-          />
-        </div>
+            key={unit}
+            className="flex flex-col items-center bg-bg-surface border border-border-default rounded-lg px-1 py-3 sm:px-3 sm:py-4 min-w-0"
+          >
+            <span className="text-2xl sm:text-3xl md:text-4xl font-bold font-mono bg-gradient-brand bg-clip-text text-transparent leading-none tabular-nums">
+              {values[index]}
+            </span>
+            <span className="text-[10px] sm:text-xs text-text-tertiary uppercase tracking-wider mt-2">
+              {unit}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

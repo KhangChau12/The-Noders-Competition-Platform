@@ -134,17 +134,17 @@ export default async function AdminCompetitionsPage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+            <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
               Manage Competitions
             </h1>
             <p className="text-text-secondary">
               View and manage all competitions on the platform
             </p>
           </div>
-          <Link href="/admin/competitions/create">
-            <Button variant="primary" size="lg">
+          <Link href="/admin/competitions/create" className="shrink-0">
+            <Button variant="primary" size="lg" className="w-full sm:w-auto">
               <Plus className="w-5 h-5 mr-2" />
               Create New
             </Button>
@@ -152,53 +152,26 @@ export default async function AdminCompetitionsPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6 border-l-4 border-primary-blue">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Competitions</div>
-              <Trophy className="w-5 h-5 text-primary-blue" />
-            </div>
-            <div className="text-3xl font-bold text-primary-blue">
-              {competitions?.length || 0}
-            </div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-success">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Active Now</div>
-              <Calendar className="w-5 h-5 text-success" />
-            </div>
-            <div className="text-3xl font-bold text-success">
-              {competitionsWithStats?.filter((c: any) => c.phase === 'public_test' || c.phase === 'private_test').length || 0}
-            </div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-warning">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Registration Open</div>
-              <Users className="w-5 h-5 text-warning" />
-            </div>
-            <div className="text-3xl font-bold text-warning">
-              {competitionsWithStats?.filter((c: any) => c.phase === 'registration').length || 0}
-            </div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-accent-cyan">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Submissions</div>
-              <Target className="w-5 h-5 text-accent-cyan" />
-            </div>
-            <div className="text-3xl font-bold text-accent-cyan">
-              {Object.values(submissionCounts).reduce((a, b) => a + b, 0)}
-            </div>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+          {[
+            { Icon: Trophy, value: competitions?.length || 0, label: 'Total', sub: 'Competitions', accent: 'text-primary-blue/15' },
+            { Icon: Target, value: competitionsWithStats?.filter((c: any) => c.phase === 'public_test' || c.phase === 'private_test').length || 0, label: 'Active', sub: 'Running now', accent: 'text-success/15' },
+            { Icon: Users, value: competitionsWithStats?.filter((c: any) => c.phase === 'registration').length || 0, label: 'Registering', sub: 'Open for entry', accent: 'text-warning/15' },
+            { Icon: Calendar, value: Object.values(submissionCounts).reduce((a: number, b: number) => a + b, 0), label: 'Submissions', sub: 'All time', accent: 'text-accent-cyan/15' },
+          ].map(({ Icon, value, label, sub, accent }) => (
+            <Card key={label} className="relative overflow-hidden p-4 sm:p-5">
+              <Icon className={`absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 ${accent} rotate-[-8deg] pointer-events-none`} />
+              <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5">{value}</p>
+              <p className="relative text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
+              <p className="relative text-[11px] text-text-tertiary mt-0.5">{sub}</p>
+            </Card>
+          ))}
         </div>
 
         {/* Competitions List */}
         <Card className="overflow-hidden">
-          <div className="p-6 border-b border-border-default bg-bg-tertiary">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Filter className="w-5 h-5" />
+          <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
+            <h2 className="text-xl font-bold">
               All Competitions
             </h2>
           </div>
@@ -206,8 +179,8 @@ export default async function AdminCompetitionsPage() {
           {competitionsWithStats && competitionsWithStats.length > 0 ? (
             <div className="divide-y divide-border-default">
               {competitionsWithStats.map((competition: any) => (
-                <div key={competition.id} className="p-6 hover:bg-bg-tertiary/50 transition-colors">
-                  <div className="flex items-start justify-between gap-6">
+                <div key={competition.id} className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
                     <div className="flex-1 min-w-0">
                       {/* Title & Badges */}
                       <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -283,7 +256,7 @@ export default async function AdminCompetitionsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 flex-shrink-0">
+                    <div className="grid grid-cols-3 md:flex md:flex-col gap-2 shrink-0">
                       <Link href={`/admin/competitions/${competition.id}/edit`}>
                         <Button variant="outline" size="sm" className="w-full">
                           <Edit2 className="w-4 h-4 mr-2" />

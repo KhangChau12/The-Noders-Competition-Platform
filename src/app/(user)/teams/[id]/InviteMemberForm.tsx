@@ -41,8 +41,7 @@ export default function InviteMemberForm({ teamId }: InviteMemberFormProps) {
 
   return (
     <div className="p-4 bg-primary-blue/5 rounded-lg border border-primary-blue/20">
-      <h3 className="text-sm font-semibold text-primary-blue mb-3 flex items-center gap-2">
-        <UserPlus className="w-4 h-4" />
+      <h3 className="text-sm font-semibold text-primary-blue mb-3">
         Invite New Member
       </h3>
 

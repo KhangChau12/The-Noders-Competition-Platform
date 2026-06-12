@@ -157,16 +157,15 @@ export default function SubmitForm({
   };
 
   return (
-    <Card className="p-8">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <Upload className="w-6 h-6 text-primary-blue" />
+    <Card className="p-5 sm:p-8">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6">
         Upload Submission
       </h2>
 
       <form onSubmit={handleSubmit}>
         {/* Drag & Drop Area */}
         <div
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-all ${
+          className={`border-2 border-dashed rounded-lg p-6 sm:p-12 text-center transition-all ${
             isDragging
               ? 'border-primary-blue bg-primary-blue/10'
               : 'border-border-default hover:border-border-focus'
@@ -205,7 +204,7 @@ export default function SubmitForm({
                   e.stopPropagation();
                   handleRemoveFile();
                 }}
-                className="p-2 hover:bg-bg-tertiary rounded-lg transition-colors"
+                className="p-2 hover:bg-bg-elevated rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -256,9 +255,8 @@ export default function SubmitForm({
         )}
 
         {/* Submission Rules */}
-        <div className="mt-6 p-4 bg-bg-tertiary rounded-lg">
-          <h3 className="font-semibold mb-2 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-warning" />
+        <div className="mt-6 p-4 bg-bg-elevated rounded-lg">
+          <h3 className="font-semibold mb-2">
             Submission Rules
           </h3>
           <ul className="text-sm text-text-secondary space-y-1">

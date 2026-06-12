@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
-import { Clock, Users, Calendar, Trophy } from 'lucide-react';
+import { Clock, Users, Calendar } from 'lucide-react';
 
 type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
 
@@ -73,9 +73,12 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const formatDate = (value: string) =>
+    new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
   return (
-    <Link href={`/competitions/${competition.id}`}>
-      <Card className={`p-6 hover:border-border-focus transition-all glow-on-hover h-full flex flex-col ${
+    <Link href={`/competitions/${competition.id}`} className="group block h-full">
+      <Card className={`p-5 sm:p-6 hover:border-border-focus transition-all glow-on-hover h-full flex flex-col ${
         phase === 'registration' ? 'ring-1 ring-primary-blue/30 shadow-glow-blue-sm' : ''
       } ${className}`}>
         {/* Header with Badges */}
@@ -91,7 +94,7 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-text-primary mb-2 line-clamp-2">
+        <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-2 line-clamp-2 group-hover:text-primary-blue transition-colors">
           {competition.title}
         </h3>
 
@@ -99,6 +102,24 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({
         <p className="text-text-secondary text-sm leading-relaxed mb-4 line-clamp-3 flex-grow">
           {competition.description}
         </p>
+
+        {/* Timeline */}
+        <div className="space-y-1.5 text-xs mb-4">
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Calendar className="h-3.5 w-3.5 text-text-tertiary shrink-0" />
+            <span>
+              <span className="text-text-tertiary">Registration:</span>{' '}
+              {formatDate(competition.registration_start)} &ndash; {formatDate(competition.registration_end)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Clock className="h-3.5 w-3.5 text-text-tertiary shrink-0" />
+            <span>
+              <span className="text-text-tertiary">Public test ends:</span>{' '}
+              {formatDate(competition.public_test_end)}
+            </span>
+          </div>
+        </div>
 
         {/* Countdown Timer */}
         {countdown && (
@@ -158,9 +179,13 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({
 
         {/* Footer */}
         <div className="mt-auto pt-4 border-t border-border-default">
-          <div className="flex items-center justify-between text-sm text-text-tertiary">
-            <span>Click to view details</span>
-            <Trophy className="h-4 w-4" />
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-text-tertiary">
+              {competition.competition_type === '4-phase' ? '4-phase format' : '3-phase format'}
+            </span>
+            <span className="font-semibold text-primary-blue group-hover:translate-x-0.5 transition-transform">
+              View details &rarr;
+            </span>
           </div>
         </div>
       </Card>

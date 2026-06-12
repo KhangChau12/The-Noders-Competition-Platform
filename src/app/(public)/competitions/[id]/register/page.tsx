@@ -132,13 +132,13 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
         </Link>
 
         <div className="mb-8">
-          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
             Register for Competition
           </h1>
           <p className="text-text-secondary">{competition.title}</p>
         </div>
 
-        <Card className="p-8 mb-6">
+        <Card className="p-5 sm:p-8 mb-6">
           <h2 className="text-2xl font-bold mb-4">Competition Details</h2>
           <div className="space-y-4">
             <div className="flex items-start gap-3">

@@ -94,7 +94,7 @@ export default function CertificatesList({ certificates: initialCertificates, co
 
   return (
     <Card className="overflow-hidden">
-      <div className="p-4 border-b border-border-default bg-bg-tertiary">
+      <div className="p-4 border-b border-border-default bg-bg-elevated">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
@@ -115,7 +115,7 @@ export default function CertificatesList({ certificates: initialCertificates, co
       {filteredCertificates.length > 0 ? (
         <div className="divide-y divide-border-default">
           {filteredCertificates.map((cert) => (
-            <div key={cert.id} className="p-4 hover:bg-bg-tertiary/50 transition-colors">
+            <div key={cert.id} className="p-4 hover:bg-bg-elevated/50 transition-colors">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   {/* File type icon */}

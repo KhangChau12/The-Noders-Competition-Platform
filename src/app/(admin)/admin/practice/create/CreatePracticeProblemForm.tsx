@@ -47,8 +47,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
     <form onSubmit={handleSubmit}>
       {/* Basic Info */}
       <Card className="p-8 mb-6">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-primary-blue" />
+        <h2 className="text-2xl font-bold mb-6">
           Basic Information
         </h2>
 
@@ -155,8 +154,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
 
       {/* Dataset & Settings */}
       <Card className="p-8 mb-6">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <FileText className="w-6 h-6 text-success" />
+        <h2 className="text-2xl font-bold mb-6">
           Dataset & Submission Settings
         </h2>
 
@@ -196,8 +194,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
           <div className="border-t border-border-default" />
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-warning" />
+            <h3 className="text-lg font-semibold mb-4">
               Submission Limits
             </h3>
             <div className="grid md:grid-cols-3 gap-6">

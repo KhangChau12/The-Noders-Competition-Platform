@@ -38,20 +38,20 @@ export default async function AdminPracticePage() {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">Practice Problems</h1>
+            <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">Practice Problems</h1>
             <p className="text-text-secondary">Manage permanent practice problems for participants</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Link href="/admin/practice/tags">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
                 <Tag className="w-4 h-4 mr-2" />
                 Manage Tags
               </Button>
             </Link>
             <Link href="/admin/practice/create">
-              <Button variant="primary" size="lg">
+              <Button variant="primary" size="lg" className="w-full sm:w-auto">
                 <Plus className="w-5 h-5 mr-2" />
                 Create New
               </Button>
@@ -60,41 +60,25 @@ export default async function AdminPracticePage() {
         </div>
 
         {/* Stats */}
-        <div className="grid sm:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 border-l-4 border-primary-blue">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Problems</div>
-              <BookOpen className="w-5 h-5 text-primary-blue" />
-            </div>
-            <div className="text-3xl font-bold text-primary-blue">{problems?.length ?? 0}</div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-success">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Participants</div>
-              <Target className="w-5 h-5 text-success" />
-            </div>
-            <div className="text-3xl font-bold text-success">
-              {Object.values(countMap).reduce((sum, c) => sum + (c.participant_count ?? 0), 0)}
-            </div>
-          </Card>
-
-          <Card className="p-6 border-l-4 border-accent-cyan">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Valid Submissions</div>
-              <Target className="w-5 h-5 text-accent-cyan" />
-            </div>
-            <div className="text-3xl font-bold text-accent-cyan">
-              {Object.values(countMap).reduce((sum, c) => sum + (c.valid_submission_count ?? 0), 0)}
-            </div>
-          </Card>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8">
+          {[
+            { Icon: BookOpen, value: problems?.length ?? 0, label: 'Problems', sub: 'Published', accent: 'text-primary-blue/15' },
+            { Icon: Target, value: Object.values(countMap).reduce((sum, c) => sum + (c.participant_count ?? 0), 0), label: 'Participants', sub: 'Total solvers', accent: 'text-success/15' },
+            { Icon: Target, value: Object.values(countMap).reduce((sum, c) => sum + (c.valid_submission_count ?? 0), 0), label: 'Submissions', sub: 'Valid only', accent: 'text-accent-cyan/15' },
+          ].map(({ Icon, value, label, sub, accent }) => (
+            <Card key={label} className="relative overflow-hidden p-4 sm:p-5">
+              <Icon className={`absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 ${accent} rotate-[-8deg] pointer-events-none`} />
+              <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5">{value}</p>
+              <p className="relative text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
+              <p className="relative text-[11px] text-text-tertiary mt-0.5">{sub}</p>
+            </Card>
+          ))}
         </div>
 
         {/* Problems List */}
         <Card className="overflow-hidden">
-          <div className="p-6 border-b border-border-default bg-bg-tertiary">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
+          <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
+            <h2 className="text-xl font-bold">
               All Practice Problems
             </h2>
           </div>
@@ -108,8 +92,8 @@ export default async function AdminPracticePage() {
                 const diffInfo = problem.difficulty ? PRACTICE_DIFFICULTY_INFO[problem.difficulty as keyof typeof PRACTICE_DIFFICULTY_INFO] : null;
 
                 return (
-                  <div key={problem.id} className="p-6 hover:bg-bg-tertiary/50 transition-colors">
-                    <div className="flex items-start justify-between gap-6">
+                  <div key={problem.id} className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3 flex-wrap">
                           <h3 className="text-xl font-bold">{problem.title}</h3>
@@ -144,7 +128,7 @@ export default async function AdminPracticePage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 flex-shrink-0">
+                      <div className="grid grid-cols-3 md:flex md:flex-col gap-2 shrink-0">
                         <Link href={`/admin/practice/${problem.id}/edit`}>
                           <Button variant="outline" size="sm" className="w-full">
                             <Edit2 className="w-4 h-4 mr-2" />

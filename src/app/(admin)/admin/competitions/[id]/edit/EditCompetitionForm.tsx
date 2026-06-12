@@ -150,7 +150,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="font-brand text-4xl sm:text-5xl mb-2 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
             Edit Competition
           </h1>
           <p className="text-text-secondary">Update competition details</p>
@@ -159,8 +159,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
           <Card className="p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-primary-blue" />
+            <h2 className="text-2xl font-bold mb-6">
               Basic Information
             </h2>
 
@@ -313,8 +312,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
 
           {/* Smart Timeline */}
           <Card className="p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-accent-cyan" />
+            <h2 className="text-2xl font-bold mb-6">
               Competition Timeline
             </h2>
 
@@ -403,8 +401,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
               {/* Timeline Preview */}
               {registrationStart && (
                 <div className="mt-8 p-6 bg-bg-surface border border-border-default rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary-blue" />
+                  <h3 className="text-lg font-semibold mb-4">
                     Timeline Preview
                   </h3>
 
@@ -480,8 +477,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
 
           {/* Dataset & Submission Rules */}
           <Card className="p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-success" />
+            <h2 className="text-2xl font-bold mb-6">
               Dataset & Submission Settings
             </h2>
 
@@ -522,8 +518,7 @@ export default function EditCompetitionForm({ competition }: EditCompetitionForm
 
               {/* Submission Limits */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-warning" />
+                <h3 className="text-lg font-semibold mb-4">
                   Submission Limits
                 </h3>
                 <div className="grid md:grid-cols-2 gap-6">

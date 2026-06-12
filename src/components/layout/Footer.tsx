@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-2 gap-10 mb-10">
           {/* Brand */}
           <div>
-            <h3 className="font-shrikhand text-2xl gradient-text mb-3">
+            <h3 className="font-brand text-2xl gradient-text mb-3">
               The Noders Community
             </h3>
             <p className="text-sm text-text-tertiary leading-relaxed mb-4">

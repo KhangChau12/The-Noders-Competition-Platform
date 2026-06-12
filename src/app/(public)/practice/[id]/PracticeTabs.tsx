@@ -54,18 +54,18 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
   return (
     <div>
       {/* Tab Nav */}
-      <div className="flex border-b border-border-default mb-8 overflow-x-auto">
+      <div className="flex border-b border-border-default mb-8 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 ${
               activeTab === tab.id
                 ? 'border-primary-blue text-primary-blue'
                 : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab.icon}
+            <span className="hidden sm:block">{tab.icon}</span>
             {tab.label}
           </button>
         ))}
@@ -73,11 +73,10 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Problem Statement */}
-          <Card className="p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-primary-blue" />
+        <div className="grid lg:grid-cols-3 gap-6 items-start">
+          {/* Main column: problem statement */}
+          <Card className="lg:col-span-2 p-5 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6">
               Problem Statement
             </h2>
             <div className="prose prose-invert max-w-none">
@@ -87,75 +86,94 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
             </div>
           </Card>
 
-          {/* Metadata */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Scoring Metric</h3>
-              <div className="flex items-center gap-3">
-                <Badge variant="tech">{metricInfo?.name ?? problem.scoring_metric}</Badge>
-                <span className="text-text-tertiary text-sm">
-                  {metricInfo?.higher_is_better ? 'Higher is better' : 'Lower is better'}
-                </span>
-              </div>
-              <p className="text-text-secondary text-sm mt-3">{metricInfo?.description}</p>
+          {/* Sidebar: everything you need to start, in one glance */}
+          <div className="space-y-5 lg:sticky lg:top-24">
+            <Card className="p-5">
+              <h3 className="font-semibold mb-4">At a glance</h3>
+              <dl className="space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Metric</dt>
+                  <dd className="font-semibold text-text-primary text-right">
+                    {metricInfo?.name ?? problem.scoring_metric}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Goal</dt>
+                  <dd className="font-medium text-text-secondary text-right">
+                    {metricInfo?.higher_is_better ? 'Higher is better ↑' : 'Lower is better ↓'}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Participants</dt>
+                  <dd className="font-semibold text-text-primary font-mono">{leaderboard.length}</dd>
+                </div>
+                <div className="border-t border-border-default" />
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Daily limit</dt>
+                  <dd className="font-semibold text-text-primary font-mono">{problem.daily_submission_limit}/day</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Total limit</dt>
+                  <dd className="font-semibold text-text-primary font-mono">
+                    {problem.total_submission_limit === 0 ? 'Unlimited' : problem.total_submission_limit}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Max file size</dt>
+                  <dd className="font-semibold text-text-primary font-mono">{problem.max_file_size_mb} MB</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-text-tertiary">Format</dt>
+                  <dd className="font-semibold text-text-primary font-mono">CSV (id,label)</dd>
+                </div>
+              </dl>
+              {metricInfo?.description && (
+                <p className="text-text-tertiary text-xs leading-relaxed mt-4 pt-4 border-t border-border-default">
+                  {metricInfo.description}
+                </p>
+              )}
             </Card>
 
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Submission Rules</h3>
-              <ul className="space-y-2 text-sm text-text-secondary">
-                <li>Daily limit: <strong className="text-text-primary">{problem.daily_submission_limit}</strong> submissions</li>
-                <li>Total limit: <strong className="text-text-primary">
-                  {problem.total_submission_limit === 0 ? 'Unlimited' : problem.total_submission_limit}
-                </strong></li>
-                <li>Max file size: <strong className="text-text-primary">{problem.max_file_size_mb} MB</strong></li>
-                <li>Format: <strong className="text-text-primary">CSV (id,label)</strong></li>
-              </ul>
-            </Card>
-          </div>
+            {(problem.dataset_url || problem.sample_submission_url) && (
+              <Card className="p-5">
+                <h3 className="font-semibold mb-3">Downloads</h3>
+                <div className="space-y-2">
+                  {problem.dataset_url && (
+                    <a href={problem.dataset_url} target="_blank" rel="noopener noreferrer" className="block">
+                      <Button variant="outline" className="w-full justify-start">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Dataset
+                      </Button>
+                    </a>
+                  )}
+                  {problem.sample_submission_url && (
+                    <a href={problem.sample_submission_url} target="_blank" rel="noopener noreferrer" className="block">
+                      <Button variant="outline" className="w-full justify-start">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Sample Submission
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </Card>
+            )}
 
-          {/* Downloads */}
-          {(problem.dataset_url || problem.sample_submission_url) && (
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Downloads</h3>
-              <div className="flex flex-wrap gap-3">
-                {problem.dataset_url && (
-                  <a href={problem.dataset_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Download Dataset
-                    </Button>
-                  </a>
-                )}
-                {problem.sample_submission_url && (
-                  <a href={problem.sample_submission_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Sample Submission
-                    </Button>
-                  </a>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Submit CTA */}
-          <Card className="p-8 bg-primary-blue/5 border-primary-blue/20">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h3 className="text-xl font-bold mb-1">Ready to practice?</h3>
-                <p className="text-text-secondary text-sm">Submit your predictions and see where you rank.</p>
-              </div>
+            <Card className="p-5 bg-primary-blue/5 border-primary-blue/20">
+              <h3 className="font-bold mb-1">Ready to practice?</h3>
+              <p className="text-text-secondary text-sm mb-4">
+                Submit your predictions and see where you rank.
+              </p>
               {isAuthenticated ? (
-                <Link href={`/practice/${problem.id}/submit`}>
-                  <Button variant="primary" size="lg">Submit Solution</Button>
+                <Link href={`/practice/${problem.id}/submit`} className="block">
+                  <Button variant="primary" className="w-full">Submit Solution</Button>
                 </Link>
               ) : (
-                <Link href="/login">
-                  <Button variant="primary" size="lg">Log in to Submit</Button>
+                <Link href="/login" className="block">
+                  <Button variant="primary" className="w-full">Log in to Submit</Button>
                 </Link>
               )}
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       )}
 

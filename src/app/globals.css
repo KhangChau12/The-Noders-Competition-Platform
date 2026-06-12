@@ -151,6 +151,16 @@
     text-wrap: balance;
   }
 
+  /* Hide scrollbar but keep scrollability (mobile tab navs) */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   .glow-on-hover {
     @apply transition-shadow duration-300 hover:shadow-glow-blue-md;
   }

@@ -71,7 +71,7 @@ export default async function PracticeProblemPage({ params }: Props) {
     : null;
 
   return (
-    <div className="min-h-screen px-4 py-12">
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-tertiary mb-8">
@@ -81,34 +81,34 @@ export default async function PracticeProblemPage({ params }: Props) {
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-6 mb-8 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-8">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-3">
-              <Badge variant="tech">{metricInfo?.name ?? problem.scoring_metric}</Badge>
               {diffInfo && (
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${diffInfo.bgColor} ${diffInfo.color} ${diffInfo.borderColor}`}>
                   {diffInfo.label}
                 </span>
               )}
-              {tags.map((tag) => (
-                <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-              ))}
+              <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
+                {metricInfo?.name ?? problem.scoring_metric}
+                {tags.length > 0 && <> &middot; {tags.map((tag) => tag.name).join(', ')}</>}
+              </span>
             </div>
 
-            <h1 className="font-brand text-3xl sm:text-4xl gradient-text mb-3">
+            <h1 className="font-brand text-2xl sm:text-3xl md:text-4xl gradient-text mb-3 leading-tight">
               {problem.title}
             </h1>
-            <p className="text-text-secondary max-w-3xl">{problem.description}</p>
+            <p className="text-text-secondary max-w-3xl text-sm sm:text-base">{problem.description}</p>
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {user ? (
-              <Link href={`/practice/${id}/submit`}>
-                <Button variant="primary" size="lg">Submit Solution</Button>
+              <Link href={`/practice/${id}/submit`} className="block">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">Submit Solution</Button>
               </Link>
             ) : (
-              <Link href="/login">
-                <Button variant="primary" size="lg">Log in to Submit</Button>
+              <Link href="/login" className="block">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">Log in to Submit</Button>
               </Link>
             )}
           </div>

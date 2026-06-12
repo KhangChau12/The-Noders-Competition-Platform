@@ -57,8 +57,8 @@ export default function RegisterForm({
   });
 
   return (
-    <Card className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Confirm Registration</h2>
+    <Card className="p-5 sm:p-8">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4">Confirm Registration</h2>
       <p className="text-text-secondary mb-6">
         {participationType === 'team'
           ? 'Select your team and confirm registration. Your registration will be pending admin approval.'
@@ -195,9 +195,8 @@ export default function RegisterForm({
         </Button>
       </form>
 
-      <div className="mt-6 p-4 bg-bg-tertiary rounded-lg">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-warning" />
+      <div className="mt-6 p-4 bg-bg-elevated rounded-lg">
+        <h3 className="font-semibold mb-2">
           Important Information
         </h3>
         <ul className="text-sm text-text-secondary space-y-1">

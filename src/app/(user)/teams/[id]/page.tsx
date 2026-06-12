@@ -67,7 +67,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Back Button */}
         <Link
           href="/dashboard"
@@ -78,38 +78,32 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
         </Link>
 
         {/* Team Header */}
-        <Card className="p-8 mb-8">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-6">
-              {/* Team Avatar */}
-              <div className="w-24 h-24 bg-gradient-brand rounded-lg flex items-center justify-center flex-shrink-0">
-                <Users className="w-12 h-12 text-white" />
+        <Card className="relative overflow-hidden p-6 sm:p-8 mb-8">
+          <Users
+            className="absolute -top-8 -right-8 h-40 w-40 text-primary-blue/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.3))]"
+            aria-hidden="true"
+          />
+          <div className="relative">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">{team.name}</h1>
+              {isLeader && (
+                <Badge variant="yellow" className="flex items-center gap-1">
+                  <Crown className="w-3 h-3" />
+                  Leader
+                </Badge>
+              )}
+            </div>
+            <p className="text-text-secondary mb-4">
+              {team.description || 'No description'}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-text-tertiary">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>{members?.length || 0} members</span>
               </div>
-
-              {/* Team Info */}
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold">{team.name}</h1>
-                  {isLeader && (
-                    <Badge variant="yellow" className="flex items-center gap-1">
-                      <Crown className="w-3 h-3" />
-                      Leader
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-text-secondary mb-4">
-                  {team.description || 'No description'}
-                </p>
-                <div className="flex items-center gap-6 text-sm text-text-tertiary">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span>{members?.length || 0} members</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Created {new Date(team.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>Created {new Date(team.created_at).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -117,8 +111,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
 
         {/* Team Leader */}
         <Card className="p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Crown className="w-5 h-5 text-warning" />
+          <h2 className="text-xl font-bold mb-4">
             Team Leader
           </h2>
           <div className="flex items-center gap-4 p-4 bg-bg-elevated rounded-lg">
@@ -137,8 +130,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
         {/* Team Members */}
         <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Users className="w-5 h-5" />
+            <h2 className="text-xl font-bold">
               Team Members ({members?.length || 0})
             </h2>
           </div>
@@ -179,24 +171,24 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
               {members.map((member: any) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 bg-bg-elevated rounded-lg hover:bg-bg-elevated/80 transition-colors"
+                  className="flex flex-wrap items-center justify-between gap-3 p-4 bg-bg-elevated rounded-lg hover:bg-bg-elevated/80 transition-colors"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 bg-gradient-brand rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-bold">
                         {member.users.full_name?.[0]?.toUpperCase() || member.users.email[0].toUpperCase()}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-semibold">{member.users.full_name || 'Anonymous'}</p>
-                      <div className="flex items-center gap-2 text-sm text-text-tertiary">
-                        <Mail className="w-3 h-3" />
-                        <span>{member.users.email}</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{member.users.full_name || 'Anonymous'}</p>
+                      <div className="flex items-center gap-2 text-sm text-text-tertiary min-w-0">
+                        <Mail className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{member.users.email}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-sm text-text-tertiary">
+                  <div className="text-sm text-text-tertiary shrink-0">
                     Joined {new Date(member.joined_at).toLocaleDateString()}
                   </div>
                 </div>

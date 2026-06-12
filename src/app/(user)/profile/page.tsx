@@ -71,10 +71,10 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">My Profile</h1>
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl gradient-text leading-tight mb-2">My Profile</h1>
           <p className="text-text-secondary">Manage your account and view your competition stats</p>
         </div>
 
@@ -121,30 +121,29 @@ export default async function ProfilePage() {
           {/* Stats & Activity */}
           <div className="lg:col-span-2 space-y-6">
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className="p-6 text-center">
-                <Trophy className="w-8 h-8 mx-auto mb-2 text-warning" />
-                <p className="text-3xl font-bold mb-1">{competitionsCount || 0}</p>
-                <p className="text-sm text-text-tertiary">Competitions</p>
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <Card className="relative overflow-hidden p-4 sm:p-6">
+                <Trophy className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-warning/10 rotate-[-8deg] pointer-events-none" />
+                <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{competitionsCount || 0}</p>
+                <p className="relative text-xs sm:text-sm text-text-tertiary">Competitions</p>
               </Card>
 
-              <Card className="p-6 text-center">
-                <Target className="w-8 h-8 mx-auto mb-2 text-primary-blue" />
-                <p className="text-3xl font-bold mb-1">{submissionsCount || 0}</p>
-                <p className="text-sm text-text-tertiary">Submissions</p>
+              <Card className="relative overflow-hidden p-4 sm:p-6">
+                <Target className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-primary-blue/10 rotate-[-8deg] pointer-events-none" />
+                <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{submissionsCount || 0}</p>
+                <p className="relative text-xs sm:text-sm text-text-tertiary">Submissions</p>
               </Card>
 
-              <Card className="p-6 text-center">
-                <Award className="w-8 h-8 mx-auto mb-2 text-success" />
-                <p className="text-3xl font-bold mb-1">{bestScores?.length || 0}</p>
-                <p className="text-sm text-text-tertiary">Best Scores</p>
+              <Card className="relative overflow-hidden p-4 sm:p-6">
+                <Award className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-success/10 rotate-[-8deg] pointer-events-none" />
+                <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{bestScores?.length || 0}</p>
+                <p className="relative text-xs sm:text-sm text-text-tertiary">Best Scores</p>
               </Card>
             </div>
 
             {/* Best Scores */}
             <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-warning" />
+              <h3 className="text-xl font-bold mb-4">
                 Top Performances
               </h3>
 
@@ -157,16 +156,16 @@ export default async function ProfilePage() {
                     return (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 bg-bg-elevated rounded-lg"
+                        className="flex items-center justify-between gap-3 p-4 bg-bg-elevated rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg text-text-tertiary">#{index + 1}</span>
-                          <div>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="font-bold text-lg text-text-tertiary shrink-0">#{index + 1}</span>
+                          <div className="min-w-0">
                             <p className="font-semibold truncate">{submission.competitions?.title}</p>
                             <p className="text-sm text-text-tertiary">Competition</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <p className="font-mono font-bold text-xl text-primary-blue">
                             {submission.score?.toFixed(metricInfo?.decimals || 4)}
                             {metricInfo?.higher_is_better === false && ' ↓'}

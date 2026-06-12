@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { signIn } from './actions';
+import { Trophy } from 'lucide-react';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -45,14 +46,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-bg-primary via-bg-surface to-bg-primary">
-      <Card className="w-full max-w-md p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-brand mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
-          <h1 className="font-bold text-3xl mb-2 text-text-primary">
+      <Card className="relative w-full max-w-md p-6 sm:p-8 shadow-2xl overflow-hidden">
+        <Trophy
+          className="absolute -top-10 -right-10 h-40 w-40 text-primary-blue/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]"
+          aria-hidden="true"
+        />
+        <div className="relative text-center mb-8">
+          <h1 className="font-brand text-3xl mb-3 gradient-text">
             Welcome Back
           </h1>
           <p className="text-text-secondary">
@@ -66,7 +66,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="relative space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-semibold mb-2 text-text-primary">
               Email Address

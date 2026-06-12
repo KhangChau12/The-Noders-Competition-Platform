@@ -29,9 +29,6 @@ export default function VerifyPage() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-blue to-accent-cyan flex items-center justify-center">
-            <ShieldCheck className="w-10 h-10 text-white" />
-          </div>
           <h1 className="font-brand text-3xl sm:text-4xl mb-3 gradient-text">
             Verify Certificate
           </h1>
@@ -41,8 +38,12 @@ export default function VerifyPage() {
         </div>
 
         {/* Verify Form */}
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <Card className="relative overflow-hidden p-6">
+          <ShieldCheck
+            className="absolute -top-8 -right-8 h-32 w-32 text-accent-cyan/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_20px_rgba(6,182,212,0.35))]"
+            aria-hidden="true"
+          />
+          <form onSubmit={handleSubmit} className="relative space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
                 Verification Code

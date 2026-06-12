@@ -504,7 +504,7 @@ export default function CompetitionTabs({
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-border-default">
+      <div className="flex gap-1 sm:gap-2 border-b border-border-default overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -512,15 +512,15 @@ export default function CompetitionTabs({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center gap-2 px-6 py-3 font-semibold transition-all
-                border-b-2 -mb-px
+                flex items-center gap-2 px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all
+                border-b-2 -mb-px whitespace-nowrap shrink-0
                 ${activeTab === tab.id
                   ? 'border-primary-blue text-primary-blue'
                   : 'border-transparent text-text-tertiary hover:text-text-secondary'
                 }
               `}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 hidden sm:block" />
               {tab.label}
             </button>
           );
@@ -642,16 +642,17 @@ function PhaseTabsNav({
     return null;
   }
 
+  const tabClass = (isActive: boolean, activeColor = 'border-primary-blue text-primary-blue') =>
+    `px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all border-b-2 -mb-px whitespace-nowrap shrink-0 ${
+      isActive ? activeColor : 'border-transparent text-text-tertiary hover:text-text-secondary'
+    }`;
+
   return (
-    <div className="flex gap-2 mb-6 border-b border-border-default">
+    <div className="flex gap-1 sm:gap-2 mb-6 border-b border-border-default overflow-x-auto scrollbar-none">
       {showFinal && (
         <button
           onClick={() => onPhaseChange('final')}
-          className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-            phase === 'final'
-              ? 'border-warning text-warning'
-              : 'border-transparent text-text-tertiary hover:text-text-secondary'
-          }`}
+          className={tabClass(phase === 'final', 'border-warning text-warning')}
         >
           Final
         </button>
@@ -659,22 +660,14 @@ function PhaseTabsNav({
       {showPrivate && (
         <button
           onClick={() => onPhaseChange('private')}
-          className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-            phase === 'private'
-              ? 'border-primary-blue text-primary-blue'
-              : 'border-transparent text-text-tertiary hover:text-text-secondary'
-          }`}
+          className={tabClass(phase === 'private')}
         >
           Private Phase
         </button>
       )}
       <button
         onClick={() => onPhaseChange('public')}
-        className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-          phase === 'public'
-            ? 'border-primary-blue text-primary-blue'
-            : 'border-transparent text-text-tertiary hover:text-text-secondary'
-        }`}
+        className={tabClass(phase === 'public')}
       >
         Public Phase
       </button>
@@ -832,21 +825,14 @@ function ScoreDistributionChart({
 
   return (
     <Card className="p-4 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 3v18h18" />
-            <path d="M7 16v-4" />
-            <path d="M11 16v-8" />
-            <path d="M15 16v-6" />
-            <path d="M19 16v-10" />
-          </svg>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary">
           Score Distribution
           <span className="text-xs font-normal text-text-tertiary ml-2">
             {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
           </span>
         </h3>
-        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
           <span>Participants: <span className="font-semibold text-text-secondary">{totalParticipants}</span></span>
           <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
           <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
@@ -933,11 +919,9 @@ function ScoreDistributionChart({
       <div className="mt-4 pt-4 border-t border-border-default">
         {isLoggedIn && isRegistered ? (
           userBestScore !== undefined ? (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
-                  <Trophy className="w-4 h-4 text-warning" />
-                </div>
+                <Trophy className="w-5 h-5 text-warning shrink-0" />
                 <div>
                   <div className="text-xs text-text-tertiary">Your Best Score</div>
                   <div className="font-mono font-bold text-warning">{userBestScore.toFixed(decimals)}</div>
@@ -963,9 +947,7 @@ function ScoreDistributionChart({
             </div>
           ) : (
             <div className="flex items-center gap-3 text-text-tertiary">
-              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-                <FileText className="w-4 h-4" />
-              </div>
+              <FileText className="w-5 h-5 shrink-0" />
               <div>
                 <div className="text-sm">You haven't submitted yet</div>
                 <div className="text-xs">Submit your solution to see your position!</div>
@@ -974,9 +956,7 @@ function ScoreDistributionChart({
           )
         ) : isLoggedIn ? (
           <div className="flex items-center gap-3 text-text-tertiary">
-            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-              <FileText className="w-4 h-4" />
-            </div>
+            <FileText className="w-5 h-5 shrink-0" />
             <div>
               <div className="text-sm">Register to participate</div>
               <div className="text-xs">Join this competition to submit your solution!</div>
@@ -984,9 +964,7 @@ function ScoreDistributionChart({
           </div>
         ) : (
           <div className="flex items-center gap-3 text-text-tertiary">
-            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-              <FileText className="w-4 h-4" />
-            </div>
+            <FileText className="w-5 h-5 shrink-0" />
             <div>
               <div className="text-sm">Login to participate</div>
               <div className="text-xs">Create an account or login to join this competition!</div>
@@ -1060,21 +1038,14 @@ function FinalScoreDistributionChart({
 
   return (
     <Card className="p-4 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 3v18h18" />
-            <path d="M7 16v-4" />
-            <path d="M11 16v-8" />
-            <path d="M15 16v-6" />
-            <path d="M19 16v-10" />
-          </svg>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary">
           Final Score Distribution (Average)
           <span className="text-xs font-normal text-text-tertiary ml-2">
             {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
           </span>
         </h3>
-        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
           <span>Complete: <span className="font-semibold text-text-secondary">{entriesWithAverage.length}</span></span>
           <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
           <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
@@ -1157,11 +1128,9 @@ function FinalScoreDistributionChart({
       <div className="mt-4 pt-4 border-t border-border-default">
         {isLoggedIn && isRegistered ? (
           userAverage !== undefined && userAverage !== null ? (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center">
-                  <Trophy className="w-4 h-4 text-warning" />
-                </div>
+                <Trophy className="w-5 h-5 text-warning shrink-0" />
                 <div>
                   <div className="text-xs text-text-tertiary">Your Final Average</div>
                   <div className="font-mono font-bold text-warning">{userAverage.toFixed(decimals)}</div>
@@ -1176,9 +1145,7 @@ function FinalScoreDistributionChart({
             </div>
           ) : userEntry ? (
             <div className="flex items-center gap-3 text-text-tertiary">
-              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-                <FileText className="w-4 h-4" />
-              </div>
+              <FileText className="w-5 h-5 shrink-0" />
               <div>
                 <div className="text-sm">Missing scores for final ranking</div>
                 <div className="text-xs">You need both public and private scores for final ranking</div>
@@ -1186,9 +1153,7 @@ function FinalScoreDistributionChart({
             </div>
           ) : (
             <div className="flex items-center gap-3 text-text-tertiary">
-              <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-                <FileText className="w-4 h-4" />
-              </div>
+              <FileText className="w-5 h-5 shrink-0" />
               <div>
                 <div className="text-sm">You didn't participate</div>
                 <div className="text-xs">No submissions found for this competition</div>
@@ -1197,9 +1162,7 @@ function FinalScoreDistributionChart({
           )
         ) : isLoggedIn ? (
           <div className="flex items-center gap-3 text-text-tertiary">
-            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-              <FileText className="w-4 h-4" />
-            </div>
+            <FileText className="w-5 h-5 shrink-0" />
             <div>
               <div className="text-sm">You weren't registered</div>
               <div className="text-xs">This competition has ended</div>
@@ -1207,9 +1170,7 @@ function FinalScoreDistributionChart({
           </div>
         ) : (
           <div className="flex items-center gap-3 text-text-tertiary">
-            <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
-              <FileText className="w-4 h-4" />
-            </div>
+            <FileText className="w-5 h-5 shrink-0" />
             <div>
               <div className="text-sm">Login to see your results</div>
               <div className="text-xs">If you participated, login to view your final ranking</div>
@@ -1266,17 +1227,17 @@ function FinalLeaderboardTable({
         <table className="w-full">
           <thead className="bg-bg-elevated border-b border-border-default">
             <tr>
-              <th className="px-4 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
-              <th className="px-4 py-4 text-left text-sm font-semibold text-text-secondary">
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">
                 {isIndividual ? 'Member' : (isTeamCompetition ? 'Team' : 'Participant')}
               </th>
               {isIndividual && isTeamCompetition && (
-                <th className="px-4 py-4 text-left text-sm font-semibold text-text-secondary">Team</th>
+                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Team</th>
               )}
-              <th className="px-4 py-4 text-center text-sm font-semibold text-text-secondary">Public</th>
-              <th className="px-4 py-4 text-center text-sm font-semibold text-text-secondary">Private</th>
-              <th className="px-4 py-4 text-center text-sm font-semibold text-text-secondary">Average</th>
-              <th className="px-4 py-4 text-center text-sm font-semibold text-text-secondary">Submissions</th>
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Public</th>
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Private</th>
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Average</th>
+              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-default">
@@ -1291,7 +1252,7 @@ function FinalLeaderboardTable({
                   ${!entry.hasBoth ? 'opacity-70' : ''}
                 `}
               >
-                <td className="px-4 py-4">
+                <td className="px-3 sm:px-4 py-3 sm:py-4">
                   <div className="flex items-center gap-2">
                     <span className={`
                       font-bold text-lg
@@ -1305,7 +1266,7 @@ function FinalLeaderboardTable({
                     {index < 3 && <Trophy className="w-4 h-4" />}
                   </div>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-3 sm:px-4 py-3 sm:py-4">
                   <span className="font-medium">
                     {isIndividual
                       ? (entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous')
@@ -1314,13 +1275,13 @@ function FinalLeaderboardTable({
                   </span>
                 </td>
                 {isIndividual && isTeamCompetition && (
-                  <td className="px-4 py-4">
+                  <td className="px-3 sm:px-4 py-3 sm:py-4">
                     <span className="text-sm text-text-tertiary">
                       {entry.teamName || '—'}
                     </span>
                   </td>
                 )}
-                <td className="px-4 py-4 text-center">
+                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
                   {entry.publicScore !== null ? (
                     <span className="font-mono font-bold text-phase-public">
                       {entry.publicScore.toFixed(decimals)}
@@ -1329,7 +1290,7 @@ function FinalLeaderboardTable({
                     <span className="text-text-tertiary">—</span>
                   )}
                 </td>
-                <td className="px-4 py-4 text-center">
+                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
                   {entry.privateScore !== null ? (
                     <span className="font-mono font-bold text-phase-private">
                       {entry.privateScore.toFixed(decimals)}
@@ -1338,7 +1299,7 @@ function FinalLeaderboardTable({
                     <span className="text-text-tertiary">—</span>
                   )}
                 </td>
-                <td className="px-4 py-4 text-center">
+                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
                   {entry.average !== null ? (
                     <span className="font-mono font-bold text-warning">
                       {entry.average.toFixed(decimals)}
@@ -1347,7 +1308,7 @@ function FinalLeaderboardTable({
                     <span className="text-text-tertiary">—</span>
                   )}
                 </td>
-                <td className="px-4 py-4 text-center">
+                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
                   <span className="text-sm text-text-tertiary">
                     {entry.totalSubmissions}
                   </span>
@@ -1493,17 +1454,17 @@ function LeaderboardTab({
           <table className="w-full">
           <thead className="bg-bg-elevated border-b border-border-default">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">
                 {isTeamCompetition ? 'Team' : 'Participant'}
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Submissions</th>
-              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
                 {metricName}
                 {metricInfo?.higher_is_better === false && ' ↓'}
                 {metricInfo?.higher_is_better === true && ' ↑'}
               </th>
-              <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-default">
@@ -1536,17 +1497,17 @@ function LeaderboardTab({
                     {entry.teams?.name || entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                   <span className="text-sm text-text-tertiary">
                     {entry.submission_count || 0}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
                   <span className="font-mono font-bold text-primary-blue">
                     {entry.score?.toFixed(decimals) || '0.0000'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right text-sm text-text-tertiary">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm text-text-tertiary whitespace-nowrap">
                   {new Date(entry.submitted_at).toLocaleDateString()}
                 </td>
               </tr>
@@ -1688,16 +1649,16 @@ function IndividualLeaderboardTab({
           <table className="w-full">
             <thead className="bg-bg-elevated border-b border-border-default">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Rank</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Member</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Team</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Submissions</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Member</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Team</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
                   {metricName}
                   {metricInfo?.higher_is_better === false && ' ↓'}
                   {metricInfo?.higher_is_better === true && ' ↑'}
                 </th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
@@ -1735,17 +1696,17 @@ function IndividualLeaderboardTab({
                       {entry.teams?.name || 'Unknown Team'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                     <span className="text-sm text-text-tertiary">
                       {entry.submission_count || 0}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
                     <span className="font-mono font-bold text-primary-blue">
                       {entry.score?.toFixed(decimals) || '0.0000'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm text-text-tertiary">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm text-text-tertiary whitespace-nowrap">
                     {new Date(entry.submitted_at).toLocaleDateString()}
                   </td>
                 </tr>
@@ -1768,43 +1729,33 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
   const filteredSubmissions = phaseFilter === 'all'
     ? submissions
     : submissions.filter((sub: any) => sub.phase === phaseFilter);
+
+  const phaseFilterNav = is4Phase ? (
+    <div className="flex gap-1 sm:gap-2 mb-6 border-b border-border-default overflow-x-auto scrollbar-none">
+      {([
+        { value: 'all', label: 'All Phases' },
+        { value: 'public', label: 'Public Phase' },
+        { value: 'private', label: 'Private Phase' },
+      ] as const).map(({ value, label }) => (
+        <button
+          key={value}
+          onClick={() => setPhaseFilter(value)}
+          className={`px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all border-b-2 -mb-px whitespace-nowrap shrink-0 ${
+            phaseFilter === value
+              ? 'border-primary-blue text-primary-blue'
+              : 'border-transparent text-text-tertiary hover:text-text-secondary'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
   if (loading) {
     return (
       <div>
-        {is4Phase && (
-          <div className="flex gap-2 mb-6 border-b border-border-default">
-            <button
-              onClick={() => setPhaseFilter('all')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'all'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              All Phases
-            </button>
-            <button
-              onClick={() => setPhaseFilter('public')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'public'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Public Phase
-            </button>
-            <button
-              onClick={() => setPhaseFilter('private')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'private'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Private Phase
-            </button>
-          </div>
-        )}
+        {phaseFilterNav}
         <Card className="p-12">
           <div className="text-center text-text-tertiary">Loading submissions...</div>
         </Card>
@@ -1815,40 +1766,7 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
   if (filteredSubmissions.length === 0) {
     return (
       <div>
-        {is4Phase && (
-          <div className="flex gap-2 mb-6 border-b border-border-default">
-            <button
-              onClick={() => setPhaseFilter('all')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'all'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              All Phases
-            </button>
-            <button
-              onClick={() => setPhaseFilter('public')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'public'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Public Phase
-            </button>
-            <button
-              onClick={() => setPhaseFilter('private')}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-                phaseFilter === 'private'
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              Private Phase
-            </button>
-          </div>
-        )}
+        {phaseFilterNav}
         <Card className="p-12">
           <div className="text-center text-text-tertiary">
             <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
@@ -1861,51 +1779,18 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
 
   return (
     <div>
-      {is4Phase && (
-        <div className="flex gap-2 mb-6 border-b border-border-default">
-          <button
-            onClick={() => setPhaseFilter('all')}
-            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-              phaseFilter === 'all'
-                ? 'border-primary-blue text-primary-blue'
-                : 'border-transparent text-text-tertiary hover:text-text-secondary'
-            }`}
-          >
-            All Phases
-          </button>
-          <button
-            onClick={() => setPhaseFilter('public')}
-            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-              phaseFilter === 'public'
-                ? 'border-primary-blue text-primary-blue'
-                : 'border-transparent text-text-tertiary hover:text-text-secondary'
-            }`}
-          >
-            Public Phase
-          </button>
-          <button
-            onClick={() => setPhaseFilter('private')}
-            className={`px-6 py-3 font-semibold transition-all border-b-2 -mb-px ${
-              phaseFilter === 'private'
-                ? 'border-primary-blue text-primary-blue'
-                : 'border-transparent text-text-tertiary hover:text-text-secondary'
-            }`}
-          >
-            Private Phase
-          </button>
-        </div>
-      )}
+      {phaseFilterNav}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-bg-elevated border-b border-border-default">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">File</th>
-                {is4Phase && <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Phase</th>}
-                <th className="px-6 py-4 text-left text-sm font-semibold text-text-secondary">Status</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Score</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-text-secondary">Submitted</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-text-secondary">Best</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">File</th>
+                {is4Phase && <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Phase</th>}
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Status</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Score</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Best</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
@@ -1932,7 +1817,7 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
                     {submission.validation_status}
                   </Badge>
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
                   {submission.score !== null ? (
                     <span className="font-mono font-bold text-primary-blue">
                       {submission.score.toFixed(4)}
@@ -1941,13 +1826,13 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
                     <span className="text-text-tertiary">-</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
                   <div className="flex items-center justify-end gap-2 text-sm text-text-tertiary">
                     <Clock className="w-4 h-4" />
                     {new Date(submission.submitted_at).toLocaleString()}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                   {submission.is_best_score && (
                     <Trophy className="w-5 h-5 text-warning mx-auto" />
                   )}

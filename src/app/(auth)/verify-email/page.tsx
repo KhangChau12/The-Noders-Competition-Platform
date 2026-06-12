@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { Mail, CheckCircle, ArrowLeft, RefreshCcw } from 'lucide-react';
+import { Mail, ArrowLeft, RefreshCcw } from 'lucide-react';
 
 export default function VerifyEmailPage({
   searchParams,
@@ -13,24 +13,18 @@ export default function VerifyEmailPage({
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12">
       <div className="max-w-2xl w-full">
-        <Card className="p-8 md:p-12 text-center relative overflow-hidden">
+        <Card className="p-6 sm:p-8 md:p-12 text-center relative overflow-hidden">
           {/* Decorative gradient */}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-brand" />
 
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-brand rounded-full flex items-center justify-center shadow-2xl shadow-primary-blue/50">
-                <Mail className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-success rounded-full flex items-center justify-center border-4 border-bg-surface">
-                <CheckCircle className="w-5 h-5 text-white" />
-              </div>
-            </div>
-          </div>
+          {/* Watermark icon */}
+          <Mail
+            className="absolute -top-8 -right-8 h-44 w-44 text-primary-blue/[0.07] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_28px_rgba(37,99,235,0.35))]"
+            aria-hidden="true"
+          />
 
           {/* Heading */}
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          <h1 className="relative font-brand text-3xl md:text-4xl gradient-text mb-4 mt-2">
             Check Your Email
           </h1>
 
@@ -94,35 +88,26 @@ export default function VerifyEmailPage({
           </div>
 
           {/* Info Box */}
-          <Card className="p-6 bg-bg-elevated border-primary-blue/30 mb-8 max-w-xl mx-auto">
-            <div className="flex gap-3 text-left">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
-                  <span className="text-xl">💡</span>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2 text-warning">Didn't receive the email?</h3>
-                <ul className="text-text-tertiary text-sm space-y-1">
-                  <li>• Check your spam or junk mail folder</li>
-                  <li>• Make sure you entered the correct email address</li>
-                  <li>• Wait a few minutes, the email might be delayed</li>
-                  <li>• Try resending the verification email (button below)</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
+          <div className="p-5 sm:p-6 rounded-xl bg-warning/5 border border-warning/20 mb-8 max-w-xl mx-auto text-left">
+            <h3 className="font-semibold mb-2 text-warning">Didn't receive the email?</h3>
+            <ul className="text-text-tertiary text-sm space-y-1">
+              <li>&bull; Check your spam or junk mail folder</li>
+              <li>&bull; Make sure you entered the correct email address</li>
+              <li>&bull; Wait a few minutes, the email might be delayed</li>
+              <li>&bull; Try resending the verification email (button below)</li>
+            </ul>
+          </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link href="/login" className="block">
+              <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
                 <ArrowLeft className="w-5 h-5" />
                 Back to Login
               </Button>
             </Link>
-            <Link href="/signup">
-              <Button variant="primary" size="lg" className="gap-2">
+            <Link href="/signup" className="block">
+              <Button variant="primary" size="lg" className="gap-2 w-full sm:w-auto">
                 <RefreshCcw className="w-5 h-5" />
                 Resend Verification Email
               </Button>

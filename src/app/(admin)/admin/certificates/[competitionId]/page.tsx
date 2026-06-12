@@ -85,12 +85,12 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
             Back to Certificates
           </Link>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-brand text-3xl sm:text-4xl mb-2 gradient-text">
+              <h1 className="font-brand text-2xl sm:text-3xl md:text-4xl mb-2 gradient-text leading-tight">
                 {competition.title}
               </h1>
-              <div className="flex items-center gap-4 text-text-secondary">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-text-secondary">
                 <span className="flex items-center gap-2">
                   <Award className="w-4 h-4" />
                   {certificates?.length || 0} certificates
@@ -102,8 +102,8 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
                 )}
               </div>
             </div>
-            <Link href={`/admin/certificates/upload?competition=${competitionId}`}>
-              <Button variant="primary" size="lg">
+            <Link href={`/admin/certificates/upload?competition=${competitionId}`} className="shrink-0">
+              <Button variant="primary" size="lg" className="w-full sm:w-auto">
                 <Plus className="w-5 h-5 mr-2" />
                 Upload Certificate
               </Button>
@@ -112,13 +112,13 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
         </div>
 
         {/* Info Card */}
-        <Card className="p-4 mb-6 bg-bg-tertiary/50">
-          <div className="flex items-center justify-between text-sm">
+        <Card className="p-4 mb-6 bg-bg-elevated/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
             <div className="flex items-center gap-2 text-text-tertiary">
               <ExternalLink className="w-4 h-4" />
               <span>Verify Link:</span>
               <code className="px-2 py-1 bg-bg-elevated rounded font-mono text-accent-cyan">
-                {typeof window !== 'undefined' ? window.location.origin : ''}/verify
+                /verify
               </code>
             </div>
             <div className="text-text-tertiary">

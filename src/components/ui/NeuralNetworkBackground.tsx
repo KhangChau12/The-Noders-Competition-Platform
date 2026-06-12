@@ -240,7 +240,7 @@ export default function NeuralNetworkBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
       {/* Desktop: left + right networks */}
       <NetworkSVG
         side="left"

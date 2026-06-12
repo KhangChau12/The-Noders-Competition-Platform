@@ -30,7 +30,7 @@ export default function CreateTeamForm() {
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Back Button */}
         <Link
           href="/teams"
@@ -42,12 +42,12 @@ export default function CreateTeamForm() {
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Create New Team</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Create New Team</h1>
           <p className="text-text-secondary">Build your team to compete together</p>
         </div>
 
         {/* Create Team Form */}
-        <Card className="p-8">
+        <Card className="p-5 sm:p-8">
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
@@ -97,15 +97,14 @@ export default function CreateTeamForm() {
 
             {/* Info Box */}
             <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-lg p-4">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <span className="text-primary-blue">ℹ️</span>
+              <h3 className="font-semibold mb-2">
                 Team Creation Info
               </h3>
               <ul className="text-sm text-text-secondary space-y-1">
-                <li>• You will automatically become the team leader</li>
-                <li>• You can invite other members after creating the team</li>
-                <li>• Team members can be managed from the team page</li>
-                <li>• Teams can register for team-based competitions</li>
+                <li>&bull; You will automatically become the team leader</li>
+                <li>&bull; You can invite other members after creating the team</li>
+                <li>&bull; Team members can be managed from the team page</li>
+                <li>&bull; Teams can register for team-based competitions</li>
               </ul>
             </div>
 

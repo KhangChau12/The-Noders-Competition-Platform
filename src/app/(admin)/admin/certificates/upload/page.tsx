@@ -62,8 +62,7 @@ export default async function UploadCertificatePage({ searchParams }: Props) {
             Back to Certificates
           </Link>
 
-          <h1 className="font-brand text-3xl sm:text-4xl mb-2 gradient-text flex items-center gap-3">
-            <Award className="w-8 h-8" />
+          <h1 className="font-brand text-3xl sm:text-4xl mb-2 gradient-text leading-tight">
             Upload Certificate
           </h1>
           <p className="text-text-secondary">

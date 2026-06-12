@@ -43,10 +43,9 @@ export default function TeamsSidebar({ userTeams, invitations }: TeamsSidebarPro
   return (
     <div className="space-y-6">
       {/* My Teams Section */}
-      <Card className="p-6">
+      <Card className="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary-blue" />
+          <h3 className="text-xl font-bold">
             My Teams
           </h3>
           <Link href="/teams/create">
@@ -96,9 +95,8 @@ export default function TeamsSidebar({ userTeams, invitations }: TeamsSidebarPro
       </Card>
 
       {/* Team Invitations Section - Always visible */}
-      <Card className="p-6 border-l-4 border-warning">
+      <Card className="p-5 sm:p-6 border-l-4 border-warning">
         <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
-          <Bell className="w-5 h-5 text-warning" />
           Team Invitations
           {invitations.length > 0 && <Badge variant="yellow">{invitations.length}</Badge>}
         </h3>
