@@ -36,6 +36,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
   ];
 
   return (
+    <>
     <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-border-default/60">
       <div className="relative h-16 w-full px-4 sm:px-6 lg:px-8">
         {/* Logo - Absolute Left */}
@@ -141,16 +142,18 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
           </svg>
         </button>
       </div>
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={showMobileMenu}
-        onClose={() => setShowMobileMenu(false)}
-        user={user}
-        navLinks={navLinks}
-        onLogout={logoutUser}
-      />
     </header>
+
+    {/* Mobile Menu — must live outside <header>: its backdrop-blur creates a
+        containing block that would trap the menu's fixed positioning */}
+    <MobileMenu
+      isOpen={showMobileMenu}
+      onClose={() => setShowMobileMenu(false)}
+      user={user}
+      navLinks={navLinks}
+      onLogout={logoutUser}
+    />
+    </>
   );
 };
 
