@@ -45,10 +45,10 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
   const metricInfo = SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const decimals = metricInfo?.decimals ?? 4;
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'leaderboard', label: `Leaderboard (${leaderboard.length})`, icon: <Trophy className="w-4 h-4" /> },
-    { id: 'my_submissions', label: 'My Submissions', icon: <Clock className="w-4 h-4" /> },
+  const tabs: { id: Tab; label: string; shortLabel: string; icon: React.ReactNode }[] = [
+    { id: 'overview', label: 'Overview', shortLabel: 'Overview', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'leaderboard', label: `Leaderboard (${leaderboard.length})`, shortLabel: `Board (${leaderboard.length})`, icon: <Trophy className="w-4 h-4" /> },
+    { id: 'my_submissions', label: 'My Submissions', shortLabel: 'My Subs', icon: <Clock className="w-4 h-4" /> },
   ];
 
   return (
@@ -66,24 +66,25 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
             }`}
           >
             <span className="hidden sm:block">{tab.icon}</span>
-            {tab.label}
+            <span className="sm:hidden">{tab.shortLabel}</span>
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* ── Overview ── */}
       {activeTab === 'overview' && (
-        <div className="grid lg:grid-cols-3 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
           {/* Problem statement */}
-          <Card className="lg:col-span-2 p-4 sm:p-6">
+          <Card className="lg:col-span-2 p-4 sm:p-6 min-w-0">
             <h2 className="text-lg sm:text-xl font-bold mb-4">Problem Statement</h2>
-            <div className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+            <div className="text-text-secondary leading-relaxed text-sm sm:text-base whitespace-pre-wrap break-words overflow-hidden">
               {problem.problem_statement || problem.description}
             </div>
           </Card>
 
           {/* Sidebar */}
-          <div className="space-y-4 lg:sticky lg:top-24">
+          <div className="space-y-4 lg:sticky lg:top-24 min-w-0">
             {/* At a glance */}
             <Card className="p-4 sm:p-5">
               <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-4">

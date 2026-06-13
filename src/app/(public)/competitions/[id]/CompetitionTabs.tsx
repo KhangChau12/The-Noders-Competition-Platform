@@ -495,10 +495,10 @@ export default function CompetitionTabs({
   const isTeamCompetition = competition.participation_type === 'team';
 
   const tabs = [
-    { id: 'overview' as TabType, label: 'Overview', icon: FileText },
-    { id: 'leaderboard' as TabType, label: isTeamCompetition ? 'Team Leaderboard' : 'Leaderboard', icon: Trophy },
-    ...(isTeamCompetition ? [{ id: 'individual_leaderboard' as TabType, label: 'Individual Leaderboard', icon: Trophy }] : []),
-    ...(isRegistered ? [{ id: 'submissions' as TabType, label: 'My Submissions', icon: History }] : []),
+    { id: 'overview' as TabType, label: 'Overview', shortLabel: 'Overview', icon: FileText },
+    { id: 'leaderboard' as TabType, label: isTeamCompetition ? 'Team Leaderboard' : 'Leaderboard', shortLabel: isTeamCompetition ? 'Teams' : 'Leaderboard', icon: Trophy },
+    ...(isTeamCompetition ? [{ id: 'individual_leaderboard' as TabType, label: 'Individual Leaderboard', shortLabel: 'Individual', icon: Trophy }] : []),
+    ...(isRegistered ? [{ id: 'submissions' as TabType, label: 'My Submissions', shortLabel: 'My Subs', icon: History }] : []),
   ];
 
   return (
@@ -521,7 +521,8 @@ export default function CompetitionTabs({
               `}
             >
               <Icon className="w-4 h-4 hidden sm:block" />
-              {tab.label}
+              <span className="sm:hidden">{tab.shortLabel}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           );
         })}
@@ -606,13 +607,12 @@ export default function CompetitionTabs({
 // Overview Tab Component
 function OverviewTab({ competition }: { competition: any }) {
   return (
-    <div className="space-y-6">
-      {/* Problem Statement */}
-      <Card className="p-6">
-        <h3 className="text-2xl font-bold mb-4">Problem Statement</h3>
-        <div className="prose prose-invert max-w-none">
+    <div className="space-y-4">
+      <Card className="p-4 sm:p-6">
+        <h3 className="text-lg sm:text-xl font-bold mb-4">Problem Statement</h3>
+        <div className="text-text-secondary leading-relaxed text-sm sm:text-base break-words overflow-hidden">
           {competition.problem_statement ? (
-            <div className="text-text-secondary whitespace-pre-wrap leading-relaxed">
+            <div className="whitespace-pre-wrap break-words">
               {competition.problem_statement}
             </div>
           ) : (
@@ -620,7 +620,6 @@ function OverviewTab({ competition }: { competition: any }) {
           )}
         </div>
       </Card>
-
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import Table, { TableColumn } from '../ui/Table';
+import React, { useState } from 'react';
 import { Badge } from '../ui/Badge';
 
 interface LeaderboardEntry {
@@ -23,138 +22,157 @@ interface LeaderboardTableProps {
   className?: string;
 }
 
+const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const RANK_COLOR: Record<number, string> = {
+  1: 'text-yellow-400',
+  2: 'text-slate-400',
+  3: 'text-orange-400',
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   data,
   currentUserId,
   loading = false,
   className = '',
 }) => {
-  const columns: TableColumn<LeaderboardEntry>[] = [
-    {
-      key: 'rank',
-      header: 'Rank',
-      sortable: true,
-      align: 'center',
-      render: (value, row) => {
-        const rankClasses = {
-          1: 'text-yellow-400',
-          2: 'text-gray-400',
-          3: 'text-orange-400',
-        };
+  const [sortKey, setSortKey] = useState<'rank' | 'score' | 'totalSubmissions'>('rank');
+  const [sortAsc, setSortAsc] = useState(true);
 
-        return (
-          <div className="flex items-center justify-center gap-2">
-            <span
-              className={`text-xl font-bold font-mono ${
-                rankClasses[row.rank as keyof typeof rankClasses] || 'text-text-primary'
-              }`}
-            >
-              {row.rank <= 3 ? (
-                <>
-                  {row.rank === 1 && '🥇'}
-                  {row.rank === 2 && '🥈'}
-                  {row.rank === 3 && '🥉'}
-                </>
-              ) : (
-                `#${row.rank}`
-              )}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'participant',
-      header: 'Participant',
-      sortable: true,
-      render: (_, row) => {
-        const name = row.userName || row.teamName || 'Anonymous';
-        const isTeam = !!row.teamId;
+  const toggle = (key: typeof sortKey) => {
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(true); }
+  };
 
-        return (
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                isTeam ? 'bg-accent-cyan/20 text-accent-cyan' : 'bg-primary-blue/20 text-primary-blue'
-              }`}
-            >
-              {isTeam ? '👥' : name[0]?.toUpperCase()}
-            </div>
-            <div>
-              <p className="font-semibold text-text-primary">{name}</p>
-              {row.isCurrentUser && (
-                <Badge variant="blue" className="text-xs mt-1">
-                  You
-                </Badge>
-              )}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'score',
-      header: 'Best Score',
-      sortable: true,
-      align: 'center',
-      render: (value) => (
-        <span className="text-lg font-bold font-mono text-primary-blue">
-          {typeof value === 'number' ? value.toFixed(6) : '-'}
-        </span>
-      ),
-    },
-    {
-      key: 'totalSubmissions',
-      header: 'Submissions',
-      sortable: true,
-      align: 'center',
-      render: (value) => (
-        <span className="font-mono text-text-primary">{value}</span>
-      ),
-    },
-    {
-      key: 'lastSubmissionAt',
-      header: 'Last Submission',
-      sortable: true,
-      render: (value) => {
-        if (!value) return <span className="text-text-tertiary">-</span>;
+  const sorted = [...data].sort((a, b) => {
+    const av = a[sortKey] as number;
+    const bv = b[sortKey] as number;
+    return sortAsc ? av - bv : bv - av;
+  });
 
-        const date = new Date(value);
-        const now = new Date();
-        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  const SortBtn = ({ col, label }: { col: typeof sortKey; label: string }) => (
+    <button
+      onClick={() => toggle(col)}
+      className={`whitespace-nowrap select-none text-xs font-semibold uppercase tracking-wide transition-colors ${
+        sortKey === col ? 'text-primary-blue' : 'text-text-tertiary hover:text-text-secondary'
+      }`}
+    >
+      {label}{sortKey === col ? (sortAsc ? ' ▲' : ' ▼') : ''}
+    </button>
+  );
 
-        let timeAgo = '';
-        if (diffInHours < 1) {
-          const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-          timeAgo = `${diffInMinutes}m ago`;
-        } else if (diffInHours < 24) {
-          timeAgo = `${diffInHours}h ago`;
-        } else {
-          const diffInDays = Math.floor(diffInHours / 24);
-          timeAgo = `${diffInDays}d ago`;
-        }
+  if (loading) {
+    return <div className="py-16 text-center text-text-tertiary text-sm">Loading…</div>;
+  }
 
-        return (
-          <div className="text-sm">
-            <p className="text-text-secondary">{timeAgo}</p>
-            <p className="text-xs text-text-tertiary">
-              {date.toLocaleDateString()}
-            </p>
-          </div>
-        );
-      },
-    },
-  ];
+  if (data.length === 0) {
+    return (
+      <div className="py-16 text-center text-text-tertiary text-sm">
+        No submissions yet. Be the first to submit!
+      </div>
+    );
+  }
 
   return (
-    <div className={className}>
-      <Table
-        columns={columns}
-        data={data}
-        keyExtractor={(row) => row.userId || row.teamId || row.rank.toString()}
-        highlightRow={(row) => row.isCurrentUser || false}
-        emptyMessage="No submissions yet. Be the first to submit!"
-      />
+    <div className={`overflow-x-auto rounded-xl border border-border-default ${className}`}>
+      <table className="w-full border-collapse min-w-0">
+        <thead className="bg-bg-elevated border-b border-border-default">
+          <tr>
+            <th className="px-3 py-3 text-left w-12">
+              <SortBtn col="rank" label="Rank" />
+            </th>
+            <th className="px-3 py-3 text-left">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                Participant
+              </span>
+            </th>
+            <th className="px-3 py-3 text-right">
+              <SortBtn col="score" label="Score" />
+            </th>
+            {/* Submissions column hidden on xs */}
+            <th className="hidden sm:table-cell px-3 py-3 text-center">
+              <SortBtn col="totalSubmissions" label="Subs" />
+            </th>
+            <th className="hidden sm:table-cell px-3 py-3 text-right">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                When
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-default">
+          {sorted.map((row, i) => {
+            const name = row.userName || row.teamName || 'Anonymous';
+            const isMe = row.isCurrentUser;
+            const medal = MEDAL[row.rank];
+            const rankColor = RANK_COLOR[row.rank] || 'text-text-tertiary';
+
+            return (
+              <tr
+                key={row.userId || row.teamId || i}
+                className={`transition-colors ${
+                  isMe
+                    ? 'bg-primary-blue/10 border-l-2 border-l-primary-blue'
+                    : row.rank <= 3
+                    ? 'bg-warning/[0.04]'
+                    : 'hover:bg-bg-elevated'
+                }`}
+              >
+                {/* Rank */}
+                <td className="px-3 py-3 text-center w-12">
+                  {medal ? (
+                    <span className="text-lg leading-none">{medal}</span>
+                  ) : (
+                    <span className={`font-bold text-sm font-mono ${rankColor}`}>#{row.rank}</span>
+                  )}
+                </td>
+
+                {/* Name */}
+                <td className="px-3 py-3 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 shrink-0 rounded-full bg-primary-blue/20 flex items-center justify-center text-xs font-bold text-primary-blue">
+                      {name[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-text-primary truncate max-w-[120px] sm:max-w-[200px]">
+                        {name}
+                      </p>
+                      {isMe && (
+                        <Badge variant="blue" className="text-[10px] px-1.5 py-0">You</Badge>
+                      )}
+                    </div>
+                  </div>
+                </td>
+
+                {/* Score */}
+                <td className="px-3 py-3 text-right">
+                  <span className="font-mono font-bold text-primary-blue text-sm">
+                    {typeof row.score === 'number' ? row.score.toFixed(4) : '—'}
+                  </span>
+                </td>
+
+                {/* Submissions (sm+) */}
+                <td className="hidden sm:table-cell px-3 py-3 text-center">
+                  <span className="text-xs text-text-tertiary font-mono">{row.totalSubmissions}</span>
+                </td>
+
+                {/* Time (sm+) */}
+                <td className="hidden sm:table-cell px-3 py-3 text-right">
+                  <span className="text-xs text-text-tertiary">{timeAgo(row.lastSubmissionAt)}</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
