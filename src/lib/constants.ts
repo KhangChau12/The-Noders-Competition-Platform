@@ -39,6 +39,9 @@ export const REGISTRATION_STATUSES = {
   REJECTED: 'rejected',
 } as const;
 
+// Active registration statuses (approved or pending — not rejected/withdrawn)
+export const ACTIVE_REGISTRATION_STATUSES = ['approved', 'pending'] as const;
+
 // Submission validation statuses
 export const VALIDATION_STATUSES = {
   PENDING: 'pending',

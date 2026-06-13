@@ -32,20 +32,21 @@ export async function createTeam(formData: FormData) {
     return { error: 'Team description must not exceed 500 characters' };
   }
 
-  // Create team
-  // @ts-ignore - Supabase types need regeneration
-  const { data: team, error: teamError } = (await (supabase
-    .from('teams') as any)
+  // Pre-generate the team ID so the rollback is point-to-point if the
+  // team_members insert fails. TODO: replace both inserts with a DB trigger
+  // (AFTER INSERT ON teams → INSERT INTO team_members) to make this truly atomic.
+  const teamId = crypto.randomUUID();
+
+  const { error: teamError } = await (supabase as any)
+    .from('teams')
     .insert({
+      id: teamId,
       name: name.trim(),
       description: description?.trim() || null,
       leader_id: user.id,
-    })
-    .select()
-    .single()) as { data: any; error: any };
+    });
 
   if (teamError) {
-    // Handle duplicate team name error
     if (teamError.code === '23505') {
       return { error: 'A team with this name already exists. Please choose a different name.' };
     }
@@ -53,23 +54,29 @@ export async function createTeam(formData: FormData) {
   }
 
   // Add leader as team member
-  // @ts-ignore - Supabase types need regeneration
-  const { error: memberError } = await (supabase
-    .from('team_members') as any)
+  const { error: memberError } = await (supabase as any)
+    .from('team_members')
     .insert({
-      team_id: team.id,
+      team_id: teamId,
       user_id: user.id,
     });
 
   if (memberError) {
-    // Rollback: Delete the team if we failed to add the leader as a member
-    await supabase.from('teams').delete().eq('id', team.id);
+    // Attempt rollback; log if it also fails so the orphan can be cleaned up manually
+    const { error: rollbackError } = await supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId);
+
+    if (rollbackError) {
+      console.error('[createTeam] Rollback failed for orphaned team', teamId, rollbackError.message);
+    }
 
     return { error: 'Failed to create team: ' + memberError.message };
   }
 
   revalidatePath('/teams');
-  revalidatePath(`/teams/${team.id}`);
+  revalidatePath(`/teams/${teamId}`);
 
-  return { success: true, teamId: team.id };
+  return { success: true, teamId };
 }

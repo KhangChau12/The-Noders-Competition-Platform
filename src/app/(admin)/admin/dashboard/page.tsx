@@ -43,14 +43,14 @@ export default async function AdminDashboardPage() {
   // Fetch total competitions
   const { count: totalCompetitions } = await supabase
     .from('competitions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .is('deleted_at', null);
 
   // Fetch active competitions (currently in public or private test phase)
   const now = new Date().toISOString();
   const { data: competitions } = (await supabase
     .from('competitions')
-    .select('*')
+    .select('registration_end, public_test_end, private_test_end')
     .is('deleted_at', null)) as { data: any };
 
   const activeCompetitions = competitions?.filter((comp: any) => {
@@ -75,7 +75,7 @@ export default async function AdminDashboardPage() {
   // Fetch total users
   const { count: totalUsers } = await supabase
     .from('users')
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true });
 
   // Fetch pending registrations
   const { data: pendingRegistrations, error: regError } = (await supabase
@@ -102,18 +102,16 @@ export default async function AdminDashboardPage() {
     .eq('status', 'pending')
     .order('registered_at', { ascending: false })) as { data: any; error: any };
 
-  // Debug log
-  console.log('Pending registrations:', pendingRegistrations, 'Error:', regError);
 
   // Fetch total submissions
   const { count: totalSubmissions } = await supabase
     .from('submissions')
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true });
 
   // Fetch total practice problems
   const { count: totalPracticeProblems } = await (supabase as any)
     .from('practice_problems')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .is('deleted_at', null);
 
   // Fetch recent submissions
@@ -141,10 +139,6 @@ export default async function AdminDashboardPage() {
     .order('submitted_at', { ascending: false })
     .limit(10)) as { data: any; error: any };
 
-  if (submissionsError) {
-    console.error('Error fetching recent submissions:', submissionsError);
-  }
-  console.log('Recent submissions:', recentSubmissions?.length || 0);
 
   return (
     <div className="min-h-screen px-4 py-8">

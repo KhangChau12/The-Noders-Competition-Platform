@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import CompetitionCard from '@/components/competition/CompetitionCard';
 import { createClient } from '@/lib/supabase/server';
+import { getCompetitionPhase } from '@/lib/utils/competition';
 import {
   Trophy,
   Users,
@@ -14,62 +15,23 @@ import {
   Code2,
 } from 'lucide-react';
 
-// Helper function to calculate competition phase
-function getCompetitionPhase(competition: any): 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended' {
-  const now = new Date();
-  const regStart = new Date(competition.registration_start);
-  const regEnd = new Date(competition.registration_end);
-  const publicStart = new Date(competition.public_test_start);
-  const publicEnd = new Date(competition.public_test_end);
-  const privateStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
-  const privateEnd = competition.private_test_end ? new Date(competition.private_test_end) : null;
-
-  if (now < regStart) return 'upcoming';
-  if (now >= regStart && now < regEnd) return 'registration';
-  if (now >= publicStart && now < publicEnd) return 'public_test';
-  if (privateStart && privateEnd && now >= privateStart && now < privateEnd) return 'private_test';
-  return 'ended';
-}
-
-// Helper function to calculate days remaining
-function getDaysRemaining(competition: any): number {
-  const now = new Date();
-  const phase = getCompetitionPhase(competition);
-
-  let endDate: Date;
-  switch (phase) {
-    case 'registration':
-      endDate = new Date(competition.registration_end);
-      break;
-    case 'public_test':
-      endDate = new Date(competition.public_test_end);
-      break;
-    case 'private_test':
-      endDate = competition.private_test_end ? new Date(competition.private_test_end) : new Date();
-      break;
-    default:
-      return 0;
-  }
-
-  const diff = endDate.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
-
 export default async function HomePage() {
   const supabase = await createClient();
 
   // Fetch all competitions for preview
-  const { data: allCompetitions } = (await supabase
+  const { data: allCompetitions } = await (supabase
     .from('competitions')
-    .select('*')
+    .select(
+      'id, title, description, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, scoring_metric'
+    )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(6)) as { data: any };
+    .limit(6)) as { data: any[] | null };
 
   // Fetch statistics
   const { count: totalCompetitions } = await supabase
     .from('competitions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .is('deleted_at', null);
 
   // Fetch total unique participants from view (bypasses RLS)
@@ -82,7 +44,7 @@ export default async function HomePage() {
 
   const { count: totalSubmissions } = await supabase
     .from('submissions')
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true });
 
   // Fetch participant counts from public view (bypasses RLS)
   const { data: participantCountsData } = await supabase
@@ -254,10 +216,10 @@ export default async function HomePage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {allCompetitions?.slice(0, 6).map((competition: any) => (
+              {allCompetitions?.map((competition) => (
                 <CompetitionCard
                   key={competition.id}
-                  competition={competition}
+                  competition={competition as any}
                   phase={getCompetitionPhase(competition)}
                 />
               ))}

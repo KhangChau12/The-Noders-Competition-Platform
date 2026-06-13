@@ -2,6 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { validateMemberAddition } from '../_lib/validateMemberAddition';
+import { verifyTeamLeader } from '../_lib/teamUtils';
+import { ACTIVE_REGISTRATION_STATUSES } from '@/lib/constants';
 
 /**
  * Add a member to a team by email
@@ -19,19 +22,8 @@ export async function addTeamMember(teamId: string, email: string) {
   }
 
   // Check if current user is the team leader
-  const { data: team } = (await supabase
-    .from('teams')
-    .select('leader_id')
-    .eq('id', teamId)
-    .single()) as { data: any };
-
-  if (!team) {
-    return { error: 'Team not found' };
-  }
-
-  if (team.leader_id !== user.id) {
-    return { error: 'Only the team leader can add members' };
-  }
+  const leaderError = await verifyTeamLeader(supabase, teamId, user.id, 'Only the team leader can add members');
+  if (leaderError) return leaderError;
 
   // Find user by email
   const { data: targetUser } = (await supabase
@@ -50,80 +42,17 @@ export async function addTeamMember(teamId: string, email: string) {
     .select('id')
     .eq('team_id', teamId)
     .eq('user_id', targetUser.id)
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
 
   if (existingMember) {
     return { error: 'User is already a member of this team' };
   }
 
-  // Check if team has active registrations with max team size constraints
-  const { data: activeRegistrations } = (await supabase
-    .from('registrations')
-    .select(`
-      *,
-      competitions (
-        max_team_size,
-        title
-      )
-    `)
-    .eq('team_id', teamId)
-    .in('status', ['approved', 'pending'])) as { data: any };
-
-  if (activeRegistrations && activeRegistrations.length > 0) {
-    // Count current members
-    const { count: currentMemberCount } = await supabase
-      .from('team_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('team_id', teamId);
-
-    const newMemberCount = (currentMemberCount || 0) + 1;
-
-    // Check if adding this member would violate any competition's max team size
-    for (const reg of activeRegistrations) {
-      const maxSize = reg.competitions?.max_team_size;
-      if (maxSize && newMemberCount > maxSize) {
-        return {
-          error: `Cannot add member: Team is registered for a competition with max team size of ${maxSize}. Current team will have ${newMemberCount} members after adding.`,
-        };
-      }
-    }
-
-    // NEW CHECK: Is the new member already in another team registered for any of these competitions?
-    const competitionIds = activeRegistrations.map((reg: any) => reg.competition_id);
-
-    const { data: memberConflicts } = (await supabase
-      .from('team_members')
-      .select(`
-        team_id,
-        teams!inner (
-          id,
-          name,
-          registrations!inner (
-            competition_id,
-            status,
-            competitions (
-              title
-            )
-          )
-        )
-      `)
-      .eq('user_id', targetUser.id)
-      .in('teams.registrations.competition_id', competitionIds)
-      .in('teams.registrations.status', ['approved', 'pending'])
-      .neq('teams.id', teamId)) as { data: any };
-
-    if (memberConflicts && memberConflicts.length > 0) {
-      const conflictingTeam = memberConflicts[0].teams.name;
-      const conflictingCompetition = memberConflicts[0].teams.registrations[0].competitions?.title || 'a competition';
-      return {
-        error: `This user is already registered with team "${conflictingTeam}" for ${conflictingCompetition}. They cannot join multiple teams for the same competition.`
-      };
-    }
-  }
+  const validationError = await validateMemberAddition(supabase, teamId, targetUser.id);
+  if (validationError) return validationError;
 
   // Add member to team
-  // @ts-ignore - Supabase types need regeneration
-  const { error: insertError } = await supabase.from('team_members').insert({
+  const { error: insertError } = await (supabase as any).from('team_members').insert({
     team_id: teamId,
     user_id: targetUser.id,
   });
@@ -151,23 +80,23 @@ export async function removeTeamMember(teamId: string, memberId: string) {
     return { error: 'Not authenticated' };
   }
 
-  // Check if current user is the team leader
-  const { data: team } = (await supabase
+  // Check if current user is the team leader (also get leader_id to prevent removing self)
+  const { data: teamData } = (await supabase
     .from('teams')
     .select('leader_id')
     .eq('id', teamId)
-    .single()) as { data: any };
+    .single()) as { data: { leader_id: string } | null };
 
-  if (!team) {
+  if (!teamData) {
     return { error: 'Team not found' };
   }
 
-  if (team.leader_id !== user.id) {
+  if (teamData.leader_id !== user.id) {
     return { error: 'Only the team leader can remove members' };
   }
 
   // Cannot remove the leader
-  if (memberId === team.leader_id) {
+  if (memberId === teamData.leader_id) {
     return { error: 'Cannot remove the team leader' };
   }
 
@@ -175,19 +104,19 @@ export async function removeTeamMember(teamId: string, memberId: string) {
   const { data: activeRegistrations } = (await supabase
     .from('registrations')
     .select(`
-      *,
+      id,
       competitions (
         min_team_size
       )
     `)
     .eq('team_id', teamId)
-    .in('status', ['approved', 'pending'])) as { data: any };
+    .in('status', ACTIVE_REGISTRATION_STATUSES)) as { data: any };
 
   if (activeRegistrations && activeRegistrations.length > 0) {
     // Count current members
     const { count: currentMemberCount } = await supabase
       .from('team_members')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('team_id', teamId);
 
     const newMemberCount = (currentMemberCount || 0) - 1;
@@ -240,19 +169,8 @@ export async function updateTeam(
   }
 
   // Check if current user is the team leader
-  const { data: team } = (await supabase
-    .from('teams')
-    .select('leader_id')
-    .eq('id', teamId)
-    .single()) as { data: any };
-
-  if (!team) {
-    return { error: 'Team not found' };
-  }
-
-  if (team.leader_id !== user.id) {
-    return { error: 'Only the team leader can update team information' };
-  }
+  const leaderError2 = await verifyTeamLeader(supabase, teamId, user.id, 'Only the team leader can update team information');
+  if (leaderError2) return leaderError2;
 
   // Validate name if provided
   if (data.name && data.name.trim().length < 3) {
@@ -308,26 +226,15 @@ export async function deleteTeam(teamId: string) {
   }
 
   // Check if current user is the team leader
-  const { data: team } = (await supabase
-    .from('teams')
-    .select('leader_id')
-    .eq('id', teamId)
-    .single()) as { data: any };
-
-  if (!team) {
-    return { error: 'Team not found' };
-  }
-
-  if (team.leader_id !== user.id) {
-    return { error: 'Only the team leader can delete the team' };
-  }
+  const leaderError3 = await verifyTeamLeader(supabase, teamId, user.id, 'Only the team leader can delete the team');
+  if (leaderError3) return leaderError3;
 
   // Check if team has any registrations (approved or pending)
-  const { data: registrations, count } = (await supabase
+  const { count } = await supabase
     .from('registrations')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('team_id', teamId)
-    .in('status', ['approved', 'pending'])) as { data: any; count: number | null };
+    .in('status', ACTIVE_REGISTRATION_STATUSES);
 
   if (count && count > 0) {
     return { error: 'Cannot delete team with competition registrations. Please wait for pending registrations to be reviewed or contact admin to remove approved registrations.' };

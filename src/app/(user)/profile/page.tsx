@@ -18,21 +18,21 @@ export default async function ProfilePage() {
   // Get user profile
   const { data: profile } = (await supabase
     .from('users')
-    .select('*')
+    .select('full_name, role, created_at')
     .eq('id', user.id)
     .single()) as { data: any };
 
   // Get user's competitions count
   const { count: competitionsCount } = await supabase
     .from('registrations')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('status', 'approved');
 
   // Get user's submissions count
   const { count: submissionsCount } = await supabase
     .from('submissions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
   // Get best scores with metric info

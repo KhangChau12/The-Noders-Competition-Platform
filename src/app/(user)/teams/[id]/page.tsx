@@ -19,7 +19,11 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   const { data: team } = (await supabase
     .from('teams')
     .select(`
-      *,
+      id,
+      name,
+      description,
+      leader_id,
+      created_at,
       leader:users!teams_leader_id_fkey (
         id,
         full_name,
@@ -37,7 +41,9 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   const { data: members } = (await supabase
     .from('team_members')
     .select(`
-      *,
+      id,
+      user_id,
+      joined_at,
       users (
         id,
         full_name,
@@ -51,7 +57,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   const { data: pendingInvites } = (await supabase
     .from('team_invitations')
     .select(`
-      *,
+      id,
       users (
         id,
         full_name,

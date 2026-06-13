@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ACTIVE_REGISTRATION_STATUSES } from '@/lib/constants';
 
 export async function registerForCompetition(
   competitionId: string,
@@ -21,7 +22,7 @@ export async function registerForCompetition(
   // Check if competition exists
   const { data: competition, error: compError } = (await supabase
     .from('competitions')
-    .select('*')
+    .select('id, participation_type, min_team_size, max_team_size')
     .eq('id', competitionId)
     .is('deleted_at', null)
     .single()) as { data: any; error: any };
@@ -74,7 +75,7 @@ export async function registerForCompetition(
     // Count team members
     const { count: memberCount } = await supabase
       .from('team_members')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('team_id', teamId);
 
     // Validate team size
@@ -106,7 +107,7 @@ export async function registerForCompetition(
       `)
       .eq('user_id', user.id)
       .eq('teams.registrations.competition_id', competitionId)
-      .in('teams.registrations.status', ['approved', 'pending'])) as { data: any };
+      .in('teams.registrations.status', ACTIVE_REGISTRATION_STATUSES)) as { data: any };
 
     if (userExistingTeamRegs && userExistingTeamRegs.length > 0) {
       const existingTeamName = userExistingTeamRegs[0].teams.name;
@@ -118,7 +119,7 @@ export async function registerForCompetition(
     // Check if team is already registered
     const { data: existingTeamRegistration } = (await supabase
       .from('registrations')
-      .select('*')
+      .select('id')
       .eq('team_id', teamId)
       .eq('competition_id', competitionId)
       .single()) as { data: any };
@@ -152,7 +153,7 @@ export async function registerForCompetition(
         `)
         .in('user_id', memberIds)
         .eq('teams.registrations.competition_id', competitionId)
-        .in('teams.registrations.status', ['approved', 'pending'])
+        .in('teams.registrations.status', ACTIVE_REGISTRATION_STATUSES)
         .neq('teams.id', teamId)) as { data: any }; // Exclude current team
 
       if (conflictingMembers && conflictingMembers.length > 0) {
@@ -191,7 +192,7 @@ export async function registerForCompetition(
   // Check if already registered
   const { data: existingRegistration } = (await supabase
     .from('registrations')
-    .select('*')
+    .select('id')
     .eq('user_id', user.id)
     .eq('competition_id', competitionId)
     .single()) as { data: any };

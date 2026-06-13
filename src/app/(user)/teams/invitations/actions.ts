@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { validateMemberAddition } from '../_lib/validateMemberAddition';
+import { verifyTeamLeader } from '../_lib/teamUtils';
 
 /**
  * Invite a user to join a team by email
@@ -19,19 +21,8 @@ export async function inviteUserToTeam(teamId: string, email: string) {
   }
 
   // Check if current user is the team leader
-  const { data: team } = (await supabase
-    .from('teams')
-    .select('leader_id, name')
-    .eq('id', teamId)
-    .single()) as { data: any };
-
-  if (!team) {
-    return { error: 'Team not found' };
-  }
-
-  if (team.leader_id !== user.id) {
-    return { error: 'Only the team leader can invite members' };
-  }
+  const leaderError = await verifyTeamLeader(supabase, teamId, user.id, 'Only the team leader can invite members');
+  if (leaderError) return leaderError;
 
   // Find user by email
   const { data: targetUser } = (await supabase
@@ -50,7 +41,7 @@ export async function inviteUserToTeam(teamId: string, email: string) {
     .select('id')
     .eq('team_id', teamId)
     .eq('user_id', targetUser.id)
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
 
   if (existingMember) {
     return { error: 'User is already a member of this team' };
@@ -58,12 +49,11 @@ export async function inviteUserToTeam(teamId: string, email: string) {
 
   // Check if invitation already exists
   const { data: existingInvitation } = (await supabase
-  // @ts-ignore - Supabase types need regeneration
     .from('team_invitations')
     .select('id, status')
     .eq('team_id', teamId)
     .eq('user_id', targetUser.id)
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
 
   if (existingInvitation) {
     if (existingInvitation.status === 'pending') {
@@ -71,79 +61,16 @@ export async function inviteUserToTeam(teamId: string, email: string) {
     }
     // Delete old rejected/accepted invitation to create new one
     await supabase
-  // @ts-ignore - Supabase types need regeneration
       .from('team_invitations')
       .delete()
       .eq('id', existingInvitation.id);
   }
 
-  // Check team size constraints for active registrations (same as addTeamMember)
-  const { data: activeRegistrations } = (await supabase
-    .from('registrations')
-    .select(`
-      *,
-      competitions (
-        max_team_size,
-        title
-      )
-    `)
-    .eq('team_id', teamId)
-    .in('status', ['approved', 'pending'])) as { data: any };
-
-  if (activeRegistrations && activeRegistrations.length > 0) {
-    const { count: currentMemberCount } = await supabase
-      .from('team_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('team_id', teamId);
-
-    const newMemberCount = (currentMemberCount || 0) + 1;
-
-    for (const reg of activeRegistrations) {
-      const maxSize = reg.competitions?.max_team_size;
-      if (maxSize && newMemberCount > maxSize) {
-        return {
-          error: `Cannot invite member: Team is registered for a competition with max team size of ${maxSize}. Current team will have ${newMemberCount} members after adding.`,
-        };
-      }
-    }
-
-    // Check if new member is in another team for same competitions
-    const competitionIds = activeRegistrations.map((reg: any) => reg.competition_id);
-
-    const { data: memberConflicts } = (await supabase
-      .from('team_members')
-      .select(`
-        team_id,
-        teams!inner (
-          id,
-          name,
-          registrations!inner (
-            competition_id,
-            status,
-            competitions (
-              title
-            )
-          )
-        )
-      `)
-      .eq('user_id', targetUser.id)
-      .in('teams.registrations.competition_id', competitionIds)
-      .in('teams.registrations.status', ['approved', 'pending'])
-      .neq('teams.id', teamId)) as { data: any };
-
-    if (memberConflicts && memberConflicts.length > 0) {
-      const conflictingTeam = memberConflicts[0].teams.name;
-      const conflictingCompetition = memberConflicts[0].teams.registrations[0].competitions?.title || 'a competition';
-      return {
-        error: `This user is already registered with team "${conflictingTeam}" for ${conflictingCompetition}. They cannot join multiple teams for the same competition.`
-      };
-    }
-  }
+  const validationError = await validateMemberAddition(supabase, teamId, targetUser.id);
+  if (validationError) return validationError;
 
   // Create invitation
-  // @ts-ignore - Supabase types need regeneration after migration
-  // @ts-ignore - Supabase types need regeneration
-  const { error: insertError } = await supabase.from('team_invitations').insert({
+  const { error: insertError } = await (supabase as any).from('team_invitations').insert({
     team_id: teamId,
     user_id: targetUser.id,
     invited_by: user.id,
@@ -175,14 +102,13 @@ export async function acceptTeamInvitation(invitationId: string) {
 
   // Get invitation details
   const { data: invitation } = (await supabase
-  // @ts-ignore - Supabase types need regeneration
     .from('team_invitations')
     .select(`
-      *,
+      id,
+      team_id,
       teams (
         id,
-        name,
-        leader_id
+        name
       )
     `)
     .eq('id', invitationId)
@@ -200,18 +126,16 @@ export async function acceptTeamInvitation(invitationId: string) {
     .select('id')
     .eq('team_id', invitation.team_id)
     .eq('user_id', user.id)
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
 
   if (existingMember) {
     // Delete invitation and return success
-  // @ts-ignore - Supabase types need regeneration
     await supabase.from('team_invitations').delete().eq('id', invitationId);
     return { error: 'You are already a member of this team' };
   }
 
   // Add user to team
-  // @ts-ignore - Supabase types need regeneration
-  const { error: memberError } = await supabase.from('team_members').insert({
+  const { error: memberError } = await (supabase as any).from('team_members').insert({
     team_id: invitation.team_id,
     user_id: user.id,
   });
@@ -221,13 +145,9 @@ export async function acceptTeamInvitation(invitationId: string) {
   }
 
   // Update invitation status
-  const { error: updateError } = await supabase
+  const { error: updateError } = await (supabase as any)
     .from('team_invitations')
-    // @ts-ignore - Supabase types need regeneration
-    .update({
-      status: 'accepted',
-      responded_at: new Date().toISOString(),
-    })
+    .update({ status: 'accepted', responded_at: new Date().toISOString() })
     .eq('id', invitationId);
 
   if (updateError) {
@@ -254,13 +174,9 @@ export async function rejectTeamInvitation(invitationId: string) {
   }
 
   // Update invitation status
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('team_invitations')
-    // @ts-ignore - Supabase types need regeneration
-    .update({
-      status: 'rejected',
-      responded_at: new Date().toISOString(),
-    })
+    .update({ status: 'rejected', responded_at: new Date().toISOString() })
     .eq('id', invitationId)
     .eq('user_id', user.id)
     .eq('status', 'pending');
@@ -289,7 +205,6 @@ export async function cancelTeamInvitation(invitationId: string) {
 
   // Verify user is team leader
   const { data: invitation } = (await supabase
-    // @ts-ignore - Supabase types need regeneration
     .from('team_invitations')
     .select('team_id, teams!inner(leader_id)')
     .eq('id', invitationId)
@@ -301,7 +216,6 @@ export async function cancelTeamInvitation(invitationId: string) {
 
   // Delete invitation
   const { error } = await supabase
-    // @ts-ignore - Supabase types need regeneration
     .from('team_invitations')
     .delete()
     .eq('id', invitationId);

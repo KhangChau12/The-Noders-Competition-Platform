@@ -22,7 +22,9 @@ export async function submitSolution(
   // Get competition details
   const { data: competition, error: compError } = (await supabase
     .from('competitions')
-    .select('*')
+    .select(
+      'id, participation_type, registration_end, public_test_end, private_test_end, daily_submission_limit, max_file_size_mb'
+    )
     .eq('id', competitionId)
     .is('deleted_at', null)
     .single()) as { data: any; error: any };
@@ -39,7 +41,7 @@ export async function submitSolution(
   if (competition.participation_type === 'individual') {
     const { data: individualReg } = (await supabase
       .from('registrations')
-      .select('*')
+      .select('id, status')
       .eq('user_id', user.id)
       .eq('competition_id', competitionId)
       .single()) as { data: any };
@@ -65,7 +67,7 @@ export async function submitSolution(
 
     const { data: teamReg } = (await supabase
       .from('registrations')
-      .select('*')
+      .select('id, status')
       .eq('team_id', teamId)
       .eq('competition_id', competitionId)
       .single()) as { data: any };
@@ -102,9 +104,9 @@ export async function submitSolution(
 
   let dailyCountQuery = supabase
     .from('submissions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('competition_id', competitionId)
-    .eq('validation_status', 'valid') // Only count valid submissions
+    .eq('validation_status', 'valid')
     .gte('submitted_at', todayStart.toISOString());
 
   if (submissionUserId) {

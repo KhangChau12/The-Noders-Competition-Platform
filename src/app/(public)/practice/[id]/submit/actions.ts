@@ -28,7 +28,7 @@ export async function submitPracticeSolution(problemId: string, formData: FormDa
 
   const { count: dailyCount } = await db(supabase)
     .from('practice_submissions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('problem_id', problemId)
     .eq('user_id', user.id)
     .eq('validation_status', 'valid')
@@ -42,7 +42,7 @@ export async function submitPracticeSolution(problemId: string, formData: FormDa
   if (problem.total_submission_limit > 0) {
     const { count: totalCount } = await db(supabase)
       .from('practice_submissions')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('problem_id', problemId)
       .eq('user_id', user.id)
       .eq('validation_status', 'valid');

@@ -25,9 +25,9 @@ export default function InviteMemberForm({ teamId }: InviteMemberFormProps) {
 
     const result = await inviteUserToTeam(teamId, email);
 
-    if (result.error) {
+    if ('error' in result) {
       setError(result.error);
-    } else if (result.success) {
+    } else if ('success' in result) {
       setSuccess(result.message || 'Invitation sent!');
       setEmail('');
       router.refresh();

@@ -261,6 +261,35 @@ export interface Database {
           joined_at?: string;
         };
       };
+      team_invitations: {
+        Row: {
+          id: string;
+          team_id: string;
+          user_id: string;
+          invited_by: string;
+          status: 'pending' | 'accepted' | 'rejected';
+          invited_at: string;
+          responded_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          team_id: string;
+          user_id: string;
+          invited_by: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          invited_at?: string;
+          responded_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          team_id?: string;
+          user_id?: string;
+          invited_by?: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          invited_at?: string;
+          responded_at?: string | null;
+        };
+      };
       test_datasets: {
         Row: {
           id: string;
@@ -377,6 +406,52 @@ export interface Database {
           tag_id?: string;
         };
       };
+      certificates: {
+        Row: {
+          id: string;
+          competition_id: string;
+          recipient_name: string;
+          verification_code: string;
+          file_path: string;
+          file_type: 'pdf' | 'png' | 'jpg' | 'jpeg';
+          issued_at: string;
+        };
+        Insert: {
+          id?: string;
+          competition_id: string;
+          recipient_name: string;
+          verification_code: string;
+          file_path: string;
+          file_type: 'pdf' | 'png' | 'jpg' | 'jpeg';
+          issued_at?: string;
+        };
+        Update: {
+          id?: string;
+          competition_id?: string;
+          recipient_name?: string;
+          verification_code?: string;
+          file_path?: string;
+          file_type?: 'pdf' | 'png' | 'jpg' | 'jpeg';
+          issued_at?: string;
+        };
+      };
+      certificate_prefixes: {
+        Row: {
+          id: string;
+          competition_id: string;
+          prefix: string;
+        };
+        Insert: {
+          id?: string;
+          competition_id: string;
+          prefix: string;
+        };
+        Update: {
+          id?: string;
+          competition_id?: string;
+          prefix?: string;
+        };
+      };
       practice_test_datasets: {
         Row: {
           id: string;
@@ -457,6 +532,12 @@ export interface Database {
           total_submission_count: number;
         };
       };
+      competition_participant_counts: {
+        Row: {
+          competition_id: string;
+          participant_count: number;
+        };
+      };
     };
     Functions: {
       [_ in never]: never;
@@ -493,3 +574,15 @@ export type PracticeLeaderboardEntry = {
   score: number;
   submitted_at: string;
 };
+
+export type CertificateRow = Database['public']['Tables']['certificates']['Row'];
+export type CertificatePrefixRow = Database['public']['Tables']['certificate_prefixes']['Row'];
+
+export type CompetitionRow = Database['public']['Tables']['competitions']['Row'];
+export type RegistrationRow = Database['public']['Tables']['registrations']['Row'];
+export type SubmissionRow = Database['public']['Tables']['submissions']['Row'];
+export type TeamRow = Database['public']['Tables']['teams']['Row'];
+export type TeamMemberRow = Database['public']['Tables']['team_members']['Row'];
+export type TeamInvitationRow = Database['public']['Tables']['team_invitations']['Row'];
+export type UserRow = Database['public']['Tables']['users']['Row'];
+export type TestDatasetRow = Database['public']['Tables']['test_datasets']['Row'];

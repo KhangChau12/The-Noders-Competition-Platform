@@ -73,7 +73,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, user, navLinks
         {/* Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-border-default/60 shrink-0">
           <span className="font-brand text-base text-text-primary">
-            The Noders <span className="text-primary-blue">Community</span>
+            The Noders <span className="text-primary-blue">Platform</span>
           </span>
           <button
             onClick={onClose}

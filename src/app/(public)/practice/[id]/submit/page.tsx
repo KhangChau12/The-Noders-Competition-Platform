@@ -33,7 +33,7 @@ export default async function PracticeSubmitPage({ params }: Props) {
 
   const { count: dailyUsed } = await (supabase as any)
     .from('practice_submissions')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact', head: true })
     .eq('problem_id', id)
     .eq('user_id', user.id)
     .eq('validation_status', 'valid')

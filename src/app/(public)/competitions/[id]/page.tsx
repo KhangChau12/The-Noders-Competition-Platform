@@ -8,6 +8,7 @@ import CountdownTimer from '@/components/competition/CountdownTimer';
 import HorizontalTimeline from '@/components/competition/HorizontalTimeline';
 import CompetitionTabs from './CompetitionTabs';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { getCompetitionPhase, getNextDeadline, getCountdownLabel } from '@/lib/utils/competition';
 import {
   Clock,
   Trophy,
@@ -25,39 +26,6 @@ interface CompetitionDetailPageProps {
   params: { id: string };
 }
 
-function getCurrentPhase(competition: any): 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended' {
-  const now = new Date();
-  const registrationStart = new Date(competition.registration_start);
-  const registrationEnd = new Date(competition.registration_end);
-  const publicTestEnd = new Date(competition.public_test_end);
-  const privateTestStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
-  const privateTestEnd = competition.private_test_end ? new Date(competition.private_test_end) : null;
-
-  if (now < registrationStart) return 'upcoming';
-  if (now >= registrationStart && now < registrationEnd) return 'registration';
-  if (now >= registrationEnd && now < publicTestEnd) return 'public_test';
-  if (privateTestStart && privateTestEnd && now >= privateTestStart && now < privateTestEnd) return 'private_test';
-  return 'ended';
-}
-
-function getNextDeadline(competition: any, currentPhase: string): Date | null {
-  if (currentPhase === 'upcoming') return new Date(competition.registration_start);
-  if (currentPhase === 'registration') return new Date(competition.registration_end);
-  if (currentPhase === 'public_test') return new Date(competition.public_test_end);
-  if (currentPhase === 'private_test' && competition.private_test_end) return new Date(competition.private_test_end);
-  return null;
-}
-
-function getCountdownLabel(currentPhase: string): string {
-  switch (currentPhase) {
-    case 'upcoming': return 'Registration starts in';
-    case 'registration': return 'Registration ends in';
-    case 'public_test': return 'Public test ends in';
-    case 'private_test': return 'Private test ends in';
-    default: return 'Competition ended';
-  }
-}
-
 export default async function CompetitionDetailPage({ params }: CompetitionDetailPageProps) {
   const { id } = params;
   const supabase = await createClient();
@@ -66,14 +34,16 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
 
   const { data: competition, error: competitionError } = (await supabase
     .from('competitions')
-    .select('*')
+    .select(
+      'id, title, description, problem_statement, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb, min_team_size, max_team_size, scoring_metric, dataset_url, deleted_at'
+    )
     .eq('id', id)
     .is('deleted_at', null)
     .single()) as { data: any; error: any };
 
   if (competitionError || !competition) notFound();
 
-  const currentPhase = getCurrentPhase(competition);
+  const currentPhase = getCompetitionPhase(competition);
   const nextDeadline = getNextDeadline(competition, currentPhase);
 
   let registration = null;
@@ -84,7 +54,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     if (competition.participation_type === 'individual') {
       const { data: regData } = (await supabase
         .from('registrations')
-        .select('*')
+        .select('id, status, user_id, team_id')
         .eq('competition_id', id)
         .eq('user_id', user.id)
         .single()) as { data: any };
@@ -99,7 +69,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         const teamIds = teamMemberships.map((m: any) => m.team_id);
         const { data: teamReg } = (await supabase
           .from('registrations')
-          .select('*')
+          .select('id, status, user_id, team_id')
           .eq('competition_id', id)
           .in('team_id', teamIds)
           .eq('status', 'approved')
@@ -114,19 +84,20 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     }
 
     if (registration && registration.status === 'approved') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       if (competition.participation_type === 'individual') {
         const { count: totalCount } = await supabase
           .from('submissions')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .eq('competition_id', id)
           .eq('user_id', user.id)
           .eq('validation_status', 'valid');
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const { count: dailyCount } = await supabase
           .from('submissions')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .eq('competition_id', id)
           .eq('user_id', user.id)
           .eq('validation_status', 'valid')
@@ -136,16 +107,14 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
       } else if (registeredTeamId) {
         const { count: totalCount } = await supabase
           .from('submissions')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .eq('competition_id', id)
           .eq('team_id', registeredTeamId)
           .eq('validation_status', 'valid');
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const { count: dailyCount } = await supabase
           .from('submissions')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact', head: true })
           .eq('competition_id', id)
           .eq('team_id', registeredTeamId)
           .eq('validation_status', 'valid')
@@ -167,7 +136,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     .select(`
       id, score, submitted_at, user_id, team_id, phase, validation_status,
       users!submissions_user_id_fkey (id, full_name, email),
-      teams!submissions_team_id_fkey (id, name, leader_id)
+      teams!submissions_team_id_fkey (id, name)
     `)
     .eq('competition_id', id)
     .eq('validation_status', 'valid')

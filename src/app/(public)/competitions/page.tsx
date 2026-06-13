@@ -22,8 +22,7 @@ import {
   SectionHeadingSkeleton,
 } from '@/components/ui/PageSkeletons';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
-
-type CompetitionPhase = 'upcoming' | 'registration' | 'public_test' | 'private_test' | 'ended';
+import { getCompetitionPhase, getCountdown, type CompetitionPhase } from '@/lib/utils/competition';
 
 type Competition = {
   id: string;
@@ -95,7 +94,9 @@ export default function CompetitionsPage() {
         // Fetch competitions
         const { data: competitionsData, error: competitionsError } = await supabase
           .from('competitions')
-          .select('*')
+          .select(
+            'id, title, description, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, scoring_metric, created_at'
+          )
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
@@ -112,7 +113,7 @@ export default function CompetitionsPage() {
           .from('competition_participant_counts')
           .select('competition_id, participant_count');
 
-        // Fetch submission counts
+        // Fetch submission counts (only competition_id needed for grouping)
         const { data: submissionsData } = await supabase
           .from('submissions')
           .select('competition_id');
@@ -209,7 +210,7 @@ export default function CompetitionsPage() {
         const now = new Date();
         const processedCompetitions: CompetitionWithStats[] = competitionsData.map((comp: any) => {
           const phase = getCompetitionPhase(comp, now);
-          const countdown = getCountdown(comp, phase, now);
+          const countdown = getCountdown(comp, phase, now) ?? undefined;
 
           return {
             ...comp,
@@ -471,59 +472,6 @@ export default function CompetitionsPage() {
       </div>
     </div>
   );
-}
-
-// Helper function to determine competition phase
-function getCompetitionPhase(comp: Competition, now: Date): CompetitionPhase {
-  const regStart = new Date(comp.registration_start);
-  const regEnd = new Date(comp.registration_end);
-  const publicStart = new Date(comp.public_test_start);
-  const publicEnd = new Date(comp.public_test_end);
-  const privateStart = comp.private_test_start ? new Date(comp.private_test_start) : null;
-  const privateEnd = comp.private_test_end ? new Date(comp.private_test_end) : null;
-
-  if (now < regStart) return 'upcoming';
-  if (now >= regStart && now <= regEnd) return 'registration';
-  if (now > regEnd && now <= publicEnd) return 'public_test';
-  if (privateStart && privateEnd && now > publicEnd && now <= privateEnd) return 'private_test';
-  return 'ended';
-}
-
-// Helper function to get countdown
-function getCountdown(
-  comp: Competition,
-  phase: CompetitionPhase,
-  now: Date
-): { days: number; hours: number; minutes: number; label: string } | undefined {
-  if (phase === 'ended') return undefined;
-
-  let targetDate: Date;
-  let label: string;
-
-  if (phase === 'upcoming') {
-    targetDate = new Date(comp.registration_start);
-    label = 'Registration starts in';
-  } else if (phase === 'registration') {
-    targetDate = new Date(comp.registration_end);
-    label = 'Registration ends in';
-  } else if (phase === 'public_test') {
-    targetDate = new Date(comp.public_test_end);
-    label = 'Public test ends in';
-  } else if (phase === 'private_test' && comp.private_test_end) {
-    targetDate = new Date(comp.private_test_end);
-    label = 'Private test ends in';
-  } else {
-    return undefined;
-  }
-
-  const diff = targetDate.getTime() - now.getTime();
-  if (diff < 0) return undefined;
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  return { days, hours, minutes, label };
 }
 
 // Current leader (ongoing) or winner (ended) from best valid scores.

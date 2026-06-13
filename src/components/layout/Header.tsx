@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         <div className="absolute left-4 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2 max-w-[calc(100%-72px)] lg:max-w-none">
           <Link href="/" className="flex items-center">
             <span className="text-lg sm:text-2xl lg:text-[1.65rem] leading-none font-brand text-white whitespace-nowrap">
-              The Noders <span className="text-primary-blue">Community</span>
+              The Noders <span className="text-primary-blue">Platform</span>
             </span>
           </Link>
         </div>

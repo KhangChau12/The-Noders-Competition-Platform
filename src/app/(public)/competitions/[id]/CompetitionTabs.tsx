@@ -46,17 +46,18 @@ export default function CompetitionTabs({
 
       if (!memberships || memberships.length === 0) return;
 
-      // Then find which team belongs to this competition
+      // Find which of the user's teams has an approved registration for this competition
       const teamIds = memberships.map((m: any) => m.team_id);
-      const { data: teams } = await supabase
-        .from('teams')
-        .select('id')
+      const { data: registrations } = await supabase
+        .from('registrations')
+        .select('team_id')
         .eq('competition_id', competition.id)
-        .in('id', teamIds)
+        .eq('status', 'approved')
+        .in('team_id', teamIds)
         .limit(1);
 
-      if (teams && teams.length > 0) {
-        setUserTeamId((teams[0] as any).id);
+      if (registrations && registrations.length > 0) {
+        setUserTeamId((registrations[0] as any).team_id);
       }
     };
 
@@ -121,7 +122,7 @@ export default function CompetitionTabs({
 
     let query = supabase
       .from('submissions')
-      .select('*')
+      .select('id, file_name, phase, score, validation_status, is_best_score, submitted_at, submitted_by, user_id, team_id')
       .eq('competition_id', competition.id);
 
     if (isTeamCompetition) {

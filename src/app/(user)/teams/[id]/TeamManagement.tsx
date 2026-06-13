@@ -43,11 +43,11 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
 
     const result = await addTeamMember(team.id, email);
 
-    if (result.error) {
-      setMessage({ type: 'error', text: result.error });
+    if ('error' in result) {
+      setMessage({ type: 'error', text: result.error as string });
       setLoading(false);
     } else {
-      setMessage({ type: 'success', text: result.message || 'Member added successfully' });
+      setMessage({ type: 'success', text: (result as any).message || 'Member added successfully' });
       setEmail('');
       setShowAddMember(false);
       setLoading(false);
@@ -63,10 +63,10 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
 
     const result = await removeTeamMember(team.id, userId);
 
-    if (result.error) {
-      setMessage({ type: 'error', text: result.error });
+    if ('error' in result) {
+      setMessage({ type: 'error', text: result.error as string });
     } else {
-      setMessage({ type: 'success', text: result.message || 'Member removed successfully' });
+      setMessage({ type: 'success', text: (result as any).message || 'Member removed successfully' });
       router.refresh();
     }
     setLoading(false);
@@ -82,11 +82,11 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       description: editDescription,
     });
 
-    if (result.error) {
-      setMessage({ type: 'error', text: result.error });
+    if ('error' in result) {
+      setMessage({ type: 'error', text: result.error as string });
       setLoading(false);
     } else {
-      setMessage({ type: 'success', text: result.message || 'Team updated successfully' });
+      setMessage({ type: 'success', text: (result as any).message || 'Team updated successfully' });
       setShowEditTeam(false);
       setLoading(false);
       router.refresh();
@@ -99,8 +99,8 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
 
     const result = await deleteTeam(team.id);
 
-    if (result.error) {
-      setMessage({ type: 'error', text: result.error });
+    if ('error' in result) {
+      setMessage({ type: 'error', text: result.error as string });
       setLoading(false);
     } else {
       router.push('/teams');
