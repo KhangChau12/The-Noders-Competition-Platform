@@ -332,7 +332,7 @@ export default function CompetitionsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="relative mb-6 sm:mb-10 overflow-hidden">
-          <Trophy className="absolute -top-4 -right-6 h-32 w-32 text-primary-blue/10 rotate-[10deg] pointer-events-none hidden sm:block [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.25))]" />
+          <Trophy className="absolute -top-4 -right-6 h-32 w-32 text-primary-blue opacity-[0.10] rotate-[10deg] pointer-events-none hidden sm:block select-none [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.25))]" />
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2">
             Compete · Learn · Win
           </p>
@@ -620,7 +620,7 @@ function SpotlightCard({
       </p>
       <Link href={`/competitions/${competition.id}`} className="group block">
         <Card className="relative overflow-hidden p-5 sm:p-8 bg-bg-surface ring-1 ring-primary-blue/35 shadow-glow-blue-sm hover:-translate-y-1 hover:shadow-lg">
-          <Trophy className="absolute -bottom-8 -right-8 h-44 w-44 text-primary-blue/[0.07] rotate-[-12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]" />
+          <Trophy className="absolute -bottom-8 -right-8 h-44 w-44 text-primary-blue opacity-[0.08] rotate-[-12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]" />
           <div className="relative grid lg:grid-cols-[1fr_300px] gap-6 lg:gap-10 items-center">
             {/* Left: info */}
             <div className="min-w-0">

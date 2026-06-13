@@ -123,19 +123,19 @@ export default async function ProfilePage() {
             {/* Stats Overview */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
               <Card className="relative overflow-hidden p-4 sm:p-6">
-                <Trophy className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-warning/10 rotate-[-8deg] pointer-events-none" />
+                <Trophy className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-warning opacity-[0.12] rotate-[-8deg] pointer-events-none select-none" />
                 <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{competitionsCount || 0}</p>
                 <p className="relative text-xs sm:text-sm text-text-tertiary">Competitions</p>
               </Card>
 
               <Card className="relative overflow-hidden p-4 sm:p-6">
-                <Target className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-primary-blue/10 rotate-[-8deg] pointer-events-none" />
+                <Target className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-primary-blue opacity-[0.12] rotate-[-8deg] pointer-events-none select-none" />
                 <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{submissionsCount || 0}</p>
                 <p className="relative text-xs sm:text-sm text-text-tertiary">Submissions</p>
               </Card>
 
               <Card className="relative overflow-hidden p-4 sm:p-6">
-                <Award className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-success/10 rotate-[-8deg] pointer-events-none" />
+                <Award className="absolute -bottom-3 -right-3 h-14 w-14 sm:h-16 sm:w-16 text-success opacity-[0.12] rotate-[-8deg] pointer-events-none select-none" />
                 <p className="relative text-2xl sm:text-3xl font-bold mb-1 font-mono">{bestScores?.length || 0}</p>
                 <p className="relative text-xs sm:text-sm text-text-tertiary">Best Scores</p>
               </Card>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Trophy, BookOpen, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
+import { Trophy, BookOpen, Users, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -14,14 +14,14 @@ interface MobileMenuProps {
     full_name?: string;
     role: 'user' | 'admin';
   } | null;
-  navLinks: Array<{ href: string; label: string }>;
+  navLinks: Array<{ href: string; label: string; external?: boolean }>;
   onLogout?: () => void;
 }
 
 const NAV_ICON_MAP: Record<string, React.ReactNode> = {
-  Home: <Home className="w-5 h-5" />,
   Competitions: <Trophy className="w-5 h-5" />,
   Practice: <BookOpen className="w-5 h-5" />,
+  'Our Community': <Users className="w-5 h-5" />,
 };
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, user, navLinks, onLogout }) => {
@@ -117,12 +117,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, user, navLinks
               Navigate
             </p>
             {navLinks.map((link) => {
-              const active = isActive(link.href);
+              const active = !link.external && isActive(link.href);
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={onClose}
+                  {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`flex items-center gap-3 px-3 py-3 mb-0.5 rounded-xl text-sm font-medium transition-colors ${
                     active
                       ? 'text-primary-blue bg-primary-blue/10'

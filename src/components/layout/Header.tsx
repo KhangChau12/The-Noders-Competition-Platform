@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logoutUser } from '@/app/actions/auth';
 import MobileMenu from './MobileMenu';
-import { User, ChevronDown, LogOut, LayoutDashboard, UserCircle, Shield } from 'lucide-react';
+import { LogOut, LayoutDashboard, Shield } from 'lucide-react';
 
 interface HeaderProps {
   user?: {
@@ -30,9 +30,9 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
   };
 
   const navLinks = [
-    { href: '/', label: 'Home' },
     { href: '/competitions', label: 'Competitions' },
     { href: '/practice', label: 'Practice' },
+    { href: 'https://thenodersptnk.com', label: 'Our Community', external: true },
   ];
 
   return (
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
       <div className="relative h-16 w-full px-4 sm:px-6 lg:px-8">
         {/* Logo - Absolute Left */}
         <div className="absolute left-4 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2 max-w-[calc(100%-72px)] lg:max-w-none">
-          <Link href="https://thenodersptnk.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <span className="text-lg sm:text-2xl lg:text-[1.65rem] leading-none font-brand text-white whitespace-nowrap">
               The Noders <span className="text-primary-blue">Community</span>
             </span>
@@ -52,11 +52,12 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
         <nav className="hidden lg:flex items-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-label="Main navigation">
             <div className="flex items-center gap-1">
               {navLinks.map((link) => {
-                const active = isActive(link.href);
+                const active = !link.external && isActive(link.href);
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
+                    {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     className={`relative px-4 py-2 text-sm font-medium transition-colors duration-200 group ${
                       active ? 'text-text-primary' : 'text-text-tertiary hover:text-text-primary'
                     }`}

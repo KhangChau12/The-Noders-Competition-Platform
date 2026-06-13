@@ -517,29 +517,29 @@ export default async function DashboardPage() {
               Icon: Trophy,
               value: String(activeCount),
               label: 'Active Competitions',
-              accent: 'text-primary-blue/15',
+              color: 'text-primary-blue',
             },
             {
               Icon: Medal,
               value: bestCompRank ? `#${bestCompRank}` : '—',
               label: 'Best Rank',
-              accent: 'text-warning/15',
+              color: 'text-warning',
             },
             {
               Icon: UsersIcon,
               value: String(userTeams.length),
               label: 'Teams',
-              accent: 'text-accent-cyan/15',
+              color: 'text-accent-cyan',
             },
             {
               Icon: BookOpen,
               value: String(attemptedInOrder.length),
               label: 'Practice Problems',
-              accent: 'text-success/15',
+              color: 'text-success',
             },
-          ].map(({ Icon, value, label, accent }) => (
+          ].map(({ Icon, value, label, color }) => (
             <Card key={label} className="relative overflow-hidden p-3.5 sm:p-5">
-              <Icon className={`absolute -bottom-3 -right-3 h-12 w-12 sm:h-16 sm:w-16 ${accent} rotate-[-8deg] pointer-events-none`} />
+              <Icon className={`absolute -bottom-3 -right-3 h-12 w-12 sm:h-16 sm:w-16 ${color} opacity-[0.12] rotate-[-8deg] pointer-events-none select-none`} />
               <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5 sm:mb-1">{value}</p>
               <p className="relative text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
             </Card>
