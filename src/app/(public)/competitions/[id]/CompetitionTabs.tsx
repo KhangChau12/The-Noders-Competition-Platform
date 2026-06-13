@@ -502,9 +502,9 @@ export default function CompetitionTabs({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Tab Navigation */}
-      <div className="flex gap-1 sm:gap-2 border-b border-border-default overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex border-b border-border-default overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -512,7 +512,7 @@ export default function CompetitionTabs({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center gap-2 px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all
+                flex items-center gap-1.5 px-3 sm:px-5 py-3 text-sm font-semibold transition-all
                 border-b-2 -mb-px whitespace-nowrap shrink-0
                 ${activeTab === tab.id
                   ? 'border-primary-blue text-primary-blue'
@@ -1478,36 +1478,32 @@ function LeaderboardTab({
                   ${index === 2 ? 'bg-phase-registration/5' : ''}
                 `}
               >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`
-                      font-bold text-lg
-                      ${index === 0 ? 'text-warning' : ''}
-                      ${index === 1 ? 'text-text-secondary' : ''}
-                      ${index === 2 ? 'text-phase-registration' : ''}
-                      ${index > 2 ? 'text-text-tertiary' : ''}
-                    `}>
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-bold text-base ${
+                      index === 0 ? 'text-warning' :
+                      index === 1 ? 'text-text-secondary' :
+                      index === 2 ? 'text-phase-registration' : 'text-text-tertiary'
+                    }`}>
                       #{index + 1}
                     </span>
-                    {index < 3 && <Trophy className="w-4 h-4" />}
+                    {index < 3 && <Trophy className="w-3.5 h-3.5" />}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className="font-medium">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
+                  <span className="font-medium text-sm">
                     {entry.teams?.name || entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
                   </span>
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
-                  <span className="text-sm text-text-tertiary">
-                    {entry.submission_count || 0}
-                  </span>
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
+                  <span className="text-sm text-text-tertiary">{entry.submission_count || 0}</span>
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
-                  <span className="font-mono font-bold text-primary-blue">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
+                  <span className="font-mono font-bold text-primary-blue text-sm">
                     {entry.score?.toFixed(decimals) || '0.0000'}
                   </span>
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm text-text-tertiary whitespace-nowrap">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right text-xs text-text-tertiary whitespace-nowrap">
                   {new Date(entry.submitted_at).toLocaleDateString()}
                 </td>
               </tr>
@@ -1672,41 +1668,35 @@ function IndividualLeaderboardTab({
                     ${index === 2 ? 'bg-phase-registration/5' : ''}
                   `}
                 >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`
-                        font-bold text-lg
-                        ${index === 0 ? 'text-warning' : ''}
-                        ${index === 1 ? 'text-text-secondary' : ''}
-                        ${index === 2 ? 'text-phase-registration' : ''}
-                        ${index > 2 ? 'text-text-tertiary' : ''}
-                      `}>
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`font-bold text-base ${
+                        index === 0 ? 'text-warning' :
+                        index === 1 ? 'text-text-secondary' :
+                        index === 2 ? 'text-phase-registration' : 'text-text-tertiary'
+                      }`}>
                         #{index + 1}
                       </span>
-                      {index < 3 && <Trophy className="w-4 h-4" />}
+                      {index < 3 && <Trophy className="w-3.5 h-3.5" />}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-medium">
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
+                    <span className="font-medium text-sm">
                       {entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-text-tertiary">
-                      {entry.teams?.name || 'Unknown Team'}
-                    </span>
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
+                    <span className="text-xs text-text-tertiary">{entry.teams?.name || 'Unknown Team'}</span>
                   </td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
-                    <span className="text-sm text-text-tertiary">
-                      {entry.submission_count || 0}
-                    </span>
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
+                    <span className="text-sm text-text-tertiary">{entry.submission_count || 0}</span>
                   </td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
-                    <span className="font-mono font-bold text-primary-blue">
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
+                    <span className="font-mono font-bold text-primary-blue text-sm">
                       {entry.score?.toFixed(decimals) || '0.0000'}
                     </span>
                   </td>
-                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm text-text-tertiary whitespace-nowrap">
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right text-xs text-text-tertiary whitespace-nowrap">
                     {new Date(entry.submitted_at).toLocaleDateString()}
                   </td>
                 </tr>
@@ -1796,17 +1786,17 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
             <tbody className="divide-y divide-border-default">
               {filteredSubmissions.map((submission) => (
               <tr key={submission.id} className="transition-colors hover:bg-bg-elevated">
-                <td className="px-6 py-4">
-                  <span className="font-medium text-sm">{submission.file_name}</span>
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 max-w-[120px] sm:max-w-xs">
+                  <span className="font-medium text-xs sm:text-sm truncate block">{submission.file_name}</span>
                 </td>
                 {is4Phase && (
-                  <td className="px-6 py-4">
+                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
                     <Badge variant={submission.phase === 'public' ? 'blue' : 'cyan'}>
-                      {submission.phase === 'public' ? 'Public' : 'Private'}
+                      {submission.phase === 'public' ? 'Pub' : 'Priv'}
                     </Badge>
                   </td>
                 )}
-                <td className="px-6 py-4">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
                   <Badge
                     variant={
                       submission.validation_status === 'valid' ? 'success' :
@@ -1814,27 +1804,26 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
                       'secondary'
                     }
                   >
-                    {submission.validation_status}
+                    {submission.validation_status === 'valid' ? '✓' : submission.validation_status === 'invalid' ? '✗' : '…'}
                   </Badge>
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
                   {submission.score !== null ? (
-                    <span className="font-mono font-bold text-primary-blue">
+                    <span className="font-mono font-bold text-primary-blue text-sm">
                       {submission.score.toFixed(4)}
                     </span>
                   ) : (
-                    <span className="text-text-tertiary">-</span>
+                    <span className="text-text-tertiary text-sm">—</span>
                   )}
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-right">
-                  <div className="flex items-center justify-end gap-2 text-sm text-text-tertiary">
-                    <Clock className="w-4 h-4" />
-                    {new Date(submission.submitted_at).toLocaleString()}
-                  </div>
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
+                  <span className="text-xs text-text-tertiary whitespace-nowrap">
+                    {new Date(submission.submitted_at).toLocaleDateString()}
+                  </span>
                 </td>
-                <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
                   {submission.is_best_score && (
-                    <Trophy className="w-5 h-5 text-warning mx-auto" />
+                    <Trophy className="w-4 h-4 text-warning mx-auto" />
                   )}
                 </td>
               </tr>

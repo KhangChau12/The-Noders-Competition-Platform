@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { BookOpen, Trophy, Clock, FileText } from 'lucide-react';
+import { BookOpen, Trophy, Clock, FileText, Download, CheckCircle, XCircle, Loader } from 'lucide-react';
 import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
 import Link from 'next/link';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
@@ -42,8 +42,8 @@ type Tab = 'overview' | 'leaderboard' | 'my_submissions';
 
 export default function PracticeTabs({ problem, leaderboard, mySubmissions, currentUserId, isAuthenticated }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-
   const metricInfo = SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const decimals = metricInfo?.decimals ?? 4;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <BookOpen className="w-4 h-4" /> },
@@ -53,13 +53,13 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
 
   return (
     <div>
-      {/* Tab Nav */}
-      <div className="flex border-b border-border-default mb-8 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Tab nav */}
+      <div className="flex border-b border-border-default mb-6 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 sm:px-5 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap shrink-0 ${
               activeTab === tab.id
                 ? 'border-primary-blue text-primary-blue'
                 : 'border-transparent text-text-secondary hover:text-text-primary'
@@ -71,26 +71,25 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
         ))}
       </div>
 
-      {/* Overview Tab */}
+      {/* ── Overview ── */}
       {activeTab === 'overview' && (
-        <div className="grid lg:grid-cols-3 gap-6 items-start">
-          {/* Main column: problem statement */}
-          <Card className="lg:col-span-2 p-5 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-bold mb-6">
-              Problem Statement
-            </h2>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-text-secondary leading-relaxed whitespace-pre-wrap">
-                {problem.problem_statement || problem.description}
-              </p>
+        <div className="grid lg:grid-cols-3 gap-5 items-start">
+          {/* Problem statement */}
+          <Card className="lg:col-span-2 p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Problem Statement</h2>
+            <div className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+              {problem.problem_statement || problem.description}
             </div>
           </Card>
 
-          {/* Sidebar: everything you need to start, in one glance */}
-          <div className="space-y-5 lg:sticky lg:top-24">
-            <Card className="p-5">
-              <h3 className="font-semibold mb-4">At a glance</h3>
-              <dl className="space-y-3 text-sm">
+          {/* Sidebar */}
+          <div className="space-y-4 lg:sticky lg:top-24">
+            {/* At a glance */}
+            <Card className="p-4 sm:p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-4">
+                At a Glance
+              </h3>
+              <dl className="space-y-2.5 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-text-tertiary">Metric</dt>
                   <dd className="font-semibold text-text-primary text-right">
@@ -99,7 +98,7 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-text-tertiary">Goal</dt>
-                  <dd className="font-medium text-text-secondary text-right">
+                  <dd className="font-medium text-text-secondary text-right text-xs">
                     {metricInfo?.higher_is_better ? 'Higher is better ↑' : 'Lower is better ↓'}
                   </dd>
                 </div>
@@ -119,12 +118,12 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-text-tertiary">Max file size</dt>
+                  <dt className="text-text-tertiary">Max file</dt>
                   <dd className="font-semibold text-text-primary font-mono">{problem.max_file_size_mb} MB</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-text-tertiary">Format</dt>
-                  <dd className="font-semibold text-text-primary font-mono">CSV (id,label)</dd>
+                  <dd className="font-semibold text-text-primary font-mono text-xs">CSV (id,label)</dd>
                 </div>
               </dl>
               {metricInfo?.description && (
@@ -134,22 +133,25 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
               )}
             </Card>
 
+            {/* Downloads */}
             {(problem.dataset_url || problem.sample_submission_url) && (
-              <Card className="p-5">
-                <h3 className="font-semibold mb-3">Downloads</h3>
+              <Card className="p-4 sm:p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-3">
+                  Downloads
+                </h3>
                 <div className="space-y-2">
                   {problem.dataset_url && (
                     <a href={problem.dataset_url} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button variant="outline" className="w-full justify-start">
-                        <FileText className="w-4 h-4 mr-2" />
+                      <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                        <Download className="w-4 h-4" />
                         Dataset
                       </Button>
                     </a>
                   )}
                   {problem.sample_submission_url && (
                     <a href={problem.sample_submission_url} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button variant="outline" className="w-full justify-start">
-                        <FileText className="w-4 h-4 mr-2" />
+                      <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                        <FileText className="w-4 h-4" />
                         Sample Submission
                       </Button>
                     </a>
@@ -158,18 +160,19 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
               </Card>
             )}
 
-            <Card className="p-5 bg-primary-blue/5 border-primary-blue/20">
-              <h3 className="font-bold mb-1">Ready to practice?</h3>
-              <p className="text-text-secondary text-sm mb-4">
-                Submit your predictions and see where you rank.
+            {/* Submit CTA */}
+            <Card className="p-4 sm:p-5 bg-primary-blue/5 border-primary-blue/20">
+              <h3 className="font-bold text-sm mb-1">Ready to practice?</h3>
+              <p className="text-text-secondary text-xs mb-4 leading-relaxed">
+                Submit your predictions and see where you rank on the leaderboard.
               </p>
               {isAuthenticated ? (
                 <Link href={`/practice/${problem.id}/submit`} className="block">
-                  <Button variant="primary" className="w-full">Submit Solution</Button>
+                  <Button variant="primary" size="sm" className="w-full">Submit Solution</Button>
                 </Link>
               ) : (
                 <Link href="/login" className="block">
-                  <Button variant="primary" className="w-full">Log in to Submit</Button>
+                  <Button variant="primary" size="sm" className="w-full">Log in to Submit</Button>
                 </Link>
               )}
             </Card>
@@ -177,7 +180,7 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
         </div>
       )}
 
-      {/* Leaderboard Tab */}
+      {/* ── Leaderboard ── */}
       {activeTab === 'leaderboard' && (
         <div>
           {leaderboard.length > 0 ? (
@@ -190,73 +193,87 @@ export default function PracticeTabs({ problem, leaderboard, mySubmissions, curr
               currentUserId={currentUserId ?? undefined}
             />
           ) : (
-            <div className="py-24 text-center text-text-tertiary">
-              <Trophy className="w-16 h-16 mx-auto mb-4 opacity-40" />
-              <p className="text-lg mb-2">No submissions yet</p>
+            <div className="py-20 text-center text-text-tertiary">
+              <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-base mb-1">No submissions yet</p>
               <p className="text-sm">Be the first to submit!</p>
             </div>
           )}
         </div>
       )}
 
-      {/* My Submissions Tab */}
+      {/* ── My Submissions ── */}
       {activeTab === 'my_submissions' && (
         <div>
           {!isAuthenticated ? (
-            <div className="py-24 text-center text-text-tertiary">
-              <p className="text-lg mb-4">Log in to see your submissions</p>
+            <div className="py-20 text-center text-text-tertiary">
+              <p className="text-base mb-4">Log in to see your submissions</p>
               <Link href="/login">
-                <Button variant="primary">Log In</Button>
+                <Button variant="primary" size="sm">Log In</Button>
               </Link>
             </div>
           ) : mySubmissions.length === 0 ? (
-            <div className="py-24 text-center text-text-tertiary">
-              <Clock className="w-16 h-16 mx-auto mb-4 opacity-40" />
-              <p className="text-lg mb-2">No submissions yet</p>
+            <div className="py-20 text-center text-text-tertiary">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-base mb-1">No submissions yet</p>
               <Link href={`/practice/${problem.id}/submit`}>
-                <Button variant="primary" className="mt-4">Submit Solution</Button>
+                <Button variant="primary" size="sm" className="mt-4">Submit Solution</Button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {mySubmissions.map((sub) => (
-                <Card key={sub.id} className={`p-5 ${sub.is_best_score ? 'border-primary-blue/30 bg-primary-blue/5' : ''}`}>
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {sub.is_best_score && <Badge variant="green">Best</Badge>}
-                      <Badge
-                        variant={
-                          sub.validation_status === 'valid'
-                            ? 'green'
-                            : sub.validation_status === 'invalid'
-                            ? 'red'
-                            : 'yellow'
-                        }
-                      >
-                        {sub.validation_status}
-                      </Badge>
-                      <span className="text-sm text-text-secondary">{sub.file_name}</span>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      {sub.score !== null && (
-                        <span className="text-lg font-bold text-text-primary font-mono">
-                          {sub.score.toFixed(metricInfo?.decimals ?? 4)}
+            <div className="space-y-2.5">
+              {mySubmissions.map((sub) => {
+                const isValid = sub.validation_status === 'valid';
+                const isInvalid = sub.validation_status === 'invalid';
+                return (
+                  <Card
+                    key={sub.id}
+                    className={`p-4 ${sub.is_best_score ? 'border-primary-blue/30 bg-primary-blue/5' : ''}`}
+                  >
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      {/* Left: badges + filename */}
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        {sub.is_best_score && (
+                          <Badge variant="green" className="shrink-0">Best</Badge>
+                        )}
+                        <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          isValid ? 'text-success bg-success/10' :
+                          isInvalid ? 'text-error bg-error/10' :
+                          'text-text-tertiary bg-bg-elevated'
+                        }`}>
+                          {isValid ? <CheckCircle className="w-3 h-3" /> : isInvalid ? <XCircle className="w-3 h-3" /> : <Loader className="w-3 h-3 animate-spin" />}
+                          {sub.validation_status}
                         </span>
-                      )}
-                      <span className="text-xs text-text-tertiary">
-                        {new Date(sub.submitted_at).toLocaleString()}
-                      </span>
+                        <span className="text-xs text-text-tertiary truncate max-w-[140px] sm:max-w-xs">
+                          {sub.file_name}
+                        </span>
+                      </div>
+
+                      {/* Right: score + time */}
+                      <div className="flex items-center gap-4 shrink-0">
+                        {sub.score !== null && (
+                          <span className="font-mono font-bold text-text-primary text-base">
+                            {sub.score.toFixed(decimals)}
+                          </span>
+                        )}
+                        <span className="text-xs text-text-tertiary whitespace-nowrap">
+                          {new Date(sub.submitted_at).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  {sub.validation_errors && sub.validation_errors.length > 0 && (
-                    <div className="mt-3 p-3 bg-error/10 rounded text-sm text-error">
-                      {Array.isArray(sub.validation_errors)
-                        ? sub.validation_errors.join(', ')
-                        : String(sub.validation_errors)}
-                    </div>
-                  )}
-                </Card>
-              ))}
+
+                    {/* Error message */}
+                    {sub.validation_errors && sub.validation_errors.length > 0 && (
+                      <div className="mt-3 p-3 bg-error/10 rounded-lg text-xs text-error leading-relaxed">
+                        {Array.isArray(sub.validation_errors)
+                          ? sub.validation_errors.join(', ')
+                          : String(sub.validation_errors)}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
