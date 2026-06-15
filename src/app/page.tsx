@@ -62,56 +62,56 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen">
       {/* Hero Section with Split Screen Design */}
-      <section className="relative lg:min-h-[90vh] flex items-center overflow-hidden py-16 sm:py-20 lg:py-24">
+      <section className="relative lg:min-h-[90vh] flex items-center overflow-hidden py-10 sm:py-16 lg:py-24">
         {/* Background: Blurred glow orbs */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary-blue/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-accent-cyan/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
-        
+
         {/* Grid Background Overlay */}
          <div className="absolute inset-0 bg-[linear-gradient(rgba(51,65,85,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(51,65,85,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
-        <div className="container mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10 lg:gap-8 items-center relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-8 items-center relative z-10">
           {/* Left Column - Typography & CTA */}
           <div className="text-center lg:text-left pt-2 sm:pt-4 lg:pt-0 mx-auto lg:mx-0 max-w-2xl">
-            <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl leading-tight mb-4">
-              <span className="text-text-primary block mb-1 text-[0.92em] sm:text-[0.96em] lg:text-[1em]">
+            <h1 className="font-brand text-4xl sm:text-5xl lg:text-5xl leading-tight mb-4">
+              <span className="text-text-primary block mb-1">
                 The Noders
               </span>
-              <span className="text-transparent bg-clip-text bg-gradient-brand text-[1.02em] sm:text-[1.06em] lg:text-[1em]">
+              <span className="text-transparent bg-clip-text bg-gradient-brand">
                 Competition Platform
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg lg:text-xl font-light text-text-secondary mb-6 leading-relaxed mx-auto lg:mx-0 max-w-xl sm:max-w-2xl">
+            <p className="text-sm sm:text-base lg:text-lg font-light text-text-secondary mb-5 leading-relaxed mx-auto lg:mx-0 max-w-xl">
               Join <span className="font-brand text-primary-blue">The Noders Community</span>. Challenge yourself with real-world AI competitions,
               compete fairly and learn from the best.
             </p>
 
             {/* Value Props */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 justify-center lg:justify-start mb-6 text-sm text-text-secondary">
-              <span className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-accent-cyan" />
-                High-Quality Competitions
+            <div className="flex items-center gap-4 justify-center lg:justify-start mb-5 text-sm text-text-secondary">
+              <span className="flex items-center gap-1.5">
+                <Trophy className="w-3.5 h-3.5 text-accent-cyan flex-shrink-0" />
+                <span className="text-xs sm:text-sm">High-Quality Competitions</span>
               </span>
-              <span className="hidden sm:inline text-border-subtle">&bull;</span>
-              <span className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-accent-cyan" />
-                Professional Community
+              <span className="text-border-subtle">&bull;</span>
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-accent-cyan flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Professional Community</span>
               </span>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex gap-3 justify-center lg:justify-start flex-wrap">
-              <Link href="/competitions">
-                <Button variant="primary" size="lg" className="gap-2 shadow-lg shadow-primary-blue/20">
-                  <Trophy className="w-5 h-5" />
+            <div className="flex flex-col xs:flex-row gap-3 justify-center lg:justify-start">
+              <Link href="/competitions" className="w-full xs:w-auto">
+                <Button variant="primary" size="lg" className="gap-2 shadow-lg shadow-primary-blue/20 w-full xs:w-auto text-sm sm:text-base px-5 sm:px-6">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                   View Competitions
                 </Button>
               </Link>
-              <Link href="/signup">
-                <Button variant="outline" size="lg" className="gap-2 backdrop-blur-sm bg-bg-primary/50">
+              <Link href="/signup" className="w-full xs:w-auto">
+                <Button variant="outline" size="lg" className="gap-2 backdrop-blur-sm bg-bg-primary/50 w-full xs:w-auto text-sm sm:text-base px-5 sm:px-6">
                   Sign Up Now
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 </Button>
               </Link>
             </div>
@@ -161,16 +161,16 @@ export default async function HomePage() {
       </section>
 
       {/* Quick Statistics Section */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 bg-bg-surface/40">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 bg-bg-surface/40">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10 sm:mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-3">
+          <div className="text-center mb-8 sm:mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2">
               By the numbers
             </p>
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-3">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-2">
               Platform Statistics
             </h2>
-            <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
               A quick snapshot of activity across the platform.
             </p>
           </div>
@@ -184,15 +184,15 @@ export default async function HomePage() {
             ].map(({ Icon, value, label, color, bar }) => (
               <div
                 key={label}
-                className="group relative overflow-hidden rounded-2xl border border-border-default bg-bg-surface p-5 sm:p-6 hover:border-primary-blue/50 hover:shadow-lg hover:shadow-primary-blue/10 transition-all duration-300"
+                className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border-default bg-bg-surface p-4 sm:p-5 hover:border-primary-blue/50 hover:shadow-lg hover:shadow-primary-blue/10 transition-all duration-300"
               >
                 <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${bar} opacity-60`} />
-                <Icon className={`absolute -bottom-4 -right-4 h-20 w-20 ${color} opacity-[0.12] rotate-[-8deg] pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-14deg]`} />
+                <Icon className={`absolute -bottom-3 -right-3 h-14 w-14 sm:h-20 sm:w-20 ${color} opacity-[0.12] rotate-[-8deg] pointer-events-none transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-14deg]`} />
                 <div className="relative">
-                  <div className="text-3xl sm:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-2 tabular-nums">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-gradient-brand bg-clip-text font-mono mb-1 tabular-nums">
                     {value}
                   </div>
-                  <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-[0.16em]">
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-text-tertiary uppercase tracking-[0.14em]">
                     {label}
                   </div>
                 </div>
@@ -204,18 +204,18 @@ export default async function HomePage() {
 
       {/* All Competitions Preview */}
       {allCompetitions && allCompetitions.length > 0 && (
-        <section className="px-6 py-12 sm:py-16">
+        <section className="px-4 sm:px-6 py-10 sm:py-14">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-3">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-text-primary mb-2 sm:mb-3">
                 All Competitions
               </h2>
-              <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
                 Explore ongoing, upcoming, and completed competitions
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {allCompetitions?.map((competition) => (
                 <CompetitionCard
                   key={competition.id}
@@ -225,11 +225,11 @@ export default async function HomePage() {
               ))}
             </div>
 
-            <div className="text-center mt-12">
+            <div className="text-center mt-8 sm:mt-12">
               <Link href="/competitions">
-                <Button variant="primary" size="lg" className="gap-2">
+                <Button variant="primary" size="lg" className="gap-2 text-sm sm:text-base px-5 sm:px-6">
                   Explore All
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </Link>
             </div>
@@ -238,61 +238,61 @@ export default async function HomePage() {
       )}
 
       {/* What We Provide Section */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 bg-bg-surface/40">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 bg-bg-surface/40">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">What we provide</h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-2 sm:mb-3">What we provide</h2>
+            <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
               Core features that make our platform powerful and easy to use
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
-              <Trophy className="absolute right-4 top-4 h-24 w-24 text-primary-blue opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
-              <div className="relative flex h-full flex-col justify-end pr-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-blue/80 mb-2">Competition</p>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">Professional Competitions</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">AI/ML competition system with multiple phases and international standards.</p>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+            <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-4 sm:p-5 lg:p-6 min-h-[160px] sm:min-h-[200px] shadow-lg shadow-black/10">
+              <Trophy className="absolute right-3 top-3 h-14 w-14 sm:h-20 sm:w-20 text-primary-blue opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
+              <div className="relative flex h-full flex-col justify-end pr-8 sm:pr-12">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-primary-blue/80 mb-1 sm:mb-2">Competition</p>
+                <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-text-primary mb-1 sm:mb-2 leading-snug">Professional Competitions</h3>
+                <p className="text-xs sm:text-sm leading-relaxed text-text-secondary hidden sm:block">AI/ML competition system with multiple phases and international standards.</p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
-              <Zap className="absolute right-4 top-4 h-24 w-24 text-accent-cyan opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
-              <div className="relative flex h-full flex-col justify-end pr-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-cyan/80 mb-2">Scoring</p>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">Automatic Scoring</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">Automatic scoring system with F1 Score and instant feedback.</p>
+            <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-4 sm:p-5 lg:p-6 min-h-[160px] sm:min-h-[200px] shadow-lg shadow-black/10">
+              <Zap className="absolute right-3 top-3 h-14 w-14 sm:h-20 sm:w-20 text-accent-cyan opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
+              <div className="relative flex h-full flex-col justify-end pr-8 sm:pr-12">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-accent-cyan/80 mb-1 sm:mb-2">Scoring</p>
+                <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-text-primary mb-1 sm:mb-2 leading-snug">Automatic Scoring</h3>
+                <p className="text-xs sm:text-sm leading-relaxed text-text-secondary hidden sm:block">Automatic scoring system with F1 Score and instant feedback.</p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
-              <Target className="absolute right-4 top-4 h-24 w-24 text-success opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
-              <div className="relative flex h-full flex-col justify-end pr-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-success/80 mb-2">Leaderboard</p>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">Real-Time Leaderboards</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">Public and private leaderboards with real-time updates.</p>
+            <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-4 sm:p-5 lg:p-6 min-h-[160px] sm:min-h-[200px] shadow-lg shadow-black/10">
+              <Target className="absolute right-3 top-3 h-14 w-14 sm:h-20 sm:w-20 text-success opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
+              <div className="relative flex h-full flex-col justify-end pr-8 sm:pr-12">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-success/80 mb-1 sm:mb-2">Leaderboard</p>
+                <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-text-primary mb-1 sm:mb-2 leading-snug">Real-Time Leaderboards</h3>
+                <p className="text-xs sm:text-sm leading-relaxed text-text-secondary hidden sm:block">Public and private leaderboards with real-time updates.</p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-6 min-h-[220px] shadow-lg shadow-black/10">
-              <Users className="absolute right-4 top-4 h-24 w-24 text-warning opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
-              <div className="relative flex h-full flex-col justify-end pr-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning/80 mb-2">Collaboration</p>
-                <h3 className="text-xl font-semibold text-text-primary mb-2">Team Competition</h3>
-                <p className="text-sm leading-relaxed text-text-secondary">Support for individual and team competitions with member management.</p>
+            <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-border-default/50 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.10),transparent_45%),linear-gradient(180deg,rgba(30,41,59,0.95),rgba(15,23,42,0.98))] p-4 sm:p-5 lg:p-6 min-h-[160px] sm:min-h-[200px] shadow-lg shadow-black/10">
+              <Users className="absolute right-3 top-3 h-14 w-14 sm:h-20 sm:w-20 text-warning opacity-[0.10] transition-transform duration-300 group-hover:scale-110 pointer-events-none select-none" />
+              <div className="relative flex h-full flex-col justify-end pr-8 sm:pr-12">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-warning/80 mb-1 sm:mb-2">Collaboration</p>
+                <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-text-primary mb-1 sm:mb-2 leading-snug">Team Competition</h3>
+                <p className="text-xs sm:text-sm leading-relaxed text-text-secondary hidden sm:block">Support for individual and team competitions with member management.</p>
               </div>
             </div>
-            </div>
+          </div>
         </div>
       </section>
 
       {/* Competition Format Section */}
-      <section className="px-6 py-12 sm:py-16">
+      <section className="px-4 sm:px-6 py-10 sm:py-14">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">Competition Format</h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-2 sm:mb-3">Competition Format</h2>
+            <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
               Two flexible competition formats for different needs
             </p>
           </div>
@@ -367,9 +367,9 @@ export default async function HomePage() {
       </section>
 
       {/* Final CTA + Contact Section */}
-      <section className="px-6 py-12 sm:py-16 bg-bg-surface/40">
+      <section className="px-4 sm:px-6 py-10 sm:py-14 bg-bg-surface/40">
         <div className="max-w-6xl mx-auto">
-          <Card className="relative overflow-hidden border-primary-blue/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_38%),linear-gradient(135deg,rgba(30,41,59,0.96),rgba(15,23,42,0.98))] p-8 sm:p-10 shadow-2xl shadow-primary-blue/10">
+          <Card className="relative overflow-hidden border-primary-blue/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_38%),linear-gradient(135deg,rgba(30,41,59,0.96),rgba(15,23,42,0.98))] p-5 sm:p-8 lg:p-10 shadow-2xl shadow-primary-blue/10">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
             <div className="absolute -right-8 top-0 h-44 w-44 rounded-full bg-primary-blue/20 blur-3xl" />
             <div className="absolute -left-8 bottom-0 h-44 w-44 rounded-full bg-accent-cyan/15 blur-3xl" />
@@ -400,16 +400,16 @@ export default async function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                  <Link href="/signup">
-                    <Button variant="primary" size="lg" className="gap-2 px-6 w-full sm:w-auto shadow-lg shadow-primary-blue/20">
-                      <Zap className="w-5 h-5" />
+                <div className="flex flex-col xs:flex-row gap-3">
+                  <Link href="/signup" className="w-full xs:w-auto">
+                    <Button variant="primary" size="lg" className="gap-2 px-5 sm:px-6 w-full xs:w-auto text-sm sm:text-base shadow-lg shadow-primary-blue/20">
+                      <Zap className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                       Join now
                     </Button>
                   </Link>
-                  <Link href="/competitions">
-                    <Button variant="outline" size="lg" className="gap-2 px-6 w-full sm:w-auto hover:border-accent-cyan hover:text-accent-cyan">
-                      <Trophy className="w-5 h-5" />
+                  <Link href="/competitions" className="w-full xs:w-auto">
+                    <Button variant="outline" size="lg" className="gap-2 px-5 sm:px-6 w-full xs:w-auto text-sm sm:text-base hover:border-accent-cyan hover:text-accent-cyan">
+                      <Trophy className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                       Explore competitions
                     </Button>
                   </Link>
@@ -430,12 +430,12 @@ export default async function HomePage() {
                 <div className="space-y-3">
                   <a
                     href="mailto:phuckhangtdn@gmail.com"
-                    className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-blue/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-accent-cyan/20"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand px-4 py-3 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-primary-blue/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-accent-cyan/20 min-w-0"
                   >
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    phuckhangtdn@gmail.com
+                    <span className="truncate">phuckhangtdn@gmail.com</span>
                   </a>
                   <p className="text-center text-sm text-text-tertiary">
                     Official website:{' '}
