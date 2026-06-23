@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react';
+import React, { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
@@ -6,10 +6,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
+  icon?: React.ReactNode;
+  asChild?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', loading, icon, children, disabled, asChild, ...props }, ref) => {
     const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-bg-primary disabled:opacity-50 disabled:cursor-not-allowed active:scale-95';
 
     const variants = {
@@ -27,14 +29,28 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: 'px-8 py-3.5 text-lg',
     };
 
+    const buttonClasses = cn(baseStyles, variants[variant], sizes[size], loading && 'opacity-70', className);
+
+    if (asChild) {
+      // Apply button styles to the child element instead of rendering our own button.
+      const child = children as React.ReactElement;
+      if (child && child.type) {
+        return React.cloneElement(child, {
+          className: cn(buttonClasses, child.props.className),
+          ...props,
+        });
+      }
+    }
+
     return (
       <button
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], loading && 'opacity-70', className)}
+        className={buttonClasses}
         disabled={disabled || loading}
         {...props}
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {!loading && icon && <span className="mr-2">{icon}</span>}
         {children}
       </button>
     );
