@@ -16,7 +16,6 @@ export default function LoginPage() {
   const redirectTo = searchParams.get('redirect');
 
   useEffect(() => {
-    // Show message if redirected from somewhere
     const message = searchParams.get('message');
     if (message) {
       setError(message);
@@ -30,7 +29,6 @@ export default function LoginPage() {
 
     const formData = new FormData(e.currentTarget);
 
-    // Add redirect parameter if exists
     if (redirectTo) {
       formData.append('redirect', redirectTo);
     }
@@ -41,90 +39,146 @@ export default function LoginPage() {
       setError(result.error);
       setIsLoading(false);
     }
-    // If success, redirect happens in server action
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-bg-primary via-bg-surface to-bg-primary">
-      <Card className="relative w-full max-w-md p-6 sm:p-8 shadow-2xl overflow-hidden">
-        <Trophy
-          className="absolute -top-10 -right-10 h-40 w-40 text-primary-blue/[0.08] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]"
-          aria-hidden="true"
-        />
-        <div className="relative text-center mb-8">
-          <h1 className="font-brand text-3xl sm:text-4xl mb-3 gradient-text leading-tight">
-            Welcome Back
-          </h1>
-          <p className="text-text-secondary">
-            Sign in to continue competing
-          </p>
+    <div className="min-h-screen flex bg-bg-primary">
+      {/* Left panel — hero constellation (desktop/tablet only) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center bg-gradient-to-br from-bg-primary via-bg-surface/60 to-bg-primary">
+        {/* Glow orbs */}
+        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-primary-blue/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-accent-cyan/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(51,65,85,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(51,65,85,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_60%,transparent_100%)] pointer-events-none" />
+
+        {/* Branding */}
+        <div className="absolute top-8 left-8 z-20">
+          <Link href="/" className="font-brand text-xl gradient-text">
+            The Noders
+          </Link>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-error/10 border border-error rounded-lg text-error text-sm">
-            {error}
+        {/* Constellation */}
+        <div className="relative w-[90%] h-[500px] [perspective:1000px] flex items-center justify-center select-none pointer-events-none z-10">
+          {/* Center — Dashboard */}
+          <div className="w-[80%] z-20 animate-levitate shadow-2xl shadow-primary-blue/10 rounded-xl border border-white/10 overflow-hidden bg-bg-surface/80 backdrop-blur-md">
+            <img src="/hero-images/dashboard.png" alt="Dashboard" className="w-full h-auto object-contain" />
           </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="relative space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold mb-2 text-text-primary">
-              Email Address
-            </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="email@example.com"
-              required
-            />
+          {/* Feature 1 — top left */}
+          <div className="absolute top-[-12%] left-[-8%] w-[44%] z-10 animate-levitate [animation-delay:1.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+            <img src="/hero-images/feature-1.png" alt="Feature 1" className="w-full h-auto object-contain" />
           </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-semibold mb-2 text-text-primary">
-              Password
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              required
-            />
+          {/* Feature 2 — bottom right */}
+          <div className="absolute bottom-[3%] right-[-2%] w-[34%] z-30 animate-levitate [animation-delay:2.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+            <img src="/hero-images/feature-2.png" alt="Feature 2" className="w-full h-auto object-contain" />
           </div>
+          {/* Feature 3 — top right */}
+          <div className="absolute -top-[4%] right-[-2%] w-[27%] z-30 animate-levitate [animation-delay:0.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
+            <img src="/hero-images/feature-3.png" alt="Feature 3" className="w-full h-auto object-contain" />
+          </div>
+          {/* Feature 4 — bottom left */}
+          <div className="absolute -bottom-[4%] left-[-2%] w-[29%] z-10 animate-levitate [animation-delay:3.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
+            <img src="/hero-images/feature-4.png" alt="Feature 4" className="w-full h-auto object-contain" />
+          </div>
+        </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <Link
-              href="/reset-password"
-              className="text-primary-blue hover:text-accent-cyan transition-colors font-medium"
-            >
-              Forgot password?
+        {/* Tagline */}
+        <div className="absolute bottom-8 left-0 right-0 text-center z-20">
+          <p className="text-xs text-text-tertiary tracking-widest uppercase">Competition Platform</p>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12 lg:py-8 bg-gradient-to-br from-bg-primary via-bg-surface/30 to-bg-primary lg:bg-none lg:bg-bg-primary">
+        <div className="w-full max-w-md">
+          {/* Mobile branding */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="font-brand text-2xl gradient-text">
+              The Noders
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full"
-            loading={isLoading}
-          >
-            Sign In
-          </Button>
-        </form>
+          <Card className="relative p-6 sm:p-8 shadow-2xl overflow-hidden">
+            <Trophy
+              className="absolute -top-10 -right-10 h-40 w-40 text-primary-blue/[0.06] rotate-[12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]"
+              aria-hidden="true"
+            />
+            <div className="relative text-center mb-8">
+              <h1 className="font-brand text-3xl sm:text-4xl mb-3 gradient-text leading-tight">
+                Welcome Back
+              </h1>
+              <p className="text-text-secondary">
+                Sign in to continue competing
+              </p>
+            </div>
 
-        <div className="mt-8 pt-6 border-t border-border-default text-center">
-          <p className="text-sm text-text-secondary">
-            Don't have an account?{' '}
-            <Link
-              href="/signup"
-              className="text-primary-blue hover:text-accent-cyan transition-colors font-bold"
-            >
-              Sign up now
-            </Link>
-          </p>
+            {error && (
+              <div className="mb-6 p-4 bg-error/10 border border-error rounded-lg text-error text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="relative space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold mb-2 text-text-primary">
+                  Email Address
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-semibold mb-2 text-text-primary">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <Link
+                  href="/reset-password"
+                  className="text-primary-blue hover:text-accent-cyan transition-colors font-medium"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                loading={isLoading}
+              >
+                Sign In
+              </Button>
+            </form>
+
+            <div className="mt-8 pt-6 border-t border-border-default text-center">
+              <p className="text-sm text-text-secondary">
+                Don&apos;t have an account?{' '}
+                <Link
+                  href="/signup"
+                  className="text-primary-blue hover:text-accent-cyan transition-colors font-bold"
+                >
+                  Sign up now
+                </Link>
+              </p>
+            </div>
+          </Card>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
