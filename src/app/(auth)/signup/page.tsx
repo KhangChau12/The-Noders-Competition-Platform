@@ -75,7 +75,7 @@ export default function SignupPage() {
           </div>
 
           {/* Feature 1 — top left, lifted higher */}
-          <div className="absolute top-[0%] left-[0%] w-[37%] z-10 animate-levitate [animation-delay:1.5s] shadow-xl shadow-black/40 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+          <div className="absolute -top-[8%] left-[0%] w-[37%] z-10 animate-levitate [animation-delay:1.5s] shadow-xl shadow-black/40 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
             <img src="/hero-images/feature-1.png" alt="Feature 1" className="w-full h-auto object-contain" />
           </div>
 
