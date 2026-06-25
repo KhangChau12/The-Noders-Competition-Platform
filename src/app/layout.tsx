@@ -4,6 +4,7 @@ import HeaderWithAuth from '@/components/layout/HeaderWithAuth';
 import Footer from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
 import NeuralNetworkBackground from '@/components/ui/NeuralNetworkBackground';
+import ContentPageOverlay from '@/components/ui/ContentPageOverlay';
 import './globals.css';
 
 // Primary font - Nunito (body text, UI, headings)
@@ -42,6 +43,8 @@ export default function RootLayout({
       <body className="font-sans bg-bg-primary text-text-primary antialiased flex flex-col min-h-screen">
         {/* Neural Network Background - Global */}
         <NeuralNetworkBackground />
+        {/* Dims the network on all pages except landing so text stays readable */}
+        <ContentPageOverlay />
 
         {/* Skip to main content for accessibility */}
         <a
