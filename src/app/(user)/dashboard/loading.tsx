@@ -5,27 +5,29 @@ import {
   PracticeProblemCardSkeleton,
 } from '@/components/ui/PageSkeletons';
 
+const S = Skeleton;
+
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
+        {/* Header: h1 + welcome subtitle */}
         <div className="mb-6 sm:mb-8 space-y-1.5 sm:space-y-2">
-          <Skeleton variant="text" height="2.75rem" width="12rem" />
-          <Skeleton variant="text" height="1rem" width="24rem" />
+          <S variant="text" height="2.75rem" width="12rem" />
+          <S variant="text" height="1rem" width="24rem" />
         </div>
 
         {/* Next deadline callout card */}
         <Card className="p-4 sm:p-5 mb-8 ring-1 ring-accent-cyan/20">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
             <div className="flex-1 min-w-0 space-y-1">
-              <Skeleton variant="text" height="0.7rem" width="14rem" />
-              <Skeleton variant="text" height="1.1rem" width="55%" />
+              <S variant="text" height="0.7rem" width="14rem" />
+              <S variant="text" height="1.1rem" width="55%" />
             </div>
             <div className="flex items-center gap-4 shrink-0">
-              <Skeleton variant="text" height="1.75rem" width="8rem" />
-              <Skeleton variant="circular" width="1.25rem" height="1.25rem" />
+              <S variant="text" height="1.75rem" width="8rem" />
+              <S variant="circular" width="1.25rem" height="1.25rem" />
             </div>
           </div>
         </Card>
@@ -34,8 +36,8 @@ export default function DashboardLoading() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-10">
           {[0, 1, 2, 3].map((i) => (
             <Card key={i} className="relative overflow-hidden p-3.5 sm:p-5 space-y-1">
-              <Skeleton variant="text" height="2rem" width="3.5rem" />
-              <Skeleton variant="text" height="0.65rem" width="75%" />
+              <S variant="text" height="2rem" width="3.5rem" />
+              <S variant="text" height="0.65rem" width="75%" />
             </Card>
           ))}
         </div>
@@ -46,11 +48,11 @@ export default function DashboardLoading() {
           {/* Left column */}
           <div className="space-y-8 sm:space-y-12">
 
-            {/* Your competitions */}
+            {/* Your competitions section */}
             <section>
               <div className="flex items-center justify-between gap-3 mb-5">
-                <Skeleton variant="text" height="1.6rem" width="13rem" />
-                <Skeleton variant="text" height="0.85rem" width="6rem" />
+                <S variant="text" height="1.6rem" width="13rem" />
+                <S variant="text" height="0.85rem" width="6rem" />
               </div>
               <div className="space-y-4">
                 {[0, 1, 2].map((i) => (
@@ -59,34 +61,31 @@ export default function DashboardLoading() {
               </div>
             </section>
 
-            {/* Open for registration */}
+            {/* Open for registration section */}
             <section>
-              <Skeleton variant="text" height="1.6rem" width="16rem" className="mb-5" />
+              <S variant="text" height="1.6rem" width="16rem" className="mb-5" />
               <div className="space-y-3">
                 {[0, 1].map((i) => (
                   <Card key={i} className="p-4 sm:p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="space-y-1.5 flex-1">
-                        <div className="flex gap-2">
-                          <Skeleton height="1.4rem" width="7rem" className="rounded-full" />
-                          <Skeleton height="1.4rem" width="5rem" className="rounded-full" />
-                        </div>
-                        <Skeleton variant="text" height="1rem" width="65%" />
-                        <Skeleton variant="text" height="0.75rem" width="45%" />
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <S variant="text" height="1rem" width="65%" />
+                        <S variant="text" height="0.75rem" width="45%" />
                       </div>
-                      <Skeleton height="2.25rem" width="8rem" className="shrink-0" />
+                      <S height="2.25rem" width="8rem" className="shrink-0" />
                     </div>
                   </Card>
                 ))}
               </div>
             </section>
 
-            {/* Continue practicing */}
+            {/* Continue practicing section */}
             <section>
-              <div className="flex items-center justify-between gap-3 mb-5">
-                <Skeleton variant="text" height="1.6rem" width="15rem" />
-                <Skeleton variant="text" height="0.85rem" width="7rem" />
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <S variant="text" height="1.6rem" width="15rem" />
+                <S variant="text" height="0.85rem" width="7rem" />
               </div>
+              <S variant="text" height="0.85rem" width="75%" className="mb-5" />
               <div className="grid sm:grid-cols-2 gap-4">
                 {[0, 1, 2, 3].map((i) => (
                   <PracticeProblemCardSkeleton key={i} />
@@ -99,38 +98,44 @@ export default function DashboardLoading() {
           {/* Right sidebar */}
           <aside className="space-y-6">
 
-            {/* Teams */}
+            {/* Teams card — matches TeamsSidebar: list of teams + create button */}
             <Card className="p-5 sm:p-6 space-y-4">
-              <Skeleton variant="text" height="1.4rem" width="8rem" />
+              <div className="flex items-center justify-between gap-3">
+                <S variant="text" height="1.4rem" width="8rem" />
+                <S variant="text" height="0.75rem" width="6rem" />
+              </div>
               <div className="space-y-3">
                 {[0, 1].map((i) => (
                   <div key={i} className="flex items-center justify-between gap-3">
-                    <div className="space-y-1.5 flex-1">
-                      <Skeleton variant="text" height="1rem" width="60%" />
-                      <Skeleton variant="text" height="0.75rem" width="40%" />
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <S variant="text" height="1rem" width="60%" />
+                      <S variant="text" height="0.75rem" width="40%" />
                     </div>
-                    <Skeleton height="2rem" width="4rem" />
+                    <S height="2rem" width="4rem" />
                   </div>
                 ))}
               </div>
-              <Skeleton height="2.25rem" width="100%" />
+              {/* Create team button */}
+              <S height="2.25rem" width="100%" />
             </Card>
 
-            {/* Recent activity */}
+            {/* Recent activity card */}
             <Card className="p-5 sm:p-6 space-y-4">
-              <Skeleton variant="text" height="1.4rem" width="10rem" />
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="space-y-1 pb-2 border-b border-border-default/40 last:border-0">
-                  <div className="flex justify-between gap-3">
-                    <Skeleton variant="text" height="0.9rem" width="60%" />
-                    <Skeleton variant="text" height="0.9rem" width="15%" />
+              <S variant="text" height="1.4rem" width="10rem" />
+              <div className="space-y-1">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="py-2 -mx-2 px-2 space-y-0.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <S variant="text" height="0.9rem" width="60%" />
+                      <S variant="text" height="0.9rem" width="15%" />
+                    </div>
+                    <div className="flex gap-2">
+                      <S variant="text" height="0.65rem" width="25%" />
+                      <S variant="text" height="0.65rem" width="20%" />
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Skeleton variant="text" height="0.7rem" width="25%" />
-                    <Skeleton variant="text" height="0.7rem" width="20%" />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </Card>
 
           </aside>
