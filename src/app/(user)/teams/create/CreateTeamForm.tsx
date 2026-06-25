@@ -5,18 +5,22 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Users, Info } from 'lucide-react';
 import { createTeam } from './actions';
 
 export default function CreateTeamForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
     setError('');
 
+    const formData = new FormData(e.currentTarget);
     const result = await createTeam(formData);
 
     if (result.error) {
@@ -24,92 +28,100 @@ export default function CreateTeamForm() {
       setIsSubmitting(false);
     } else if (result.success && result.teamId) {
       router.push(`/teams/${result.teamId}`);
-      router.refresh();
     }
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* Back Button */}
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
+      <div className="max-w-2xl mx-auto">
+
+        {/* Back */}
         <Link
           href="/teams"
-          className="inline-flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors mb-8"
+          className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Teams
+          Teams
         </Link>
 
-        {/* Page Header */}
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Create New Team</h1>
-          <p className="text-text-secondary">Build your team to compete together</p>
+          <h1 className="font-brand text-3xl sm:text-4xl gradient-text leading-tight mb-1">
+            Create Team
+          </h1>
+          <p className="text-sm text-text-secondary">
+            You&apos;ll become the team leader and can invite members afterward.
+          </p>
         </div>
 
-        {/* Create Team Form */}
-        <Card className="p-5 sm:p-8">
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-error/10 border border-error/30 rounded-lg flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-error flex-shrink-0" />
-              <p className="text-error">{error}</p>
-            </div>
-          )}
+        <form onSubmit={handleSubmit}>
+          <Card className="p-5 sm:p-6 space-y-5">
 
-          <form action={handleSubmit} className="space-y-6">
+            {/* Error */}
+            {error && (
+              <div className="flex items-start gap-2.5 p-3.5 bg-error/10 border border-error/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+                <p className="text-sm text-error">{error}</p>
+              </div>
+            )}
+
             {/* Team Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-semibold mb-2">
+              <label htmlFor="name" className="block text-sm font-semibold mb-1.5">
                 Team Name <span className="text-error">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 minLength={3}
                 maxLength={50}
-                placeholder="Enter team name"
-                className="w-full px-4 py-3 bg-bg-surface border border-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue text-text-primary"
+                placeholder="e.g. Neural Ninjas"
+                className="w-full px-4 py-2.5 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue text-text-primary placeholder:text-text-tertiary transition-colors"
               />
-              <p className="text-sm text-text-tertiary mt-2">
-                Choose a unique name for your team (3-50 characters)
-              </p>
+              <div className="flex justify-between mt-1.5">
+                <p className="text-xs text-text-tertiary">3–50 characters</p>
+                <p className={`text-xs font-mono ${name.length > 45 ? 'text-warning' : 'text-text-tertiary'}`}>
+                  {name.length}/50
+                </p>
+              </div>
             </div>
 
-            {/* Team Description */}
+            {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-semibold mb-2">
+              <label htmlFor="description" className="block text-sm font-semibold mb-1.5">
                 Description
+                <span className="ml-1.5 text-xs font-normal text-text-tertiary">(optional)</span>
               </label>
               <textarea
                 id="description"
                 name="description"
-                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
                 maxLength={500}
-                placeholder="Describe your team's goals and expertise"
-                className="w-full px-4 py-3 bg-bg-surface border border-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue text-text-primary resize-none"
+                placeholder="Describe your team's goals, expertise, or what you're looking for in members..."
+                className="w-full px-4 py-2.5 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue text-text-primary placeholder:text-text-tertiary resize-none transition-colors"
               />
-              <p className="text-sm text-text-tertiary mt-2">
-                Optional: Add a description to help others understand your team
+              <p className={`text-xs font-mono mt-1.5 text-right ${description.length > 470 ? 'text-warning' : 'text-text-tertiary'}`}>
+                {description.length}/500
               </p>
             </div>
 
-            {/* Info Box */}
-            <div className="bg-primary-blue/10 border border-primary-blue/20 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">
-                Team Creation Info
-              </h3>
-              <ul className="text-sm text-text-secondary space-y-1">
-                <li>&bull; You will automatically become the team leader</li>
-                <li>&bull; You can invite other members after creating the team</li>
-                <li>&bull; Team members can be managed from the team page</li>
-                <li>&bull; Teams can register for team-based competitions</li>
-              </ul>
+            {/* Info hint */}
+            <div className="flex items-start gap-2.5 p-3.5 bg-primary-blue/5 border border-primary-blue/15 rounded-lg">
+              <Info className="w-4 h-4 text-primary-blue shrink-0 mt-0.5" />
+              <div className="text-xs text-text-secondary space-y-0.5">
+                <p>You will be automatically set as the team leader.</p>
+                <p>After creating, you can invite members from the team page.</p>
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-4">
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
               <Link href="/teams" className="flex-1">
                 <Button variant="outline" className="w-full" disabled={isSubmitting}>
                   Cancel
@@ -118,15 +130,17 @@ export default function CreateTeamForm() {
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1"
-                disabled={isSubmitting}
+                className="flex-1 gap-2"
+                disabled={isSubmitting || name.trim().length < 3}
                 loading={isSubmitting}
               >
-                {isSubmitting ? 'Creating...' : 'Create Team'}
+                <Users className="w-4 h-4" />
+                {isSubmitting ? 'Creating…' : 'Create Team'}
               </Button>
             </div>
-          </form>
-        </Card>
+          </Card>
+        </form>
+
       </div>
     </div>
   );

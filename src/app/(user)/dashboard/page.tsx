@@ -4,7 +4,19 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { Trophy, BookOpen, Users as UsersIcon, ArrowRight, Clock, Medal, Activity } from 'lucide-react';
+import {
+  Trophy,
+  BookOpen,
+  Users as UsersIcon,
+  ArrowRight,
+  Clock,
+  Medal,
+  Activity,
+  CheckCircle2,
+  Circle,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import TeamsSidebar from './TeamsSidebar';
 import PracticeProblemCard from '@/components/practice/PracticeProblemCard';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
@@ -52,16 +64,12 @@ function timeAgo(iso: string): string {
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // Check authentication
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/login');
-  }
+  if (!user) redirect('/login');
 
-  // Fetch profile for personalized greeting
   const { data: profile } = (await supabase
     .from('users')
     .select('full_name')
@@ -78,64 +86,39 @@ export default async function DashboardPage() {
       status,
       registered_at,
       competitions!inner (
-        id,
-        title,
-        description,
-        competition_type,
-        participation_type,
-        registration_start,
-        registration_end,
-        public_test_start,
-        public_test_end,
-        private_test_start,
-        private_test_end,
-        scoring_metric
+        id, title, description, competition_type, participation_type,
+        registration_start, registration_end, public_test_start, public_test_end,
+        private_test_start, private_test_end, scoring_metric
       )
     `)
     .eq('user_id', user.id)
     .order('registered_at', { ascending: false });
 
-  // Fetch user's team memberships first
+  // Fetch team memberships
   const { data: userTeamMemberships } = (await supabase
     .from('team_members')
     .select('team_id')
     .eq('user_id', user.id)) as { data: any };
 
-  // Fetch team registrations if user is in any teams
+  // Fetch team registrations
   let teamRegistrations: any[] = [];
   if (userTeamMemberships && userTeamMemberships.length > 0) {
     const teamIds = userTeamMemberships.map((m: any) => m.team_id);
-
     const { data: teamRegs } = await supabase
       .from('registrations')
       .select(`
-        id,
-        competition_id,
-        status,
-        registered_at,
-        team_id,
+        id, competition_id, status, registered_at, team_id,
         competitions!inner (
-          id,
-          title,
-          description,
-          competition_type,
-          participation_type,
-          registration_start,
-          registration_end,
-          public_test_start,
-          public_test_end,
-          private_test_start,
-          private_test_end,
-          scoring_metric
+          id, title, description, competition_type, participation_type,
+          registration_start, registration_end, public_test_start, public_test_end,
+          private_test_start, private_test_end, scoring_metric
         )
       `)
       .in('team_id', teamIds)
       .order('registered_at', { ascending: false });
-
     teamRegistrations = teamRegs || [];
   }
 
-  // Combine individual and team registrations
   const registrations = [...(individualRegistrations || []), ...teamRegistrations];
 
   // Fetch ALL active competitions
@@ -147,7 +130,6 @@ export default async function DashboardPage() {
     .is('deleted_at', null)
     .order('created_at', { ascending: false })) as { data: any };
 
-  // Create map of competition_id -> registration status
   const registrationStatusMap = new Map(
     registrations?.map((r: any) => [r.competition_id, r.status]) || []
   );
@@ -167,7 +149,6 @@ export default async function DashboardPage() {
     {} as Record<string, number>
   );
 
-  // Process ALL competitions
   const processAllCompetitions = (comps: any[]): CompetitionWithStats[] => {
     return comps.map((comp: Competition) => {
       const phase = getCompetitionPhase(comp, now);
@@ -175,27 +156,17 @@ export default async function DashboardPage() {
       const regStatus = registrationStatusMap.get(comp.id);
       const registration_status: 'not_registered' | 'pending' | 'approved' | 'rejected' =
         regStatus || 'not_registered';
-
-      return {
-        ...comp,
-        phase,
-        participant_count: participantCounts[comp.id] || 0,
-        registration_status,
-        countdown,
-      };
+      return { ...comp, phase, participant_count: participantCounts[comp.id] || 0, registration_status, countdown };
     });
   };
 
-  const processedAllCompetitions = allCompetitions
-    ? processAllCompetitions(allCompetitions)
-    : [];
+  const processedAllCompetitions = allCompetitions ? processAllCompetitions(allCompetitions) : [];
 
-  // Compute the user's leaderboard rank in each registered competition
-  const myTeamIdSet = new Set<string>(
-    (userTeamMemberships ?? []).map((m: any) => m.team_id)
-  );
+  // Leaderboard rank per competition
+  const myTeamIdSet = new Set<string>((userTeamMemberships ?? []).map((m: any) => m.team_id));
   const myCompIds = registrations.map((r: any) => r.competition_id);
   const compRanks: Record<string, { rank: number; total: number }> = {};
+
   if (myCompIds.length > 0) {
     const { data: bestSubs } = await (supabase as any)
       .from('submissions')
@@ -206,14 +177,11 @@ export default async function DashboardPage() {
       .not('score', 'is', null);
 
     const subsByComp: Record<string, any[]> = {};
-    (bestSubs ?? []).forEach((s: any) => {
-      (subsByComp[s.competition_id] ??= []).push(s);
-    });
+    (bestSubs ?? []).forEach((s: any) => { (subsByComp[s.competition_id] ??= []).push(s); });
 
     processedAllCompetitions.forEach((comp) => {
       const rows = subsByComp[comp.id];
       if (!rows || rows.length === 0) return;
-      // Rank against the leaderboard of the most relevant phase
       const privateRows = rows.filter((r) => r.phase === 'private');
       const pool =
         (comp.phase === 'private_test' || comp.phase === 'ended') && privateRows.length > 0
@@ -221,17 +189,14 @@ export default async function DashboardPage() {
           : rows.filter((r) => r.phase === 'public');
       if (pool.length === 0) return;
       const higherIsBetter =
-        SCORING_METRIC_INFO[comp.scoring_metric as keyof typeof SCORING_METRIC_INFO]
-          ?.higher_is_better !== false;
+        SCORING_METRIC_INFO[comp.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better !== false;
       pool.sort((a, b) => (higherIsBetter ? b.score - a.score : a.score - b.score));
-      const idx = pool.findIndex(
-        (s) => s.user_id === user.id || (s.team_id && myTeamIdSet.has(s.team_id))
-      );
+      const idx = pool.findIndex((s) => s.user_id === user.id || (s.team_id && myTeamIdSet.has(s.team_id)));
       if (idx >= 0) compRanks[comp.id] = { rank: idx + 1, total: pool.length };
     });
   }
 
-  // Recent competition submissions by this user (for the activity feed)
+  // Recent competition submissions
   const { data: recentCompSubs } = await (supabase as any)
     .from('submissions')
     .select('id, score, submitted_at, validation_status, competition_id, competitions(title, scoring_metric)')
@@ -239,35 +204,23 @@ export default async function DashboardPage() {
     .order('submitted_at', { ascending: false })
     .limit(5);
 
-  // Fetch user's teams
+  // User teams
   const { data: teamMemberships } = (await supabase
     .from('team_members')
-    .select(`
-      team_id,
-      teams (
-        id,
-        name,
-        leader_id
-      )
-    `)
+    .select('team_id, teams (id, name, leader_id)')
     .eq('user_id', user.id)) as { data: any };
 
   let userTeams: any[] = [];
   if (teamMemberships && teamMemberships.length > 0) {
     const teamIds = teamMemberships.map((m: any) => m.teams.id);
-
     const { data: memberCounts } = (await supabase
       .from('team_members')
       .select('team_id')
       .in('team_id', teamIds)) as { data: any };
-
     const countMap = new Map<string, number>();
     if (memberCounts) {
-      memberCounts.forEach((row: any) => {
-        countMap.set(row.team_id, (countMap.get(row.team_id) || 0) + 1);
-      });
+      memberCounts.forEach((row: any) => { countMap.set(row.team_id, (countMap.get(row.team_id) || 0) + 1); });
     }
-
     userTeams = teamMemberships.map((membership: any) => ({
       id: membership.teams.id,
       name: membership.teams.name,
@@ -276,28 +229,19 @@ export default async function DashboardPage() {
     }));
   }
 
-  // Fetch pending team invitations
+  // Pending invitations
   const { data: invitations } = (await supabase
     .from('team_invitations')
     .select(`
-      id,
-      team_id,
-      invited_at,
-      teams (
-        id,
-        name
-      ),
-      invited_by_user:users!team_invitations_invited_by_fkey (
-        id,
-        full_name,
-        email
-      )
+      id, team_id, invited_at,
+      teams (id, name),
+      invited_by_user:users!team_invitations_invited_by_fkey (id, full_name, email)
     `)
     .eq('user_id', user.id)
     .eq('status', 'pending')
     .order('invited_at', { ascending: false })) as { data: any };
 
-  // Fetch the user's practice activity (attempted problems + best scores)
+  // Practice activity
   const { data: myPracticeSubs } = await (supabase as any)
     .from('practice_submissions')
     .select('problem_id, score, is_best_score, validation_status, submitted_at')
@@ -311,7 +255,6 @@ export default async function DashboardPage() {
     if (!attemptedInOrder.includes(s.problem_id)) attemptedInOrder.push(s.problem_id);
   });
 
-  // Fetch practice problems with tags
   const { data: rawPracticeProblems } = await (supabase as any)
     .from('practice_problems')
     .select('*, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
@@ -331,22 +274,13 @@ export default async function DashboardPage() {
     participant_count: practiceCountMap[p.id] ?? 0,
   }));
 
-  // "Continue practicing": up to 2 most recently attempted, then fill with newest unattempted (4 total)
   const problemById = new Map<string, any>(allPracticeProblems.map((p: any) => [p.id, p]));
-  const continueProblems = attemptedInOrder
-    .map((id) => problemById.get(id))
-    .filter(Boolean)
-    .slice(0, 2);
-  const freshProblems = allPracticeProblems.filter(
-    (p: any) => !attemptedInOrder.includes(p.id)
-  );
-  const practiceProblems = [
-    ...continueProblems,
-    ...freshProblems.slice(0, 4 - continueProblems.length),
-  ];
+  const continueProblems = attemptedInOrder.map((id) => problemById.get(id)).filter(Boolean).slice(0, 2);
+  const freshProblems = allPracticeProblems.filter((p: any) => !attemptedInOrder.includes(p.id));
+  const practiceProblems = [...continueProblems, ...freshProblems.slice(0, 4 - continueProblems.length)];
   const hasPracticed = attemptedInOrder.length > 0;
 
-  // Recent activity feed: latest submissions across competitions + practice
+  // Activity feed
   type ActivityItem = {
     id: string;
     title: string;
@@ -367,9 +301,7 @@ export default async function DashboardPage() {
         kind: 'Competition' as const,
         score: s.score,
         validation_status: s.validation_status,
-        decimals:
-          SCORING_METRIC_INFO[comp?.scoring_metric as keyof typeof SCORING_METRIC_INFO]
-            ?.decimals ?? 4,
+        decimals: SCORING_METRIC_INFO[comp?.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.decimals ?? 4,
         submitted_at: s.submitted_at,
       };
     })),
@@ -382,9 +314,7 @@ export default async function DashboardPage() {
         kind: 'Practice' as const,
         score: s.score,
         validation_status: s.validation_status,
-        decimals:
-          SCORING_METRIC_INFO[problem?.scoring_metric as keyof typeof SCORING_METRIC_INFO]
-            ?.decimals ?? 4,
+        decimals: SCORING_METRIC_INFO[problem?.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.decimals ?? 4,
         submitted_at: s.submitted_at,
       };
     })),
@@ -392,7 +322,7 @@ export default async function DashboardPage() {
     .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
     .slice(0, 6);
 
-  // Split competitions into "yours" vs "open to join"
+  // Partition competitions
   const myCompetitions = processedAllCompetitions.filter(
     (c) => c.registration_status && c.registration_status !== 'not_registered'
   );
@@ -406,7 +336,6 @@ export default async function DashboardPage() {
     (c) => c.registration_status === 'approved' && c.phase !== 'ended'
   ).length;
 
-  // Nearest deadline among approved, still-running competitions
   const nextDeadline = myCompetitions
     .filter((c) => c.registration_status === 'approved' && c.countdown)
     .sort((a, b) => {
@@ -415,25 +344,73 @@ export default async function DashboardPage() {
       return aMin - bMin;
     })[0] ?? null;
 
-  // Best leaderboard rank across registered competitions
   const rankValues = Object.values(compRanks).map((r) => r.rank);
   const bestCompRank = rankValues.length > 0 ? Math.min(...rankValues) : null;
+
+  // Onboarding checklist state
+  const hasJoinedCompetition = myCompetitions.length > 0;
+  const hasTeamOrNotNeeded = userTeams.length > 0;
+  const hasSubmitted = activityItems.length > 0;
+  const onboardingDone = hasJoinedCompetition && hasTeamOrNotNeeded && hasSubmitted;
+
+  // Show stats row only when user has meaningful data
+  const showStats =
+    activeCount > 0 || bestCompRank !== null || userTeams.length > 0 || attemptedInOrder.length > 0;
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-1.5 sm:mb-2 gradient-text leading-tight">Dashboard</h1>
+          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-1.5 sm:mb-2 gradient-text leading-tight">
+            Dashboard
+          </h1>
           <p className="text-sm sm:text-lg text-text-secondary">
-            Welcome back{firstName ? `, ${firstName}` : ''}! Here&apos;s what&apos;s happening.
+            Welcome back{firstName ? `, ${firstName}` : ''}!
+            {nextDeadline
+              ? ' You have a deadline coming up.'
+              : openCompetitions.length > 0
+              ? ' There are competitions open for registration.'
+              : ' Here\'s your overview.'}
           </p>
         </div>
 
-        {/* Next deadline callout */}
+        {/* ── Onboarding checklist (shown until all steps done) ── */}
+        {!onboardingDone && (
+          <Card className="relative overflow-hidden p-5 sm:p-6 mb-8 ring-1 ring-primary-blue/20">
+            <Zap className="absolute -bottom-5 -right-5 h-20 w-20 text-primary-blue/[0.07] rotate-[-10deg] pointer-events-none select-none" />
+            <div className="relative">
+              <h2 className="font-bold text-base mb-1">Get started</h2>
+              <p className="text-sm text-text-secondary mb-4">Complete these steps to get the most out of the platform.</p>
+              <div className="space-y-2.5">
+                <OnboardingStep
+                  done={hasJoinedCompetition}
+                  label="Join a competition"
+                  href="/competitions"
+                  cta="Browse competitions"
+                />
+                <OnboardingStep
+                  done={hasTeamOrNotNeeded}
+                  label="Create or join a team"
+                  href="/teams/create"
+                  cta="Create team"
+                />
+                <OnboardingStep
+                  done={hasSubmitted}
+                  label="Submit your first solution"
+                  href="/practice"
+                  cta="Try practice first"
+                />
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* ── Next deadline banner ── */}
         {nextDeadline && (
           <Link href={`/competitions/${nextDeadline.id}`} className="group block mb-8">
-            <Card className="relative overflow-hidden p-4 sm:p-5 ring-1 ring-accent-cyan/30 hover:ring-accent-cyan/60 hover:-translate-y-0.5">
+            <Card className="relative overflow-hidden p-4 sm:p-5 ring-1 ring-accent-cyan/30 hover:ring-accent-cyan/60 hover:-translate-y-0.5 transition-all">
               <Clock className="absolute -bottom-5 -right-4 h-20 w-20 text-accent-cyan/[0.08] rotate-[-10deg] pointer-events-none select-none [filter:drop-shadow(0_0_18px_rgba(6,182,212,0.3))]" />
               <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                 <div className="flex-1 min-w-0">
@@ -460,142 +437,119 @@ export default async function DashboardPage() {
           </Link>
         )}
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-10">
-          {[
-            {
-              Icon: Trophy,
-              value: String(activeCount),
-              label: 'Active Competitions',
-              color: 'text-primary-blue',
-            },
-            {
-              Icon: Medal,
-              value: bestCompRank ? `#${bestCompRank}` : '—',
-              label: 'Best Rank',
-              color: 'text-warning',
-            },
-            {
-              Icon: UsersIcon,
-              value: String(userTeams.length),
-              label: 'Teams',
-              color: 'text-accent-cyan',
-            },
-            {
-              Icon: BookOpen,
-              value: String(attemptedInOrder.length),
-              label: 'Practice Problems',
-              color: 'text-success',
-            },
-          ].map(({ Icon, value, label, color }) => (
-            <Card key={label} className="relative overflow-hidden p-3.5 sm:p-5">
-              <Icon className={`absolute -bottom-3 -right-3 h-12 w-12 sm:h-16 sm:w-16 ${color} opacity-[0.12] rotate-[-8deg] pointer-events-none select-none`} />
-              <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5 sm:mb-1">{value}</p>
-              <p className="relative text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
-            </Card>
-          ))}
-        </div>
+        {/* ── Stats row (only when there's something to show) ── */}
+        {showStats && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-10">
+            {[
+              { Icon: Trophy, value: String(activeCount), label: 'Active Competitions', color: 'text-primary-blue', show: true },
+              { Icon: Medal, value: bestCompRank ? `#${bestCompRank}` : '—', label: 'Best Rank', color: 'text-warning', show: bestCompRank !== null },
+              { Icon: UsersIcon, value: String(userTeams.length), label: 'My Teams', color: 'text-accent-cyan', show: true },
+              { Icon: BookOpen, value: String(attemptedInOrder.length), label: 'Problems Practiced', color: 'text-success', show: true },
+            ].map(({ Icon, value, label, color }) => (
+              <Card key={label} className="relative overflow-hidden p-3.5 sm:p-5">
+                <Icon className={`absolute -bottom-3 -right-3 h-12 w-12 sm:h-16 sm:w-16 ${color} opacity-[0.12] rotate-[-8deg] pointer-events-none select-none`} />
+                <p className="relative text-2xl sm:text-3xl font-bold font-mono mb-0.5 sm:mb-1">{value}</p>
+                <p className="relative text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-text-tertiary">{label}</p>
+              </Card>
+            ))}
+          </div>
+        )}
 
-        {/* 2-Column Layout */}
-        <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-          {/* LEFT COLUMN */}
-          <div className="space-y-8 sm:space-y-12">
+        {/* ── 2-Column layout ── */}
+        <div className="grid lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-start">
+
+          {/* ── LEFT COLUMN ── */}
+          <div className="space-y-10">
+
             {/* Your Competitions */}
             <section>
               <div className="flex items-center justify-between gap-3 mb-5">
                 <h2 className="text-xl sm:text-2xl font-bold">Your Competitions</h2>
-                <Link
-                  href="/competitions"
-                  className="text-sm font-semibold text-primary-blue hover:text-accent-cyan transition-colors shrink-0"
-                >
+                <Link href="/competitions" className="text-sm font-semibold text-primary-blue hover:text-accent-cyan transition-colors shrink-0">
                   Browse all &rarr;
                 </Link>
               </div>
 
               {myCompetitions.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {myCompetitions.map((competition) => {
-                    const now = new Date();
                     const regStart = new Date(competition.registration_start);
                     const publicEnd = new Date(competition.public_test_end);
                     const privateEnd = competition.private_test_end ? new Date(competition.private_test_end) : null;
-
                     const totalDuration = (privateEnd || publicEnd).getTime() - regStart.getTime();
                     const elapsed = now.getTime() - regStart.getTime();
                     const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                    const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+                    const rank = compRanks[competition.id];
 
-                    const metricInfo =
-                      SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+                    const phaseVariant =
+                      competition.phase === 'registration' ? 'registration' :
+                      competition.phase === 'public_test' ? 'public' :
+                      competition.phase === 'private_test' ? 'private' :
+                      competition.phase === 'upcoming' ? 'secondary' : 'ended';
+                    const phaseLabel =
+                      competition.phase === 'registration' ? 'Registration' :
+                      competition.phase === 'public_test' ? 'Public Test' :
+                      competition.phase === 'private_test' ? 'Private Test' :
+                      competition.phase === 'upcoming' ? 'Upcoming' : 'Ended';
+
+                    const statusVariant =
+                      competition.registration_status === 'approved' ? 'success' :
+                      competition.registration_status === 'pending' ? 'warning' : 'error';
+                    const statusLabel =
+                      competition.registration_status === 'approved' ? 'Approved' :
+                      competition.registration_status === 'pending' ? 'Pending' : 'Rejected';
 
                     return (
                       <Link key={competition.id} href={`/competitions/${competition.id}`} className="group block">
-                        <Card className="p-4 sm:p-6 hover:border-primary-blue/50 transition-all cursor-pointer">
-                          <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <Badge
-                              variant={
-                                competition.phase === 'registration' ? 'purple' :
-                                competition.phase === 'public_test' ? 'blue' :
-                                competition.phase === 'private_test' ? 'cyan' : 'gray'
-                              }
-                            >
-                              {competition.phase === 'registration' ? 'Registration' :
-                               competition.phase === 'public_test' ? 'Public Test' :
-                               competition.phase === 'private_test' ? 'Private Test' :
-                               competition.phase === 'upcoming' ? 'Upcoming' : 'Ended'}
-                            </Badge>
-                            <Badge
-                              variant={
-                                competition.registration_status === 'approved' ? 'green' :
-                                competition.registration_status === 'pending' ? 'yellow' : 'red'
-                              }
-                            >
-                              {competition.registration_status === 'approved' ? 'Registered' :
-                               competition.registration_status === 'pending' ? 'Pending Approval' : 'Rejected'}
-                            </Badge>
+                        <Card className="p-4 sm:p-5 hover:border-primary-blue/40 transition-all">
+                          {/* Top row: badges + rank */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant={phaseVariant as any}>{phaseLabel}</Badge>
+                              <Badge variant={statusVariant}>{statusLabel}</Badge>
+                            </div>
+                            {rank && (
+                              <span className="text-xs font-mono font-semibold text-accent-cyan shrink-0">
+                                #{rank.rank} / {rank.total}
+                              </span>
+                            )}
                           </div>
 
-                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-                            <h3 className="text-lg sm:text-xl font-bold group-hover:text-primary-blue transition-colors">
+                          {/* Title + countdown */}
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1.5">
+                            <h3 className="text-base sm:text-lg font-bold group-hover:text-primary-blue transition-colors">
                               {competition.title}
                             </h3>
                             {competition.countdown && (
-                              <span className="text-xs sm:text-sm text-text-secondary">
-                                {competition.countdown.label}:{' '}
-                                <span className="font-mono font-semibold text-primary-blue">
+                              <span className="text-xs text-text-tertiary shrink-0">
+                                {competition.countdown.label.replace(' in', '')}:{' '}
+                                <span className="font-mono font-semibold text-text-secondary">
                                   {competition.countdown.days}d {competition.countdown.hours}h {competition.countdown.minutes}m
                                 </span>
                               </span>
                             )}
                           </div>
 
-                          <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary mb-3 sm:mb-4">
+                          {/* Meta */}
+                          <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary mb-3">
                             {metricInfo?.name ?? competition.scoring_metric.replace('_', ' ')}
                             {' · '}
                             {competition.participation_type === 'team' ? 'Team' : 'Individual'}
                             {' · '}
                             {competition.participant_count} participant{competition.participant_count !== 1 ? 's' : ''}
-                            {compRanks[competition.id] && (
-                              <>
-                                {' · '}
-                                <span className="text-accent-cyan font-semibold">
-                                  Rank #{compRanks[competition.id].rank} of {compRanks[competition.id].total}
-                                </span>
-                              </>
-                            )}
                           </p>
 
-                          {/* Timeline Bar */}
-                          <div>
-                            <div className="relative h-2 bg-bg-elevated rounded-full overflow-hidden">
-                              <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full transition-all duration-500"
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
-                            <div className="flex justify-between mt-2 text-xs text-text-tertiary">
-                              <span>{regStart.toLocaleDateString()}</span>
-                              <span>{(privateEnd || publicEnd).toLocaleDateString()}</span>
-                            </div>
+                          {/* Progress bar */}
+                          <div className="relative h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+                            <div
+                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between mt-1.5 text-[10px] text-text-tertiary font-mono">
+                            <span>{regStart.toLocaleDateString()}</span>
+                            <span>{(privateEnd || publicEnd).toLocaleDateString()}</span>
                           </div>
                         </Card>
                       </Link>
@@ -604,12 +558,9 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <Card className="relative overflow-hidden p-6 sm:p-8 text-center">
-                  <Trophy
-                    className="absolute -bottom-6 -right-6 h-28 w-28 text-primary-blue/[0.07] rotate-[-10deg] pointer-events-none [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.3))]"
-                    aria-hidden="true"
-                  />
+                  <Trophy className="absolute -bottom-6 -right-6 h-28 w-28 text-primary-blue/[0.07] rotate-[-10deg] pointer-events-none [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.3))]" aria-hidden="true" />
                   <div className="relative">
-                    <h3 className="text-lg font-bold mb-2">You haven&apos;t joined a competition yet</h3>
+                    <h3 className="text-lg font-bold mb-2">No competitions yet</h3>
                     <p className="text-text-secondary text-sm mb-5 max-w-md mx-auto">
                       Register for a competition to track your progress, submit solutions, and climb the leaderboard.
                     </p>
@@ -624,21 +575,29 @@ export default async function DashboardPage() {
               )}
             </section>
 
-            {/* Open for Registration */}
+            {/* Open for Registration — shown as a subtle contextual section */}
             {openCompetitions.length > 0 && (
               <section>
-                <h2 className="text-xl sm:text-2xl font-bold mb-5">Open for Registration</h2>
-                <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h2 className="text-lg font-semibold text-text-secondary flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-success" />
+                    Open for Registration
+                  </h2>
+                  <Link href="/competitions" className="text-sm font-semibold text-primary-blue hover:text-accent-cyan transition-colors shrink-0">
+                    See all &rarr;
+                  </Link>
+                </div>
+                <div className="space-y-2">
                   {openCompetitions.map((competition) => (
-                    <Card
-                      key={competition.id}
-                      className="p-4 sm:p-5 hover:border-primary-blue/50 transition-all"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-text-primary mb-1 truncate">{competition.title}</h3>
-                          <p className="text-xs text-text-tertiary">
-                            Registration{competition.phase === 'upcoming' ? ' opens' : ' closes'}:{' '}
+                    <Card key={competition.id} className="p-4 hover:border-success/30 transition-all">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
+                            <h3 className="font-semibold text-sm text-text-primary truncate">{competition.title}</h3>
+                          </div>
+                          <p className="text-xs text-text-tertiary pl-3.5">
+                            {competition.phase === 'upcoming' ? 'Opens' : 'Closes'}{' '}
                             {new Date(
                               competition.phase === 'upcoming'
                                 ? competition.registration_start
@@ -648,9 +607,7 @@ export default async function DashboardPage() {
                           </p>
                         </div>
                         <Link href={`/competitions/${competition.id}`} className="shrink-0">
-                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                            View &amp; Register
-                          </Button>
+                          <Button variant="outline" size="sm">Register</Button>
                         </Link>
                       </div>
                     </Card>
@@ -666,17 +623,14 @@ export default async function DashboardPage() {
                   <h2 className="text-xl sm:text-2xl font-bold">
                     {hasPracticed ? 'Continue Practicing' : 'Keep Your Skills Sharp'}
                   </h2>
-                  <Link
-                    href="/practice"
-                    className="text-sm font-semibold text-primary-blue hover:text-accent-cyan transition-colors shrink-0"
-                  >
+                  <Link href="/practice" className="text-sm font-semibold text-primary-blue hover:text-accent-cyan transition-colors shrink-0">
                     All problems &rarr;
                   </Link>
                 </div>
                 <p className="text-sm text-text-secondary mb-5">
                   {hasPracticed
-                    ? 'Pick up where you left off, or try a new problem to push your best score higher.'
-                    : 'No deadline, no pressure — practice on real ML problems anytime and compare your score on the leaderboard.'}
+                    ? 'Pick up where you left off, or try a new problem to push your score higher.'
+                    : 'No deadline, no pressure — practice on real ML problems anytime.'}
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4">
                   {practiceProblems.map((problem: any) => (
@@ -691,17 +645,17 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* RIGHT SIDEBAR - Teams + activity */}
-          <aside className="lg:sticky lg:top-24 lg:self-start space-y-6">
+          {/* ── RIGHT SIDEBAR ── */}
+          <aside className="lg:sticky lg:top-24 lg:self-start space-y-5">
             <TeamsSidebar userTeams={userTeams} invitations={invitations || []} />
 
             {/* Recent activity */}
             {activityItems.length > 0 && (
-              <Card className="relative overflow-hidden p-5 sm:p-6">
-                <Activity className="absolute -bottom-6 -right-6 h-24 w-24 text-primary-blue/[0.07] rotate-[-10deg] pointer-events-none select-none [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.3))]" />
+              <Card className="relative overflow-hidden p-5">
+                <Activity className="absolute -bottom-6 -right-6 h-24 w-24 text-primary-blue/[0.06] rotate-[-10deg] pointer-events-none select-none" />
                 <div className="relative">
-                  <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-base font-bold mb-3">Recent Activity</h3>
+                  <div className="space-y-0.5">
                     {activityItems.map((item) => (
                       <Link
                         key={item.id}
@@ -709,14 +663,10 @@ export default async function DashboardPage() {
                         className="block -mx-2 px-2 py-2 rounded-lg hover:bg-bg-elevated/60 transition-colors"
                       >
                         <div className="flex items-baseline justify-between gap-3">
-                          <p className="text-sm font-semibold text-text-primary truncate">
-                            {item.title}
-                          </p>
+                          <p className="text-sm font-medium text-text-primary truncate">{item.title}</p>
                           <span className="font-mono text-xs shrink-0">
                             {item.score !== null ? (
-                              <span className="text-accent-cyan font-semibold">
-                                {item.score.toFixed(item.decimals)}
-                              </span>
+                              <span className="text-accent-cyan font-semibold">{item.score.toFixed(item.decimals)}</span>
                             ) : item.validation_status === 'invalid' ? (
                               <span className="text-error">Invalid</span>
                             ) : (
@@ -736,6 +686,39 @@ export default async function DashboardPage() {
           </aside>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Onboarding step component ──────────────────────────────────────────────
+function OnboardingStep({
+  done,
+  label,
+  href,
+  cta,
+}: {
+  done: boolean;
+  label: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2.5 min-w-0">
+        {done ? (
+          <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+        ) : (
+          <Circle className="w-4 h-4 text-text-tertiary shrink-0" />
+        )}
+        <span className={`text-sm font-medium ${done ? 'text-text-tertiary line-through' : 'text-text-primary'}`}>
+          {label}
+        </span>
+      </div>
+      {!done && (
+        <Link href={href} className="shrink-0">
+          <Button variant="outline" size="sm">{cta}</Button>
+        </Link>
+      )}
     </div>
   );
 }
