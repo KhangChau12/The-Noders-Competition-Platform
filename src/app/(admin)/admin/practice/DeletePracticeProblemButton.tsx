@@ -60,12 +60,12 @@ export default function DeletePracticeProblemButton({ problemId, problemTitle }:
           <div className="mb-4 p-3 bg-error/10 border border-error rounded text-sm text-error">{error}</div>
         )}
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting}>Cancel</Button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+          <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={isDeleting} className="w-full sm:w-auto">Cancel</Button>
           <Button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="bg-error hover:bg-error/90 border-error text-white"
+            className="w-full sm:w-auto bg-error hover:bg-error/90 border-error text-white"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>

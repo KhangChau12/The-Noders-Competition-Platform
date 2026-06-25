@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import EditPracticeProblemForm from './EditPracticeProblemForm';
 
@@ -13,12 +13,7 @@ export default async function EditPracticeProblemPage({ params }: Props) {
   const supabase = await createClient();
   const db = supabase as any;
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single() as { data: { role: string } | null };
-  if (profile?.role !== 'admin') redirect('/dashboard');
-
+  // Auth + admin role enforced by the admin layout.
   const { data: problem } = await db
     .from('practice_problems')
     .select('*')
@@ -37,13 +32,12 @@ export default async function EditPracticeProblemPage({ params }: Props) {
   const currentTagIds = (problemTags ?? []).map((pt: any) => pt.tag_id);
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
+    <div className="max-w-4xl mx-auto">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-1.5 gradient-text leading-tight">
             Edit Practice Problem
           </h1>
-          <p className="text-text-secondary line-clamp-1">{problem.title}</p>
+          <p className="text-sm sm:text-base text-text-secondary line-clamp-1">{problem.title}</p>
         </div>
 
         <EditPracticeProblemForm
@@ -51,7 +45,6 @@ export default async function EditPracticeProblemPage({ params }: Props) {
           allTags={allTags ?? []}
           currentTagIds={currentTagIds}
         />
-      </div>
     </div>
   );
 }

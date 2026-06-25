@@ -59,7 +59,7 @@ export default function EditPracticeProblemForm({ problem, allTags, currentTagId
 
       {/* Basic Info */}
       <Card className="p-5 sm:p-8 mb-6">
-        <h2 className="text-2xl font-bold mb-6">
+        <h2 className="text-lg sm:text-2xl font-bold mb-5 sm:mb-6">
           Basic Information
         </h2>
 
@@ -163,7 +163,7 @@ export default function EditPracticeProblemForm({ problem, allTags, currentTagId
 
       {/* Dataset & Settings */}
       <Card className="p-5 sm:p-8 mb-6">
-        <h2 className="text-2xl font-bold mb-6">
+        <h2 className="text-lg sm:text-2xl font-bold mb-5 sm:mb-6">
           Dataset & Submission Settings
         </h2>
 
@@ -223,11 +223,11 @@ export default function EditPracticeProblemForm({ problem, allTags, currentTagId
         </div>
       )}
 
-      <div className="flex gap-4">
+      <div className="flex flex-col-reverse sm:flex-row gap-3">
         <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} loading={isSubmitting} className="flex-1">
           {isSubmitting ? 'Saving...' : 'Save Changes'}
         </Button>
-        <Button type="button" variant="outline" size="lg" onClick={() => router.back()} disabled={isSubmitting}>
+        <Button type="button" variant="outline" size="lg" onClick={() => router.back()} disabled={isSubmitting} className="w-full sm:w-auto">
           Cancel
         </Button>
       </div>

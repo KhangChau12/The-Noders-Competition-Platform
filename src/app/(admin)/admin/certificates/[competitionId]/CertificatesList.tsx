@@ -93,7 +93,7 @@ export default function CertificatesList({ certificates: initialCertificates, co
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="hover:translate-y-0 hover:border-border-default overflow-hidden">
       <div className="p-4 border-b border-border-default bg-bg-elevated">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="relative flex-1">
@@ -103,7 +103,7 @@ export default function CertificatesList({ certificates: initialCertificates, co
               placeholder="Search by name or code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-bg-elevated border border-border-default rounded-lg text-sm focus:outline-none focus:border-primary-blue"
+              className="w-full pl-10 pr-4 min-h-[44px] py-2.5 bg-bg-elevated border border-border-default rounded-lg text-sm focus:outline-none focus:border-primary-blue"
             />
           </div>
           <div className="text-sm text-text-tertiary shrink-0">

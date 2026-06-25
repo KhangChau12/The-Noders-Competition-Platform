@@ -88,14 +88,14 @@ export default function DeleteCompetitionButton({
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleCancel}>
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+              <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button
                 variant="outline"
                 onClick={handleSecondConfirm}
-                className="bg-warning/10 hover:bg-warning/20 border-warning text-warning"
+                className="w-full sm:w-auto bg-warning/10 hover:bg-warning/20 border-warning text-warning"
               >
                 Yes, Continue
               </Button>
@@ -143,14 +143,14 @@ export default function DeleteCompetitionButton({
               </div>
             )}
 
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleCancel} disabled={isDeleting}>
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+              <Button variant="outline" onClick={handleCancel} disabled={isDeleting} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button
                 onClick={handleFinalDelete}
                 disabled={isDeleting}
-                className="bg-error hover:bg-error/90 border-error text-white"
+                className="w-full sm:w-auto bg-error hover:bg-error/90 border-error text-white"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Permanently'}
               </Button>
@@ -166,10 +166,10 @@ export default function DeleteCompetitionButton({
         variant="outline"
         size="sm"
         onClick={handleFirstConfirm}
-        className="text-error hover:bg-error/10 hover:border-error"
+        className="w-full text-error hover:bg-error/10 hover:border-error"
       >
         <Trash2 className="w-4 h-4 mr-2" />
-        Delete Competition
+        Delete
       </Button>
 
       {/* Render modals using portal to document.body */}

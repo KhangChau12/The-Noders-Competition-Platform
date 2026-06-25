@@ -1,9 +1,9 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Award,
   Plus,
@@ -13,22 +13,7 @@ import {
 export default async function AdminCertificatesPage() {
   const supabase = await createClient();
 
-  // Check authentication and admin role
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single() as { data: { role: string } | null };
-
-  if (profile?.role !== 'admin') {
-    redirect('/dashboard');
-  }
+  // Auth + role already enforced by the admin layout.
 
   // Fetch all competitions with certificate counts
   const { data: competitions } = await supabase
@@ -66,30 +51,24 @@ export default async function AdminCertificatesPage() {
   }));
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
-              Certificate Management
-            </h1>
-            <p className="text-text-secondary">
-              Upload and manage certificates for verification
-            </p>
-          </div>
-          <Link href="/admin/certificates/upload" className="shrink-0">
-            <Button variant="primary" size="lg" className="w-full sm:w-auto">
+    <>
+      <AdminPageHeader
+        title="Certificates"
+        description="Upload and manage certificates for verification"
+        action={
+          <Link href="/admin/certificates/upload">
+            <Button variant="primary">
               <Plus className="w-5 h-5 mr-2" />
               Upload Certificate
             </Button>
           </Link>
-        </div>
+        }
+      />
 
-        {/* Competitions List */}
-        <Card className="overflow-hidden">
+      {/* Competitions List */}
+      <Card className="hover:translate-y-0 hover:border-border-default overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
-            <h2 className="text-xl font-bold">
+            <h2 className="text-base sm:text-xl font-bold">
               Certificates by Competition
             </h2>
           </div>
@@ -139,7 +118,6 @@ export default async function AdminCertificatesPage() {
             </div>
           )}
         </Card>
-      </div>
-    </div>
+    </>
   );
 }

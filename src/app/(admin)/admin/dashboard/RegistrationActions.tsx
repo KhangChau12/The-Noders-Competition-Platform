@@ -14,63 +14,58 @@ export default function RegistrationActions({
 }: RegistrationActionsProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const handleApprove = async () => {
     setIsApproving(true);
-    setMessage('');
-
+    setError('');
     const result = await approveRegistration(registrationId);
-
-    if (result?.error) {
-      setMessage(result.error);
+    if ('error' in result && result.error) {
+      setError(result.error);
       setIsApproving(false);
-    } else if (result?.success) {
-      setMessage('Approved successfully');
-      // Keep loading state - page will revalidate
     }
+    // On success the page revalidates and this row disappears — keep loading state.
   };
 
   const handleReject = async () => {
     setIsRejecting(true);
-    setMessage('');
-
+    setError('');
     const result = await rejectRegistration(registrationId);
-
-    if (result?.error) {
-      setMessage(result.error);
+    if ('error' in result && result.error) {
+      setError(result.error);
       setIsRejecting(false);
-    } else if (result?.success) {
-      setMessage('Rejected successfully');
-      // Keep loading state - page will revalidate
     }
   };
 
+  const busy = isApproving || isRejecting;
+
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={handleApprove}
-        disabled={isApproving || isRejecting}
-        loading={isApproving}
-      >
-        <CheckCircle2 className="w-4 h-4 mr-1" />
-        Approve
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleReject}
-        disabled={isApproving || isRejecting}
-        loading={isRejecting}
-      >
-        <XCircle className="w-4 h-4 mr-1" />
-        Reject
-      </Button>
-      {message && (
-        <span className="text-sm text-text-secondary ml-2">{message}</span>
-      )}
+    <div className="flex flex-col items-stretch sm:items-end gap-1.5">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="success"
+          size="sm"
+          onClick={handleApprove}
+          disabled={busy}
+          loading={isApproving}
+          className="flex-1 sm:flex-none"
+        >
+          <CheckCircle2 className="w-4 h-4 mr-1.5" />
+          Approve
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={handleReject}
+          disabled={busy}
+          loading={isRejecting}
+          className="flex-1 sm:flex-none"
+        >
+          <XCircle className="w-4 h-4 mr-1.5" />
+          Reject
+        </Button>
+      </div>
+      {error && <span className="text-xs text-error">{error}</span>}
     </div>
   );
 }

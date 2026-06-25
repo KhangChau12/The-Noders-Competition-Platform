@@ -102,19 +102,18 @@ export default function CreateCompetitionPage() {
     (competitionType === '4-phase' ? privateTestDuration : 0);
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
+    <div className="max-w-4xl mx-auto">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-1.5 gradient-text leading-tight">
             Create Competition
           </h1>
-          <p className="text-text-secondary">Set up a new AI competition</p>
+          <p className="text-sm sm:text-base text-text-secondary">Set up a new AI competition</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
           <Card className="p-5 sm:p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold mb-5 sm:mb-6">
               Basic Information
             </h2>
 
@@ -263,7 +262,7 @@ export default function CreateCompetitionPage() {
 
           {/* Smart Timeline */}
           <Card className="p-5 sm:p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold mb-5 sm:mb-6">
               Competition Timeline
             </h2>
 
@@ -428,7 +427,7 @@ export default function CreateCompetitionPage() {
 
           {/* Dataset & Submission Rules */}
           <Card className="p-5 sm:p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-6">
+            <h2 className="text-lg sm:text-2xl font-bold mb-5 sm:mb-6">
               Dataset & Submission Settings
             </h2>
 
@@ -578,7 +577,7 @@ export default function CreateCompetitionPage() {
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
             <Button
               type="submit"
               variant="primary"
@@ -596,12 +595,12 @@ export default function CreateCompetitionPage() {
               size="lg"
               onClick={() => router.back()}
               disabled={isSubmitting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
           </div>
         </form>
-      </div>
     </div>
   );
 }

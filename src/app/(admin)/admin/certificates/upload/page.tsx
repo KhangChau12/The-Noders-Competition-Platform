@@ -12,21 +12,10 @@ interface Props {
 export default async function UploadCertificatePage({ searchParams }: Props) {
   const supabase = await createClient();
 
-  // Check authentication and admin role
+  // Admin role enforced by the admin layout. We still need the user id for the upload.
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) {
     redirect('/login');
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single() as { data: { role: string } | null };
-
-  if (profile?.role !== 'admin') {
-    redirect('/dashboard');
   }
 
   // Fetch all competitions
@@ -50,8 +39,7 @@ export default async function UploadCertificatePage({ searchParams }: Props) {
   const selectedCompetitionId = searchParams.competition || null;
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -62,15 +50,15 @@ export default async function UploadCertificatePage({ searchParams }: Props) {
             Back to Certificates
           </Link>
 
-          <h1 className="font-brand text-3xl sm:text-4xl mb-2 gradient-text leading-tight">
+          <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-1.5 gradient-text leading-tight">
             Upload Certificate
           </h1>
-          <p className="text-text-secondary">
+          <p className="text-sm sm:text-base text-text-secondary">
             Upload a PDF or image certificate and get a verification code
           </p>
         </div>
 
-        <Card className="p-6">
+        <Card className="hover:translate-y-0 hover:border-border-default p-5 sm:p-6">
           <UploadCertificateForm
             competitions={competitions || []}
             prefixMap={prefixMap}
@@ -78,7 +66,6 @@ export default async function UploadCertificatePage({ searchParams }: Props) {
             userId={user.id}
           />
         </Card>
-      </div>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -9,21 +8,15 @@ export const metadata = { title: 'Manage Practice Tags' };
 
 export default async function PracticeTagsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('users').select('role').eq('id', user.id).single() as { data: { role: string } | null };
-  if (profile?.role !== 'admin') redirect('/dashboard');
-
+  // Auth + admin role enforced by the admin layout.
   const { data: tags } = await (supabase as any)
     .from('practice_tags')
     .select('*')
     .order('name');
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <Link href="/admin/practice">
             <Button variant="outline" size="sm">
@@ -41,7 +34,6 @@ export default async function PracticeTagsPage() {
         </div>
 
         <TagManager tags={tags ?? []} />
-      </div>
     </div>
   );
 }

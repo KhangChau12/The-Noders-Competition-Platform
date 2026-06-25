@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
@@ -21,22 +21,7 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
   const { competitionId } = params;
   const supabase = await createClient();
 
-  // Check authentication and admin role
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single() as { data: { role: string } | null };
-
-  if (profile?.role !== 'admin') {
-    redirect('/dashboard');
-  }
+  // Auth + admin role enforced by the admin layout.
 
   // Fetch competition
   const { data: competition } = await supabase
@@ -73,26 +58,25 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
   const prefix = prefixData?.prefix || null;
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link
             href="/admin/certificates"
-            className="inline-flex items-center gap-2 text-text-tertiary hover:text-text-secondary mb-4"
+            className="inline-flex items-center gap-2 text-sm text-text-tertiary hover:text-text-secondary mb-4 min-h-[44px] sm:min-h-0 -mt-2 sm:mt-0"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Certificates
           </Link>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="font-brand text-2xl sm:text-3xl md:text-4xl mb-2 gradient-text leading-tight">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-2 gradient-text leading-tight break-words">
                 {competition.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-text-secondary">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm sm:text-base text-text-secondary">
                 <span className="flex items-center gap-2">
-                  <Award className="w-4 h-4" />
+                  <Award className="w-4 h-4 shrink-0" />
                   {certificates?.length || 0} certificates
                 </span>
                 {prefix && (
@@ -103,7 +87,7 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
               </div>
             </div>
             <Link href={`/admin/certificates/upload?competition=${competitionId}`} className="shrink-0">
-              <Button variant="primary" size="lg" className="w-full sm:w-auto">
+              <Button variant="primary" className="w-full sm:w-auto">
                 <Plus className="w-5 h-5 mr-2" />
                 Upload Certificate
               </Button>
@@ -112,7 +96,7 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
         </div>
 
         {/* Info Card */}
-        <Card className="p-4 mb-6 bg-bg-elevated/50">
+        <Card className="hover:translate-y-0 hover:border-border-default p-4 mb-6 bg-bg-elevated/50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
             <div className="flex items-center gap-2 text-text-tertiary">
               <ExternalLink className="w-4 h-4" />
@@ -132,7 +116,6 @@ export default async function CompetitionCertificatesPage({ params }: Props) {
           certificates={certificates || []}
           competitionId={competitionId}
         />
-      </div>
     </div>
   );
 }
