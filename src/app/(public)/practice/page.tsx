@@ -229,7 +229,7 @@ export default async function PracticePage({
               <a
                 key={value}
                 href={buildUrl({ difficulty: value || undefined })}
-                className={`flex-1 sm:flex-none text-center px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center justify-center flex-1 sm:flex-none min-h-[40px] sm:min-h-0 text-center px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedDifficulty === value
                     ? 'bg-primary-blue text-white'
                     : 'text-text-secondary hover:text-text-primary'

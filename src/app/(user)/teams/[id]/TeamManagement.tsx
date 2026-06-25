@@ -133,9 +133,9 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       )}
 
       {/* Add Member Card */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">
+      <Card className="p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="text-lg sm:text-xl font-bold">
             Add Team Members
           </h3>
           {!showAddMember && (
@@ -144,9 +144,10 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
               size="sm"
               onClick={() => setShowAddMember(true)}
               disabled={loading}
+              className="shrink-0"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Member
+              <UserPlus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Member</span>
             </Button>
           )}
         </div>
@@ -197,27 +198,27 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
             {members.map((member: any) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-4 bg-bg-elevated rounded-lg border border-border-default"
+                className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-bg-elevated rounded-lg border border-border-default"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                   <div className="w-10 h-10 bg-gradient-brand rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold">
                       {member.users.full_name?.[0]?.toUpperCase() ||
                         member.users.email[0].toUpperCase()}
                     </span>
                   </div>
-                  <div>
-                    <p className="font-semibold">{member.users.full_name || 'Anonymous'}</p>
-                    <div className="flex items-center gap-2 text-sm text-text-tertiary">
-                      <Mail className="w-3 h-3" />
-                      <span>{member.users.email}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold truncate">{member.users.full_name || 'Anonymous'}</p>
+                      {member.user_id === team.leader_id && (
+                        <Badge variant="yellow">Leader</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-text-tertiary min-w-0">
+                      <Mail className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{member.users.email}</span>
                     </div>
                   </div>
-                  {member.user_id === team.leader_id && (
-                    <Badge variant="yellow" className="ml-2">
-                      Leader
-                    </Badge>
-                  )}
                 </div>
 
                 {member.user_id !== team.leader_id && (
@@ -226,10 +227,10 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
                     size="sm"
                     onClick={() => handleRemoveMember(member.user_id)}
                     disabled={loading}
-                    className="text-error hover:text-error hover:border-error"
+                    className="shrink-0 text-error hover:text-error hover:border-error"
                   >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Remove
+                    <Trash2 className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Remove</span>
                   </Button>
                 )}
               </div>
@@ -239,9 +240,9 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       </Card>
 
       {/* Edit Team Card */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">
+      <Card className="p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="text-lg sm:text-xl font-bold">
             Edit Team Information
           </h3>
           {!showEditTeam && (
@@ -250,9 +251,10 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
               size="sm"
               onClick={() => setShowEditTeam(true)}
               disabled={loading}
+              className="shrink-0"
             >
-              <Edit3 className="w-4 h-4 mr-2" />
-              Edit
+              <Edit3 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Edit</span>
             </Button>
           )}
         </div>
@@ -321,10 +323,10 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
       </Card>
 
       {/* Delete Team Card */}
-      <Card className="p-6 border-error/30">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-bold text-error">
+      <Card className="p-5 sm:p-6 border-error/30">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-error">
               Danger Zone
             </h3>
             <p className="text-sm text-text-tertiary mt-1">
@@ -337,7 +339,7 @@ export default function TeamManagement({ team, members, isLeader }: TeamManageme
               size="sm"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
-              className="text-error hover:text-error hover:border-error"
+              className="w-full sm:w-auto shrink-0 text-error hover:text-error hover:border-error"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Team

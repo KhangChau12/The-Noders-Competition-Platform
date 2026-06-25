@@ -120,7 +120,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
       <div
         className={`
-          border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
+          border-2 border-dashed rounded-lg p-6 sm:p-8 md:p-12 text-center cursor-pointer
           transition-all duration-200 ease-out
           ${
             disabled
@@ -159,9 +159,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
         {selectedFile ? (
           <div className="space-y-3">
-            <div className="text-5xl">✓</div>
+            <div className="text-4xl sm:text-5xl">✓</div>
             <div>
-              <p className="text-lg font-semibold text-text-primary">
+              <p className="text-base sm:text-lg font-semibold text-text-primary break-words">
                 {selectedFile.name}
               </p>
               <p className="text-sm text-text-tertiary mt-1">
@@ -177,12 +177,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="text-5xl text-text-tertiary">📁</div>
+            <div className="text-4xl sm:text-5xl text-text-tertiary">📁</div>
             <div>
-              <p className="text-lg font-semibold text-text-primary">
-                Drag & drop {accept} file here
+              <p className="text-base sm:text-lg font-semibold text-text-primary">
+                <span className="hidden sm:inline">Drag &amp; drop {accept} file here</span>
+                <span className="sm:hidden">Tap to upload {accept} file</span>
               </p>
-              <p className="text-sm text-text-tertiary mt-1">
+              <p className="hidden sm:block text-sm text-text-tertiary mt-1">
                 or click to browse
               </p>
             </div>

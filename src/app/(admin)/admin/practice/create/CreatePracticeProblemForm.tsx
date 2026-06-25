@@ -46,7 +46,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
   return (
     <form onSubmit={handleSubmit}>
       {/* Basic Info */}
-      <Card className="p-8 mb-6">
+      <Card className="p-5 sm:p-8 mb-6">
         <h2 className="text-2xl font-bold mb-6">
           Basic Information
         </h2>
@@ -153,7 +153,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
       </Card>
 
       {/* Dataset & Settings */}
-      <Card className="p-8 mb-6">
+      <Card className="p-5 sm:p-8 mb-6">
         <h2 className="text-2xl font-bold mb-6">
           Dataset & Submission Settings
         </h2>
@@ -197,7 +197,7 @@ export default function CreatePracticeProblemForm({ tags }: Props) {
             <h3 className="text-lg font-semibold mb-4">
               Submission Limits
             </h3>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div>
                 <label htmlFor="dailySubmissionLimit" className="block text-sm font-medium mb-2">Daily Limit *</label>
                 <Input id="dailySubmissionLimit" name="dailySubmissionLimit" type="number" defaultValue={15} min="1" max="100" required />

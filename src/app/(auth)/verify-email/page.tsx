@@ -11,7 +11,7 @@ export default function VerifyEmailPage({
   const email = searchParams.email || '';
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
       <div className="max-w-2xl w-full">
         <Card className="p-6 sm:p-8 md:p-12 text-center relative overflow-hidden">
           {/* Decorative gradient */}
@@ -29,11 +29,11 @@ export default function VerifyEmailPage({
           </h1>
 
           {/* Message */}
-          <div className="text-text-secondary text-lg mb-6 max-w-xl mx-auto leading-relaxed">
+          <div className="text-text-secondary text-base sm:text-lg mb-6 max-w-xl mx-auto leading-relaxed">
             We've sent a confirmation email to
             {email && (
               <div className="mt-2 mb-2">
-                <span className="inline-block px-4 py-2 bg-bg-elevated rounded-lg font-mono text-primary-blue font-semibold">
+                <span className="inline-block px-4 py-2 bg-bg-elevated rounded-lg font-mono text-primary-blue font-semibold break-all max-w-full">
                   {email}
                 </span>
               </div>

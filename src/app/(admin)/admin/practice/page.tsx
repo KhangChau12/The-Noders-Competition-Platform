@@ -95,8 +95,8 @@ export default async function AdminPracticePage() {
                   <div key={problem.id} className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-3 flex-wrap">
-                          <h3 className="text-xl font-bold">{problem.title}</h3>
+                        <div className="flex items-center gap-2 sm:gap-3 mb-3 flex-wrap">
+                          <h3 className="text-lg sm:text-xl font-bold break-words">{problem.title}</h3>
                           {diffInfo && (
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${diffInfo.bgColor} ${diffInfo.color}`}>
                               {diffInfo.label}
@@ -109,7 +109,7 @@ export default async function AdminPracticePage() {
 
                         <p className="text-text-secondary text-sm mb-4 line-clamp-2">{problem.description}</p>
 
-                        <div className="flex flex-wrap gap-6 text-sm">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 sm:gap-6 text-sm">
                           <span className="text-text-secondary">
                             <strong className="text-text-primary">{stats.participant_count}</strong> participants
                           </span>

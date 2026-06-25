@@ -198,8 +198,8 @@ export default async function AdminDashboardPage() {
                       <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">
                         Competition
                       </th>
-                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">Type</th>
-                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">
+                      <th className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">Type</th>
+                      <th className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">
                         Registered At
                       </th>
                       <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold">Actions</th>
@@ -223,12 +223,12 @@ export default async function AdminDashboardPage() {
                             {registration.competition?.title || 'Unknown'}
                           </div>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4">
                           <Badge variant="tech">
                             {registration.competition?.participation_type || 'individual'}
                           </Badge>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm text-text-secondary">
+                        <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 text-sm text-text-secondary">
                           {new Date(registration.registered_at).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',

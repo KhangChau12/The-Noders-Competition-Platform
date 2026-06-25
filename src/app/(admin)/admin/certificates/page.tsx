@@ -103,11 +103,11 @@ export default async function AdminCertificatesPage() {
                   className="block"
                 >
                   <div className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold">{competition.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                        <h3 className="text-base sm:text-lg font-semibold break-words">{competition.title}</h3>
                         {competition.prefix && (
-                          <Badge variant="tech" className="font-mono">
+                          <Badge variant="tech" className="font-mono shrink-0">
                             {competition.prefix}
                           </Badge>
                         )}

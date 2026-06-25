@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
   if (isEmailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md p-8 text-center">
+        <Card className="w-full max-w-md p-6 sm:p-8 text-center">
           <div className="text-success text-5xl mb-4">✓</div>
           <h1 className="text-2xl font-bold mb-2">Check Your Email</h1>
           <p className="text-text-secondary mb-6">
@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md p-8">
+      <Card className="w-full max-w-md p-6 sm:p-8">
         <div className="text-center mb-8">
           <h1 className="font-brand text-3xl sm:text-4xl mb-2 gradient-text leading-tight">
             Reset Password

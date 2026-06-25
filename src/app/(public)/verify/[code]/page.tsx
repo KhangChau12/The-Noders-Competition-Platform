@@ -58,7 +58,7 @@ export default async function VerifyResultPage({ params }: Props) {
           <p className="text-text-secondary mb-6">
             No certificate was found with the verification code:
           </p>
-          <code className="block text-xl font-mono text-text-tertiary mb-8 p-4 bg-bg-elevated rounded-lg">
+          <code className="block text-lg sm:text-xl font-mono text-text-tertiary mb-8 p-4 bg-bg-elevated rounded-lg break-all">
             {code.toUpperCase()}
           </code>
           <p className="text-sm text-text-tertiary mb-6">
@@ -118,13 +118,12 @@ export default async function VerifyResultPage({ params }: Props) {
                 {isPdf && fileUrl && (
                   <iframe
                     src={`${fileUrl}#toolbar=0&navpanes=0`}
-                    className="w-full border-0"
-                    style={{ height: '600px' }}
+                    className="w-full border-0 h-[60vh] min-h-[360px] sm:h-[600px]"
                     title="Certificate PDF"
                   />
                 )}
                 {isImage && fileUrl && (
-                  <div className="p-4 flex items-center justify-center" style={{ minHeight: '400px' }}>
+                  <div className="p-3 sm:p-4 flex items-center justify-center min-h-[260px] sm:min-h-[400px]">
                     <img
                       src={fileUrl}
                       alt={`Certificate for ${certificate.recipient_name}`}

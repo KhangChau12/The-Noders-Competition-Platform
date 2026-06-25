@@ -62,7 +62,7 @@ export default function SignupPage() {
           aria-hidden="true"
         />
         <div className="relative text-center mb-8">
-          <h1 className="font-brand text-3xl mb-3 gradient-text">
+          <h1 className="font-brand text-3xl sm:text-4xl mb-3 gradient-text leading-tight">
             Join Now
           </h1>
           <p className="text-text-secondary">

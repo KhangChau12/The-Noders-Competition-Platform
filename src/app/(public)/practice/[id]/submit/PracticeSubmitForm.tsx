@@ -107,28 +107,33 @@ export default function PracticeSubmitForm({ problemId, maxFileSizeMb, dailySubm
           />
 
           {selectedFile ? (
-            <div className="flex items-center justify-center gap-4">
-              <FileText className="w-12 h-12 text-success" />
-              <div className="text-left">
-                <div className="font-medium">{selectedFile.name}</div>
+            <div className="flex items-center justify-center gap-3 sm:gap-4 min-w-0">
+              <FileText className="w-10 h-10 sm:w-12 sm:h-12 text-success shrink-0" />
+              <div className="text-left min-w-0">
+                <div className="font-medium truncate">{selectedFile.name}</div>
                 <div className="text-sm text-text-tertiary">{(selectedFile.size / 1024).toFixed(2)} KB</div>
               </div>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setSubmitError(''); }}
-                className="p-2 hover:bg-bg-elevated rounded-lg transition-colors"
+                className="flex items-center justify-center w-11 h-11 shrink-0 hover:bg-bg-elevated rounded-lg transition-colors"
+                aria-label="Remove file"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           ) : (
             <>
-              <Upload className="w-16 h-16 mx-auto mb-4 text-text-tertiary" />
-              <p className="text-lg font-medium mb-2">
-                {canSubmit ? 'Drag and drop your CSV file here' : 'Daily submission limit reached'}
+              <Upload className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-text-tertiary" />
+              <p className="text-base sm:text-lg font-medium mb-2">
+                {canSubmit
+                  ? (<><span className="hidden sm:inline">Drag and drop your CSV file here</span><span className="sm:hidden">Tap to upload your CSV file</span></>)
+                  : 'Daily submission limit reached'}
               </p>
               <p className="text-sm text-text-tertiary">
-                {canSubmit ? 'or click to browse' : 'Come back tomorrow!'}
+                {canSubmit
+                  ? (<><span className="hidden sm:inline">or click to browse</span><span className="sm:hidden">CSV format only</span></>)
+                  : 'Come back tomorrow!'}
               </p>
             </>
           )}

@@ -215,7 +215,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Phase</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold">
                       Submitted At
                     </th>
                   </tr>
@@ -258,7 +258,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
                           </Badge>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-text-secondary">
+                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-text-secondary">
                         {new Date(submission.submitted_at).toLocaleString('en-US', {
                           year: 'numeric',
                           month: 'short',

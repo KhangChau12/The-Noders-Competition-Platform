@@ -56,7 +56,7 @@ export default function VerifyPage() {
                   setError(null);
                 }}
                 placeholder="e.g., PAIC-2026-X7K9"
-                className="w-full px-4 py-4 bg-bg-elevated border border-border-default rounded-lg text-center text-xl font-mono uppercase tracking-wider focus:outline-none focus:border-primary-blue"
+                className="w-full px-3 sm:px-4 py-4 bg-bg-elevated border border-border-default rounded-lg text-center text-lg sm:text-xl font-mono uppercase tracking-wider focus:outline-none focus:border-primary-blue"
                 autoFocus
               />
               {error && (

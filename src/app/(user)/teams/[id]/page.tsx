@@ -151,20 +151,20 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
                 {pendingInvites.map((invite: any) => (
                   <div
                     key={invite.id}
-                    className="flex items-center justify-between p-3 bg-warning/5 rounded-lg border border-warning/20"
+                    className="flex items-center justify-between gap-3 p-3 bg-warning/5 rounded-lg border border-warning/20"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-brand rounded-full flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 bg-gradient-brand rounded-full flex items-center justify-center shrink-0">
                         <span className="text-white text-sm font-bold">
                           {invite.users.full_name?.[0]?.toUpperCase() || invite.users.email[0].toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold">{invite.users.full_name || 'Anonymous'}</p>
-                        <p className="text-xs text-text-tertiary">{invite.users.email}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{invite.users.full_name || 'Anonymous'}</p>
+                        <p className="text-xs text-text-tertiary truncate">{invite.users.email}</p>
                       </div>
                     </div>
-                    <Badge variant="yellow">Pending</Badge>
+                    <Badge variant="yellow" className="shrink-0">Pending</Badge>
                   </div>
                 ))}
               </div>

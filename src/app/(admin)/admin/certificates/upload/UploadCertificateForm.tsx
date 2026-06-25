@@ -215,13 +215,14 @@ export default function UploadCertificateForm({
           Verify link: <code className="text-accent-cyan">/verify/{success.code}</code>
         </div>
 
-        <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={handleUploadAnother}>
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-center">
+          <Button variant="outline" onClick={handleUploadAnother} className="w-full sm:w-auto">
             Upload Another
           </Button>
           <Button
             variant="primary"
             onClick={() => router.push(`/admin/certificates/${competitionId}`)}
+            className="w-full sm:w-auto"
           >
             View All Certificates
           </Button>

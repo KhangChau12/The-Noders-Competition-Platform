@@ -23,9 +23,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       success: 'bg-success text-white hover:bg-success/90 hover:shadow-lg hover:shadow-success/20',
     };
 
+    // Mobile gets a 44px min touch target; sm:min-h-0 restores the compact
+    // desktop sizing so existing desktop layouts are unaffected.
     const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-5 py-2.5 text-base',
+      sm: 'min-h-[44px] sm:min-h-0 px-3 py-2.5 sm:py-1.5 text-sm',
+      md: 'min-h-[44px] sm:min-h-0 px-5 py-2.5 text-base',
       lg: 'px-8 py-3.5 text-lg',
     };
 

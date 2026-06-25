@@ -113,7 +113,7 @@ export default function CreateCompetitionPage() {
 
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
-          <Card className="p-8 mb-6">
+          <Card className="p-5 sm:p-8 mb-6">
             <h2 className="text-2xl font-bold mb-6">
               Basic Information
             </h2>
@@ -262,7 +262,7 @@ export default function CreateCompetitionPage() {
           </Card>
 
           {/* Smart Timeline */}
-          <Card className="p-8 mb-6">
+          <Card className="p-5 sm:p-8 mb-6">
             <h2 className="text-2xl font-bold mb-6">
               Competition Timeline
             </h2>
@@ -290,7 +290,7 @@ export default function CreateCompetitionPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-text-secondary">Phase Durations</h3>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <div>
                     <label htmlFor="registrationDuration" className="block text-sm font-medium mb-2">
                       Registration Phase *
@@ -366,10 +366,10 @@ export default function CreateCompetitionPage() {
                     <div className="relative h-12 bg-bg-elevated rounded-lg overflow-hidden">
                       {/* Registration phase */}
                       <div
-                        className="absolute top-0 left-0 h-full bg-phase-registration/40 border-r-2 border-phase-registration flex items-center justify-center"
+                        className="absolute top-0 left-0 h-full bg-phase-registration/40 border-r-2 border-phase-registration flex items-center justify-center overflow-hidden"
                         style={{ width: `${(registrationDuration / totalDays) * 100}%` }}
                       >
-                        <span className="text-xs font-semibold text-white">Registration</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-white truncate px-1">Registration</span>
                       </div>
 
                       {/* Public test phase */}
@@ -380,19 +380,19 @@ export default function CreateCompetitionPage() {
                           width: `${(publicTestDuration / totalDays) * 100}%`,
                         }}
                       >
-                        <span className="text-xs font-semibold text-white">Public Test</span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-white truncate px-1">Public Test</span>
                       </div>
 
                       {/* Private test phase (4-phase only) */}
                       {competitionType === '4-phase' && (
                         <div
-                          className="absolute top-0 h-full bg-accent-cyan/40 border-r-2 border-accent-cyan flex items-center justify-center"
+                          className="absolute top-0 h-full bg-accent-cyan/40 border-r-2 border-accent-cyan flex items-center justify-center overflow-hidden"
                           style={{
                             left: `${((registrationDuration + publicTestDuration) / totalDays) * 100}%`,
                             width: `${(privateTestDuration / totalDays) * 100}%`,
                           }}
                         >
-                          <span className="text-xs font-semibold text-white">Private Test</span>
+                          <span className="text-[10px] sm:text-xs font-semibold text-white truncate px-1">Private Test</span>
                         </div>
                       )}
                     </div>
@@ -427,7 +427,7 @@ export default function CreateCompetitionPage() {
           </Card>
 
           {/* Dataset & Submission Rules */}
-          <Card className="p-8 mb-6">
+          <Card className="p-5 sm:p-8 mb-6">
             <h2 className="text-2xl font-bold mb-6">
               Dataset & Submission Settings
             </h2>

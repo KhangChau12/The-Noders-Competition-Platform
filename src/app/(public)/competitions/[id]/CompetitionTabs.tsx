@@ -919,15 +919,15 @@ function ScoreDistributionChart({
       <div className="mt-4 pt-4 border-t border-border-default">
         {isLoggedIn && isRegistered ? (
           userBestScore !== undefined ? (
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-              <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-warning shrink-0" />
-                <div>
+            <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Trophy className="hidden xs:block w-5 h-5 text-warning shrink-0" />
+                <div className="min-w-0">
                   <div className="text-xs text-text-tertiary">Your Best Score</div>
-                  <div className="font-mono font-bold text-warning">{userBestScore.toFixed(decimals)}</div>
+                  <div className="font-mono font-bold text-warning truncate">{userBestScore.toFixed(decimals)}</div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-center sm:text-right">
                 <div className="text-xs text-text-tertiary">Your Rank</div>
                 <div className="font-bold text-text-primary">
                   #{userRank} <span className="text-text-tertiary font-normal">/ {totalParticipants}</span>
@@ -937,7 +937,7 @@ function ScoreDistributionChart({
                 <div className="text-xs text-text-tertiary">
                   {higherIsBetter ? 'Behind Leader' : 'Above Leader'}
                 </div>
-                <div className="font-mono text-sm text-text-secondary">
+                <div className="font-mono text-sm text-text-secondary truncate">
                   {higherIsBetter
                     ? (sortedScores[sortedScores.length - 1] - userBestScore).toFixed(decimals)
                     : (userBestScore - sortedScores[0]).toFixed(decimals)
@@ -1128,15 +1128,15 @@ function FinalScoreDistributionChart({
       <div className="mt-4 pt-4 border-t border-border-default">
         {isLoggedIn && isRegistered ? (
           userAverage !== undefined && userAverage !== null ? (
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-              <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-warning shrink-0" />
-                <div>
+            <div className="flex items-center justify-between gap-x-4 gap-y-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Trophy className="hidden xs:block w-5 h-5 text-warning shrink-0" />
+                <div className="min-w-0">
                   <div className="text-xs text-text-tertiary">Your Final Average</div>
-                  <div className="font-mono font-bold text-warning">{userAverage.toFixed(decimals)}</div>
+                  <div className="font-mono font-bold text-warning truncate">{userAverage.toFixed(decimals)}</div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <div className="text-xs text-text-tertiary">Final Rank</div>
                 <div className="font-bold text-text-primary">
                   #{userRank} <span className="text-text-tertiary font-normal">/ {entriesWithAverage.length}</span>

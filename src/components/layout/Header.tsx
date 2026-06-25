@@ -124,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
         {/* Mobile Menu Button - Absolute Right */}
         <button
-          className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors absolute right-4 top-1/2 -translate-y-1/2"
+          className="lg:hidden flex items-center justify-center w-11 h-11 -mr-2 text-text-secondary hover:text-text-primary transition-colors absolute right-4 top-1/2 -translate-y-1/2"
           onClick={() => setShowMobileMenu(true)}
           aria-label="Open menu"
         >

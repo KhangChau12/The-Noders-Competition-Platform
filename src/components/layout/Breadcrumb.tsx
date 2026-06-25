@@ -22,10 +22,10 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
   const breadcrumbItems = items || generateBreadcrumbs(pathname);
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center gap-2 text-sm', className)}>
+    <nav aria-label="Breadcrumb" className={cn('flex items-center flex-wrap gap-x-1 gap-y-1 sm:gap-x-2 text-xs sm:text-sm', className)}>
       <Link
         href="/"
-        className="flex items-center gap-1 text-text-tertiary hover:text-primary-blue transition-colors"
+        className="flex items-center gap-1 text-text-tertiary hover:text-primary-blue transition-colors shrink-0"
         aria-label="Home"
       >
         <Home className="w-4 h-4" />
@@ -35,21 +35,23 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         const isLast = index === breadcrumbItems.length - 1;
 
         return (
-          <div key={index} className="flex items-center gap-2">
-            <ChevronRight className="w-4 h-4 text-text-tertiary" />
+          <div key={index} className="flex items-center gap-x-1 sm:gap-x-2 min-w-0">
+            <ChevronRight className="w-4 h-4 text-text-tertiary shrink-0" />
             {item.href && !isLast ? (
               <Link
                 href={item.href}
-                className="text-text-tertiary hover:text-primary-blue transition-colors"
+                className="text-text-tertiary hover:text-primary-blue transition-colors shrink-0"
               >
                 {item.label}
               </Link>
             ) : (
               <span
                 className={cn(
+                  'truncate max-w-[55vw] sm:max-w-none',
                   isLast ? 'text-text-primary font-semibold' : 'text-text-tertiary'
                 )}
                 aria-current={isLast ? 'page' : undefined}
+                title={item.label}
               >
                 {item.label}
               </span>

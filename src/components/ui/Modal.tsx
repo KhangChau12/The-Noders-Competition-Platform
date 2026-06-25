@@ -60,16 +60,16 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-5 border-b border-border-default">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-border-default">
             <h2
               id="modal-title"
-              className="text-xl font-semibold text-text-primary"
+              className="text-lg sm:text-xl font-semibold text-text-primary"
             >
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="text-text-tertiary hover:text-text-primary transition-colors duration-200 text-3xl leading-none w-8 h-8 flex items-center justify-center"
+              className="text-text-tertiary hover:text-text-primary transition-colors duration-200 text-3xl leading-none w-11 h-11 -mr-2 flex items-center justify-center shrink-0"
               aria-label="Close modal"
             >
               &times;
@@ -78,13 +78,13 @@ const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Body */}
-        <div className="px-6 py-5 overflow-y-auto flex-1">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto flex-1">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-border-default">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t border-border-default">
             {footer}
           </div>
         )}

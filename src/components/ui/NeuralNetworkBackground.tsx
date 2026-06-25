@@ -265,7 +265,7 @@ export default function NeuralNetworkBackground() {
         nodes={leftNodes}
         connections={leftConnections}
         particleLines={leftParticleLines}
-        className="block md:hidden left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] h-[420px]"
+        className="block md:hidden left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] max-w-full h-[420px]"
         mobile
       />
 

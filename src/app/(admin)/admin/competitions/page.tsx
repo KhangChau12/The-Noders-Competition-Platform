@@ -183,8 +183,8 @@ export default async function AdminCompetitionsPage() {
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
                     <div className="flex-1 min-w-0">
                       {/* Title & Badges */}
-                      <div className="flex items-center gap-3 mb-3 flex-wrap">
-                        <h3 className="text-xl font-bold">{competition.title}</h3>
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 flex-wrap">
+                        <h3 className="text-lg sm:text-xl font-bold break-words">{competition.title}</h3>
                         <Badge variant={getPhaseVariant(competition.phase)}>
                           {competition.phase.replace('_', ' ')}
                         </Badge>
@@ -200,7 +200,7 @@ export default async function AdminCompetitionsPage() {
                       </p>
 
                       {/* Stats */}
-                      <div className="flex flex-wrap gap-6 text-sm">
+                      <div className="flex flex-wrap gap-x-4 gap-y-2 sm:gap-6 text-sm">
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-text-tertiary" />
                           <span className="text-text-secondary">

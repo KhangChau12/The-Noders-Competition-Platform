@@ -63,11 +63,11 @@ export default function TagManager({ tags }: Props) {
   return (
     <div className="space-y-6">
       {/* Create new tag */}
-      <Card className="p-6">
+      <Card className="p-5 sm:p-6">
         <h2 className="text-lg font-semibold mb-4">
           Add New Tag
         </h2>
-        <form onSubmit={handleCreate} className="flex gap-3">
+        <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-3">
           <Input
             placeholder="e.g. CV/Classification"
             value={newName}
@@ -75,7 +75,7 @@ export default function TagManager({ tags }: Props) {
             className="flex-1"
             disabled={isPending}
           />
-          <Button type="submit" variant="primary" disabled={isPending || !newName.trim()}>
+          <Button type="submit" variant="primary" disabled={isPending || !newName.trim()} className="w-full sm:w-auto shrink-0">
             <Plus className="w-4 h-4 mr-2" />
             Add Tag
           </Button>
@@ -85,7 +85,7 @@ export default function TagManager({ tags }: Props) {
 
       {/* Existing tags */}
       <Card className="overflow-hidden">
-        <div className="p-6 border-b border-border-default bg-bg-elevated">
+        <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
           <h2 className="text-lg font-semibold">
             All Tags ({tags.length})
           </h2>
@@ -99,7 +99,7 @@ export default function TagManager({ tags }: Props) {
         ) : (
           <div className="divide-y divide-border-default">
             {tags.map((tag) => (
-              <div key={tag.id} className="flex items-center justify-between px-6 py-4 hover:bg-bg-elevated/50">
+              <div key={tag.id} className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-bg-elevated/50">
                 {editingId === tag.id ? (
                   <div className="flex items-center gap-3 flex-1 mr-4">
                     <Input
@@ -127,14 +127,14 @@ export default function TagManager({ tags }: Props) {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <Badge variant="tech">{tag.name}</Badge>
-                    <span className="text-xs text-text-tertiary font-mono">{tag.slug}</span>
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <Badge variant="tech" className="shrink-0">{tag.name}</Badge>
+                    <span className="text-xs text-text-tertiary font-mono truncate">{tag.slug}</span>
                   </div>
                 )}
 
                 {editingId !== tag.id && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button
                       variant="outline"
                       size="sm"

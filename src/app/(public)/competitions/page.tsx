@@ -365,8 +365,8 @@ export default function CompetitionsPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Status segmented control */}
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3 min-w-0">
+            {/* Status segmented control — full width on small phones, inline from xs */}
             <div className="flex flex-1 sm:flex-none rounded-lg border border-border-default bg-bg-surface p-1 overflow-x-auto scrollbar-none min-w-0">
               {[
                 { value: 'all', label: 'All' },
@@ -377,7 +377,7 @@ export default function CompetitionsPage() {
                 <button
                   key={option.value}
                   onClick={() => setFilterStatus(option.value as FilterStatus)}
-                  className={`flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
+                  className={`flex-1 sm:flex-none min-h-[40px] sm:min-h-0 px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
                     filterStatus === option.value
                       ? 'bg-primary-blue text-white'
                       : 'text-text-secondary hover:text-text-primary'
@@ -394,7 +394,7 @@ export default function CompetitionsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-2 sm:px-3 py-2.5 sm:py-2 max-w-[110px] sm:max-w-none bg-bg-surface border border-border-default rounded-lg text-[13px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
+                className="w-full xs:w-auto min-h-[44px] sm:min-h-0 px-3 py-2.5 sm:py-2 xs:max-w-[140px] sm:max-w-none bg-bg-surface border border-border-default rounded-lg text-[13px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
                 aria-label="Sort competitions"
               >
                 <option value="latest">Latest</option>
