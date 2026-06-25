@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import PracticeTabs from './PracticeTabs';
 import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO } from '@/lib/constants';
 import type { PracticeTag } from '@/types/database.types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Target, Users, Zap } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -73,9 +72,9 @@ export default async function PracticeProblemPage({ params }: Props) {
 
   return (
     <div className="min-h-screen">
-      {/* ── Header area ── */}
-      <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-5 sm:pb-6">
-        <div className="max-w-6xl mx-auto">
+      {/* ── Hero header ── */}
+      <div className="px-4 sm:px-6 pt-8 pb-6 sm:pt-10 sm:pb-8">
+        <div className="max-w-7xl mx-auto">
           {/* Breadcrumb */}
           <Link
             href="/practice"
@@ -85,20 +84,17 @@ export default async function PracticeProblemPage({ params }: Props) {
             Practice
           </Link>
 
-          {/* Difficulty + meta badges */}
+          {/* Difficulty + tags */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {diffInfo && (
               <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${diffInfo.bgColor} ${diffInfo.color} ${diffInfo.borderColor}`}>
                 {diffInfo.label}
               </span>
             )}
-            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
-              {metricInfo?.name ?? problem.scoring_metric}
-            </span>
-            {tags.length > 0 && tags.map((tag) => (
+            {tags.map((tag) => (
               <span
                 key={tag.id}
-                className="text-xs px-2 py-0.5 rounded-full bg-bg-elevated border border-border-default text-text-tertiary"
+                className="text-xs px-2.5 py-0.5 rounded-full bg-bg-elevated border border-border-default text-text-tertiary"
               >
                 {tag.name}
               </span>
@@ -106,67 +102,52 @@ export default async function PracticeProblemPage({ params }: Props) {
           </div>
 
           {/* Title */}
-          <h1 className="font-brand text-2xl sm:text-3xl md:text-4xl gradient-text leading-tight mb-3">
+          <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl mb-3 gradient-text leading-tight">
             {problem.title}
           </h1>
 
           {/* Description */}
-          <p className="text-text-secondary text-sm sm:text-base leading-relaxed max-w-3xl mb-5">
+          <p className="text-sm sm:text-base text-text-secondary mb-5 max-w-3xl leading-relaxed">
             {problem.description}
           </p>
 
-          {/* Personal stats strip (if user has submitted) */}
-          {user && myBestScore && (
-            <div className="flex flex-wrap items-center gap-3 sm:gap-6 py-3 px-4 bg-bg-surface rounded-xl border border-border-default/60 mb-2">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-text-disabled">Best Score</p>
-                <p className="font-mono font-bold text-primary-blue text-base leading-tight">
-                  {myBestScore.score.toFixed(metricInfo?.decimals ?? 4)}
-                </p>
-              </div>
-              {myRank && myRank > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-text-disabled">Your Rank</p>
-                  <p className="font-bold text-text-primary text-base leading-tight">
-                    #{myRank}
-                    <span className="text-text-tertiary font-normal text-xs ml-1">/ {leaderboard.length}</span>
-                  </p>
-                </div>
-              )}
-              <div className="ml-auto">
-                <Link href={`/practice/${id}/submit`}>
-                  <Button variant="primary" size="sm">Submit Again</Button>
-                </Link>
-              </div>
+          {/* Quick stats row */}
+          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-none pb-1 text-sm text-text-secondary">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Target className="w-4 h-4 text-text-tertiary" />
+              <span>
+                {metricInfo?.name ?? problem.scoring_metric}
+                {metricInfo?.higher_is_better === false ? ' ↓' : ' ↑'}
+              </span>
             </div>
-          )}
-
-          {/* Submit CTA for unattempted / guests */}
-          {(!user || !myBestScore) && (
-            <div className="flex justify-start">
-              {user ? (
-                <Link href={`/practice/${id}/submit`}>
-                  <Button variant="primary" size="sm">Submit Solution</Button>
-                </Link>
-              ) : (
-                <Link href="/login">
-                  <Button variant="primary" size="sm">Log in to Submit</Button>
-                </Link>
-              )}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Users className="w-4 h-4 text-text-tertiary" />
+              <span>{leaderboard.length} participants</span>
             </div>
-          )}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Zap className="w-4 h-4 text-text-tertiary" />
+              {/* Split into two tokens so they stay together but don't form one very long string */}
+              <span>{problem.daily_submission_limit}/day</span>
+              <span className="text-text-disabled">·</span>
+              <span>
+                {problem.total_submission_limit === 0 ? 'Unlimited' : `${problem.total_submission_limit} total`}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Tab content ── */}
+      {/* ── Main body ── */}
       <div className="px-4 sm:px-6 pb-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <PracticeTabs
             problem={{ ...problem, tags }}
             leaderboard={leaderboard}
             mySubmissions={mySubmissions}
             currentUserId={user?.id ?? null}
             isAuthenticated={!!user}
+            myBestScore={myBestScore ?? null}
+            myRank={myRank}
           />
         </div>
       </div>
