@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import PracticeTabs from './PracticeTabs';
 import { StatRun, type StatItem } from '@/components/ui/StatRun';
-import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import type { PracticeTag } from '@/types/database.types';
 import { ArrowLeft } from 'lucide-react';
 
@@ -87,7 +87,7 @@ export default async function PracticeProblemPage({ params }: Props) {
   const heroStats: StatItem[] = [
     {
       label: 'Scoring metric',
-      value: `${metricInfo?.name ?? problem.scoring_metric} ${metricInfo?.higher_is_better === false ? '↓' : '↑'}`,
+      value: `${metricShortName(problem.scoring_metric)} ${metricArrow(problem.scoring_metric)}`,
       tone: 'blue',
     },
     { label: 'Participants', value: String(leaderboard.length) },
@@ -142,7 +142,7 @@ export default async function PracticeProblemPage({ params }: Props) {
         </h1>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] line-clamp-3 mb-4">
+        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] mb-4">
           {problem.description}
         </p>
 

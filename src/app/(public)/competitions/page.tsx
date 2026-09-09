@@ -12,7 +12,7 @@ import {
   CompetitionCardSkeleton,
   SectionHeadingSkeleton,
 } from '@/components/ui/PageSkeletons';
-import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import { getCompetitionPhase, getCountdown, type CompetitionPhase } from '@/lib/utils/competition';
 
 type Competition = {
@@ -541,14 +541,6 @@ function registrationFact(
   }
 }
 
-const metricArrow = (metric: string) =>
-  SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false
-    ? '↓'
-    : '↑';
-
-const metricName = (metric: string) =>
-  SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.name ??
-  metric.replace('_', ' ');
 
 // Eyebrow row: phase word + sentence-case facts.
 function CardEyebrow({
@@ -563,7 +555,7 @@ function CardEyebrow({
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 text-xs">
       <PhaseWord phase={competition.phase} />
       <span className="font-semibold text-text-tertiary">
-        {metricName(competition.scoring_metric)} {metricArrow(competition.scoring_metric)}
+        {metricShortName(competition.scoring_metric)} {metricArrow(competition.scoring_metric)}
       </span>
       {(competition.participation_type === 'team' || competition.competition_type === '4-phase') && (
         <span className="font-semibold text-text-tertiary">

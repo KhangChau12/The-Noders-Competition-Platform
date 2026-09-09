@@ -112,6 +112,23 @@ export const SCORING_METRIC_INFO = {
   },
 } as const;
 
+/**
+ * Compact metric name for tight contexts (stat rows, leaderboard headers, eyebrows):
+ * "MAE (Mean Absolute Error)" → "MAE", "F1 Score" stays "F1 Score".
+ */
+export function metricShortName(metric: string): string {
+  const full = SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.name;
+  if (!full) return metric.replace(/_/g, ' ');
+  return full.replace(/\s*\(.*\)\s*$/, '');
+}
+
+/** Directional arrow for a metric: '↑' when higher is better, '↓' otherwise. */
+export function metricArrow(metric: string): string {
+  return SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false
+    ? '↓'
+    : '↑';
+}
+
 // Practice problem difficulties
 export const PRACTICE_DIFFICULTIES = {
   BEGINNER:     'beginner',

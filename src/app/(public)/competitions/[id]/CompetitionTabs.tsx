@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, metricShortName } from '@/lib/constants';
 import { Markdown } from '@/components/ui/Markdown';
 import { StatRun } from '@/components/ui/StatRun';
 import LeaderboardTable, { type LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable';
@@ -1187,7 +1187,7 @@ function LeaderboardTab({
   const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const metricName = metricInfo?.name || 'Score';
+  const metricName = metricShortName(competition.scoring_metric);
   const decimals = metricInfo?.decimals || 4;
   const ascending = metricInfo?.higher_is_better === false;
   const arrow = ascending ? ' ↓' : ' ↑';
@@ -1333,7 +1333,7 @@ function IndividualLeaderboardTab({
   const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const metricName = metricInfo?.name || 'Score';
+  const metricName = metricShortName(competition.scoring_metric);
   const decimals = metricInfo?.decimals || 4;
   const ascending = metricInfo?.higher_is_better === false;
 

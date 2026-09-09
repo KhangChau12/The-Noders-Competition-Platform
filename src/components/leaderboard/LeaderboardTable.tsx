@@ -109,13 +109,14 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   const fmt = (v?: number | null) =>
     v === null || v === undefined ? null : v.toFixed(decimals);
 
-  const SortHead = ({ col, label, align = 'left' }: { col: SortKey; label: string; align?: 'left' | 'right' | 'center' }) => (
+  const SortHead = ({ col, label, align = 'left', cls }: { col: SortKey; label: string; align?: 'left' | 'right' | 'center'; cls?: string }) => (
     <th
       className={cn(
         'px-3.5 py-[9px] text-xs font-semibold uppercase tracking-[0.07em] whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
-        align === 'left' && 'text-left'
+        align === 'left' && 'text-left',
+        cls
       )}
     >
       <button
@@ -131,18 +132,22 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     </th>
   );
 
-  const PlainHead = ({ label, align = 'left' }: { label: string; align?: 'left' | 'right' | 'center' }) => (
+  const PlainHead = ({ label, align = 'left', cls }: { label: string; align?: 'left' | 'right' | 'center'; cls?: string }) => (
     <th
       className={cn(
         'px-3.5 py-[9px] text-xs font-semibold uppercase tracking-[0.07em] text-text-tertiary whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
-        align === 'left' && 'text-left'
+        align === 'left' && 'text-left',
+        cls
       )}
     >
       {label}
     </th>
   );
+
+  // On phones the standard variant drops Subs + When so the score stays in view.
+  const secondaryCol = 'hidden sm:table-cell';
 
   if (loading) {
     return (
@@ -178,8 +183,21 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               ) : (
                 <SortHead col="score" label={metricLabel} align="right" />
               )}
-              {showSubmissions && <SortHead col="totalSubmissions" label="Subs" align="center" />}
-              {whenVisible && <PlainHead label={isFinal ? 'When' : 'Submitted'} align="right" />}
+              {showSubmissions && (
+                <SortHead
+                  col="totalSubmissions"
+                  label="Subs"
+                  align="center"
+                  cls={isFinal ? undefined : secondaryCol}
+                />
+              )}
+              {whenVisible && (
+                <PlainHead
+                  label={isFinal ? 'When' : 'Submitted'}
+                  align="right"
+                  cls={isFinal ? undefined : secondaryCol}
+                />
+              )}
             </tr>
           </thead>
           <tbody>
@@ -205,7 +223,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     </span>
                   </td>
 
-                  <td className="px-3.5 py-[11px]">
+                  <td className="px-3.5 py-[11px] whitespace-nowrap">
                     <span className="text-text-primary font-bold">{name}</span>
                     {isMe && (
                       <span className="font-mono text-[0.6875rem] text-[#60A5FA] ml-1.5">YOU</span>
@@ -213,7 +231,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
 
                   {showTeam && (
-                    <td className="px-3.5 py-[11px]">
+                    <td className="px-3.5 py-[11px] whitespace-nowrap">
                       <span className="font-mono text-xs text-text-tertiary">
                         {row.teamName || '—'}
                       </span>
@@ -253,13 +271,13 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   )}
 
                   {showSubmissions && (
-                    <td className="px-3.5 py-[11px] text-center">
+                    <td className={cn('px-3.5 py-[11px] text-center', !isFinal && secondaryCol)}>
                       <span className="font-mono text-xs text-text-tertiary">{row.totalSubmissions}</span>
                     </td>
                   )}
 
                   {whenVisible && (
-                    <td className="px-3.5 py-[11px] text-right">
+                    <td className={cn('px-3.5 py-[11px] text-right', !isFinal && secondaryCol)}>
                       <span className="font-mono text-xs text-text-tertiary whitespace-nowrap">
                         {timeAgo(row.lastSubmissionAt)}
                       </span>

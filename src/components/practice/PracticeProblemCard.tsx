@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO, metricShortName } from '@/lib/constants';
 import type { PracticeProblemRow, PracticeTag } from '@/types/database.types';
 
 interface Props {
@@ -75,7 +75,7 @@ const PracticeProblemCard: React.FC<Props> = ({
             {problem.title}
           </h3>
           <p className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary mb-2">
-            {metricInfo?.name ?? problem.scoring_metric.replace('_', ' ')} ·{' '}
+            {metricShortName(problem.scoring_metric)} ·{' '}
             {metricInfo?.type === 'regression' ? 'Regression' : 'Classification'}
           </p>
           <p className="text-sm text-text-secondary leading-[1.55] line-clamp-2">

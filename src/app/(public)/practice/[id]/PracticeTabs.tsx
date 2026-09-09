@@ -6,7 +6,7 @@ import { Markdown } from '@/components/ui/Markdown';
 import LeaderboardTable, { type LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, metricShortName } from '@/lib/constants';
 import type { PracticeProblemRow, PracticeTag } from '@/types/database.types';
 
 interface LeaderboardRow {
@@ -188,7 +188,7 @@ export default function PracticeTabs({
           currentUserId={currentUserId ?? undefined}
           decimals={decimals}
           scoreAscending={!higherIsBetter}
-          metricLabel={`${metricInfo?.name ?? 'Score'} ${higherIsBetter ? '↑' : '↓'}`}
+          metricLabel={`${metricShortName(problem.scoring_metric)} ${higherIsBetter ? '↑' : '↓'}`}
           showSubmissions={false}
           emptyMessage="No submissions yet. Be the first to submit!"
         />

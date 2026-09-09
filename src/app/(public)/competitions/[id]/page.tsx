@@ -6,7 +6,7 @@ import { StatRun, type StatItem } from '@/components/ui/StatRun';
 import PhaseTimeline from '@/components/competition/PhaseTimeline';
 import CompetitionTabs from './CompetitionTabs';
 import DetailCountdown from './DetailCountdown';
-import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { SCORING_METRIC_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import { getCompetitionPhase, getNextDeadline } from '@/lib/utils/competition';
 import { Download, ArrowRight, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 
@@ -210,7 +210,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     { label: 'Participants', value: String(participantCount) },
     {
       label: 'Scoring metric',
-      value: `${metricInfo?.name ?? competition.scoring_metric} ${metricInfo?.higher_is_better === false ? '↓' : '↑'}`,
+      value: `${metricShortName(competition.scoring_metric)} ${metricArrow(competition.scoring_metric)}`,
       tone: 'blue',
     },
     {
@@ -261,7 +261,7 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         </h1>
 
         {/* ── Description ── */}
-        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] line-clamp-3 mb-4">
+        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] mb-4">
           {competition.description}
         </p>
 
