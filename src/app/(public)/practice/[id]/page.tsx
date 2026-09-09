@@ -137,17 +137,17 @@ export default async function PracticeProblemPage({ params }: Props) {
         </div>
 
         {/* Title */}
-        <h1 className="font-brand text-[1.375rem] sm:text-3xl leading-[1.12] text-text-primary mb-2.5">
+        <h1 className="text-2xl sm:text-[2rem] font-bold tracking-[-0.01em] leading-[1.15] text-text-primary mb-2.5">
           {problem.title}
         </h1>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] mb-4">
+        <p className="text-sm text-text-secondary leading-[1.6] mb-6">
           {problem.description}
         </p>
 
         {/* Hero stat run */}
-        <StatRun items={heroStats} className="mb-5" />
+        <StatRun size="sm" items={heroStats} className="mb-6" />
 
         <PracticeTabs
           problem={{ ...problem, tags }}

@@ -4,7 +4,7 @@ import { Fragment, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Markdown } from '@/components/ui/Markdown';
 import LeaderboardTable, { type LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Download } from 'lucide-react';
 import Link from 'next/link';
 import { SCORING_METRIC_INFO, metricShortName } from '@/lib/constants';
 import type { PracticeProblemRow, PracticeTag } from '@/types/database.types';
@@ -76,7 +76,7 @@ export default function PracticeTabs({
   return (
     <div>
       {/* ── Action line ── */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
+      <div className="flex flex-wrap items-center gap-x-[18px] gap-y-3 mb-6">
         {isAuthenticated ? (
           <Link href={`/practice/${problem.id}/submit`}>
             <Button variant="primary" size="sm" className="gap-2">
@@ -99,7 +99,8 @@ export default function PracticeTabs({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-text-secondary"
           >
-            <span className="text-[#60A5FA]">↓</span> Dataset
+            <Download className="w-3.5 h-3.5 text-[#60A5FA]" />
+            Dataset
           </a>
         )}
         {problem.sample_submission_url && (
@@ -109,7 +110,8 @@ export default function PracticeTabs({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-text-secondary"
           >
-            <span className="text-[#60A5FA]">↓</span> Sample submission
+            <Download className="w-3.5 h-3.5 text-[#60A5FA]" />
+            Sample submission
           </a>
         )}
 
@@ -153,11 +155,15 @@ export default function PracticeTabs({
 
       {/* ── Overview ── */}
       {activeTab === 'overview' && (
-        <div className="max-w-[72ch]">
-          <h3 className="text-lg font-extrabold text-text-primary mb-3">Problem statement</h3>
+        <div className="max-w-[85ch] mx-auto">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mb-3">
+            Problem statement
+          </h3>
           <Markdown>{problem.problem_statement || problem.description}</Markdown>
 
-          <h3 className="text-lg font-extrabold text-text-primary mt-8 mb-2">Scoring &amp; limits</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mt-9 mb-3">
+            Scoring &amp; limits
+          </h3>
           <p className="text-sm text-text-secondary leading-[1.65] mb-1.5">
             <span className="text-text-primary font-bold">
               {metricInfo?.name ?? problem.scoring_metric}

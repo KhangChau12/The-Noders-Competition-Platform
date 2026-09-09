@@ -3,37 +3,40 @@ import Skeleton from '@/components/ui/Skeleton';
 const S = Skeleton;
 
 // Mirrors the redesigned single-column competition detail page:
-// eyebrow → title → description → stat run → phase rail → action line → tabs.
+// breadcrumb → eyebrow → title → description → stat run → phase rail → action line → tabs.
 export default function CompetitionDetailLoading() {
   return (
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
 
+        {/* Breadcrumb */}
+        <S variant="text" height="0.75rem" width="8rem" className="mb-3.5" />
+
         {/* Eyebrow */}
         <S variant="text" height="0.75rem" width="16rem" className="mb-2.5" />
 
         {/* Title */}
-        <S variant="text" height="1.875rem" width="70%" className="max-w-full mb-2.5" />
+        <S variant="text" height="2rem" width="70%" className="max-w-full mb-2.5" />
 
         {/* Description (3 lines) */}
-        <div className="space-y-1.5 max-w-[72ch] mb-4">
+        <div className="space-y-1.5 mb-6">
           <S variant="text" height="0.875rem" width="100%" />
           <S variant="text" height="0.875rem" width="96%" />
-          <S variant="text" height="0.875rem" width="70%" />
+          <S variant="text" height="0.875rem" width="55%" />
         </div>
 
         {/* Stat run */}
-        <div className="flex flex-wrap gap-x-9 gap-y-6 mb-5">
+        <div className="flex flex-wrap gap-x-7 gap-y-[18px] mb-6">
           {['4rem', '6rem', '4rem', '5rem', '4rem'].map((w, i) => (
             <div key={i} className="space-y-1.5">
-              <S variant="text" height="1.375rem" width={w} />
+              <S variant="text" height="0.9375rem" width={w} />
               <S variant="text" height="0.75rem" width="5rem" />
             </div>
           ))}
         </div>
 
         {/* Phase rail + marks */}
-        <div className="mb-5">
+        <div className="mb-6">
           <S height="0.25rem" width="100%" className="rounded-full mb-2" />
           <div className="flex gap-4">
             {[0, 1, 2, 3].map((i) => (

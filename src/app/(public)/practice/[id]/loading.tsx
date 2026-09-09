@@ -16,27 +16,27 @@ export default function PracticeDetailLoading() {
         <S variant="text" height="0.75rem" width="12rem" className="mb-2.5" />
 
         {/* Title */}
-        <S variant="text" height="1.875rem" width="55%" className="max-w-full mb-2.5" />
+        <S variant="text" height="2rem" width="55%" className="max-w-full mb-2.5" />
 
         {/* Description (3 lines) */}
-        <div className="space-y-1.5 max-w-[72ch] mb-4">
+        <div className="space-y-1.5 mb-6">
           <S variant="text" height="0.875rem" width="100%" />
           <S variant="text" height="0.875rem" width="90%" />
-          <S variant="text" height="0.875rem" width="60%" />
+          <S variant="text" height="0.875rem" width="45%" />
         </div>
 
         {/* Stat run */}
-        <div className="flex flex-wrap gap-x-9 gap-y-6 mb-5">
+        <div className="flex flex-wrap gap-x-7 gap-y-[18px] mb-6">
           {['6rem', '4rem', '5rem', '4rem'].map((w, i) => (
             <div key={i} className="space-y-1.5">
-              <S variant="text" height="1.375rem" width={w} />
+              <S variant="text" height="0.9375rem" width={w} />
               <S variant="text" height="0.75rem" width="5rem" />
             </div>
           ))}
         </div>
 
         {/* Action line */}
-        <div className="flex items-center gap-5 mb-6">
+        <div className="flex items-center gap-x-[18px] mb-6">
           <S height="2.5rem" width="9rem" className="rounded-lg" />
           <S variant="text" height="1rem" width="5rem" />
           <S variant="text" height="1rem" width="8rem" />

@@ -614,15 +614,19 @@ function OverviewTab({ competition }: { competition: any }) {
     metricInfo?.higher_is_better === false ? 'Lower is better ↓' : 'Higher is better ↑';
 
   return (
-    <div className="max-w-[72ch]">
-      <h3 className="text-lg font-extrabold text-text-primary mb-3">Problem statement</h3>
+    <div className="max-w-[85ch] mx-auto">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mb-3">
+        Problem statement
+      </h3>
       {competition.problem_statement ? (
         <Markdown>{competition.problem_statement}</Markdown>
       ) : (
         <p className="text-sm text-text-tertiary">No problem statement provided yet.</p>
       )}
 
-      <h3 className="text-lg font-extrabold text-text-primary mt-8 mb-2">Evaluation</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mt-9 mb-3">
+        Evaluation
+      </h3>
       <p className="text-sm text-text-secondary leading-[1.65] mb-1.5">
         <span className="text-text-primary font-bold">
           {metricInfo?.name ?? competition.scoring_metric}

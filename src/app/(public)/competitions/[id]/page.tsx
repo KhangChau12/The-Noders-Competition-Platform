@@ -8,7 +8,7 @@ import CompetitionTabs from './CompetitionTabs';
 import DetailCountdown from './DetailCountdown';
 import { SCORING_METRIC_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import { getCompetitionPhase, getNextDeadline } from '@/lib/utils/competition';
-import { Download, ArrowRight, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { Download, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 
 interface CompetitionDetailPageProps {
   params: { id: string };
@@ -241,6 +241,15 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
 
+        {/* ── Breadcrumb ── */}
+        <Link
+          href="/competitions"
+          className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-text-tertiary hover:text-text-secondary transition-colors mb-3.5"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Competitions
+        </Link>
+
         {/* ── Eyebrow ── */}
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 mb-2.5 text-xs">
           <span className={`inline-flex items-center gap-[7px] font-bold ${phaseWord.tone}`}>
@@ -256,23 +265,23 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
         </div>
 
         {/* ── Title ── */}
-        <h1 className="font-brand text-[1.375rem] sm:text-3xl leading-[1.12] text-text-primary mb-2.5">
+        <h1 className="text-2xl sm:text-[2rem] font-bold tracking-[-0.01em] leading-[1.15] text-text-primary mb-2.5">
           {competition.title}
         </h1>
 
         {/* ── Description ── */}
-        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] mb-4">
+        <p className="text-sm text-text-secondary leading-[1.6] mb-6">
           {competition.description}
         </p>
 
         {/* ── Hero stat run ── */}
-        <StatRun items={heroStats} className="mb-5" />
+        <StatRun size="sm" items={heroStats} className="mb-6" />
 
         {/* ── Phase timeline (+ demoted countdown on desktop) ── */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-6">
           <PhaseTimeline competition={competition} className="flex-1 min-w-0" />
           {nextDeadline && currentPhase !== 'ended' && (
-            <div className="hidden sm:block text-right shrink-0 pt-0.5">
+            <div className="hidden sm:block text-right shrink-0">
               <DetailCountdown target={nextDeadline.toISOString()} />
             </div>
           )}
