@@ -21,48 +21,38 @@ export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
 }
 
 // ─── Competition card skeleton ────────────────────────────────────────────────
-// Mirrors <CompetitionGridCard>: badges row → title (2 lines) + description
-// (2 lines) → timeline bar + date row → bordered mono footer.
+// Mirrors <CompetitionGridCard>: eyebrow line → title (2 lines) + description
+// (2 lines) → phase rail + "closes in" line → leader line → footer.
 export function CompetitionCardSkeleton() {
   return (
-    <Card className="h-full p-4 sm:p-6 bg-bg-surface shadow-md border-border-default">
-      <div className="h-full flex flex-col gap-3.5 sm:gap-4">
-        {/* badges row */}
-        <div className="flex flex-wrap items-center gap-2">
-          <S height="1.375rem" width="7.5rem" className="rounded-full" />
-          <S height="1.375rem" width="4.5rem" className="rounded-full" />
-          <S height="1.375rem" width="3.5rem" className="rounded-full" />
-        </div>
+    <div className="h-full flex flex-col gap-3 rounded-xl border border-border-default bg-bg-surface p-4 sm:p-[18px]">
+      {/* eyebrow */}
+      <S variant="text" height="0.75rem" width="70%" />
 
-        {/* title (2 lines) + description (2 lines) */}
-        <div>
-          <div className="space-y-1.5 mb-2">
-            <S variant="text" height="1.4rem" width="90%" />
-            <S variant="text" height="1.4rem" width="55%" />
-          </div>
-          <div className="space-y-1.5">
-            <S variant="text" height="0.85rem" width="100%" />
-            <S variant="text" height="0.85rem" width="80%" />
-          </div>
+      {/* title (2 lines) + description (2 lines) */}
+      <div>
+        <div className="space-y-1.5 mb-2">
+          <S variant="text" height="1.2rem" width="90%" />
+          <S variant="text" height="1.2rem" width="55%" />
         </div>
-
-        {/* timeline bar + date/countdown row */}
-        <div>
-          <S height="0.375rem" width="100%" className="rounded-full" />
-          <div className="flex items-center justify-between mt-1.5">
-            <S variant="text" height="0.7rem" width="4.5rem" />
-            <S variant="text" height="0.7rem" width="6rem" />
-            <S variant="text" height="0.7rem" width="4.5rem" />
-          </div>
-        </div>
-
-        {/* footer — top border, mono stats + View link */}
-        <div className="mt-auto border-t border-border-subtle/60 pt-3 flex items-center justify-between gap-3">
-          <S variant="text" height="0.7rem" width="55%" />
-          <S variant="text" height="0.8rem" width="3.5rem" />
+        <div className="space-y-1.5">
+          <S variant="text" height="0.85rem" width="100%" />
+          <S variant="text" height="0.85rem" width="80%" />
         </div>
       </div>
-    </Card>
+
+      {/* phase rail + closes-in line */}
+      <div>
+        <S height="0.25rem" width="100%" className="rounded-full" />
+        <S variant="text" height="0.8rem" width="9rem" className="mt-2.5" />
+      </div>
+
+      {/* footer */}
+      <div className="mt-auto pt-1 flex items-center justify-between gap-3">
+        <S variant="text" height="0.85rem" width="60%" />
+        <S variant="text" height="0.75rem" width="3rem" />
+      </div>
+    </div>
   );
 }
 
@@ -125,16 +115,13 @@ export function DashboardCompetitionRowSkeleton() {
 }
 
 // ─── Section heading skeleton ─────────────────────────────────────────────────
-// Mirrors <CompetitionSection>'s header: optional kicker + h2 on the left,
-// a competition-count line on the right, aligned along the baseline.
+// Mirrors <CompetitionSection>'s header: an uppercase label on the left,
+// a mono count on the right, aligned along the baseline.
 export function SectionHeadingSkeleton({ kicker = false }: { kicker?: boolean }) {
   return (
-    <div className="flex items-end justify-between gap-2 px-1">
-      <div className="space-y-1.5">
-        {kicker && <S variant="text" height="0.7rem" width="11rem" />}
-        <S variant="text" height="1.25rem" width="12rem" />
-      </div>
-      <S variant="text" height="0.85rem" width="6rem" className="shrink-0" />
+    <div className="flex items-baseline justify-between gap-2">
+      <S variant="text" height="0.75rem" width={kicker ? '9rem' : '7rem'} />
+      <S variant="text" height="0.75rem" width="6rem" className="shrink-0" />
     </div>
   );
 }

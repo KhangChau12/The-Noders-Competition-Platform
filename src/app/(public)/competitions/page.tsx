@@ -3,19 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { StatRun } from '@/components/ui/StatRun';
+import PhaseTimeline from '@/components/competition/PhaseTimeline';
 import Link from 'next/link';
-import {
-  Search,
-  SortAsc,
-  Trophy,
-  Clock,
-  ArrowRight,
-  Crown,
-} from 'lucide-react';
+import { Search, ArrowRight, Crown } from 'lucide-react';
 import {
   CompetitionCardSkeleton,
   SectionHeadingSkeleton,
@@ -330,43 +322,41 @@ export default function CompetitionsPage() {
   return (
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="relative mb-6 sm:mb-10 overflow-hidden">
-          <Trophy className="absolute -top-4 -right-6 h-32 w-32 text-primary-blue opacity-[0.10] rotate-[10deg] pointer-events-none hidden sm:block select-none [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.25))]" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2">
-            Compete · Learn · Win
-          </p>
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl gradient-text leading-tight mb-3">
+        {/* Header — h1 + tertiary subtitle + a stat run */}
+        <div className="mb-6 sm:mb-10">
+          <h1 className="text-2xl font-bold tracking-[-0.01em] text-text-primary mb-1">
             Competitions
           </h1>
-          <p className="text-sm sm:text-lg text-text-secondary max-w-2xl mb-3 sm:mb-4">
-            Browse active competitions and start your AI journey
+          <p className="text-sm text-text-tertiary mb-5">
+            Active challenges and past results from the Noders PTNK community.
           </p>
           {!loading && competitions.length > 0 && (
-            <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
-              {stats.active} active
-              {' · '}{stats.participants} participant{stats.participants !== 1 ? 's' : ''}
-              {' · '}{stats.submissions} submission{stats.submissions !== 1 ? 's' : ''}
-            </p>
+            <StatRun
+              items={[
+                { label: 'Active', value: String(stats.active) },
+                { label: 'Participants', value: stats.participants.toLocaleString() },
+                { label: 'Submissions', value: stats.submissions.toLocaleString() },
+                { label: 'Ended', value: String(competitions.length - stats.active) },
+              ]}
+            />
           )}
         </div>
 
-        {/* Toolbar: search row, then status + sort sharing one row on phones */}
-        <div className="flex flex-col lg:flex-row gap-2.5 sm:gap-3 mb-6 sm:mb-8 lg:items-center">
+        {/* Toolbar: bottom-border search + underline-link segmented controls */}
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-6 sm:mb-8 lg:items-end">
           <div className="relative flex-1 lg:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-tertiary" />
-            <Input
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
+            <input
               type="text"
-              placeholder="Search competitions..."
+              placeholder="Search competitions…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-4"
+              className="w-full min-h-[44px] sm:min-h-0 bg-transparent border-0 border-b border-border-subtle pl-6 pr-2 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-primary-blue"
             />
           </div>
 
-          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3 min-w-0">
-            {/* Status segmented control — full width on small phones, inline from xs */}
-            <div className="flex flex-1 sm:flex-none rounded-lg border border-border-default bg-bg-surface p-1 overflow-x-auto scrollbar-none min-w-0">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 min-w-0">
+            <div className="flex gap-4 sm:gap-[18px] overflow-x-auto scrollbar-none">
               {[
                 { value: 'all', label: 'All' },
                 { value: 'registration', label: 'Registering' },
@@ -376,10 +366,10 @@ export default function CompetitionsPage() {
                 <button
                   key={option.value}
                   onClick={() => setFilterStatus(option.value as FilterStatus)}
-                  className={`flex-1 sm:flex-none min-h-[40px] sm:min-h-0 px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
+                  className={`min-h-[44px] sm:min-h-0 shrink-0 border-b-2 py-1 text-xs font-bold uppercase tracking-[0.04em] whitespace-nowrap transition-colors ${
                     filterStatus === option.value
-                      ? 'bg-primary-blue text-white'
-                      : 'text-text-secondary hover:text-text-primary'
+                      ? 'border-primary-blue text-text-primary'
+                      : 'border-transparent text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
                   {option.label}
@@ -387,29 +377,32 @@ export default function CompetitionsPage() {
               ))}
             </div>
 
-            {/* Sort */}
-            <div className="flex items-center gap-2 shrink-0">
-              <SortAsc className="hidden sm:block h-4 w-4 text-text-tertiary" aria-hidden="true" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="w-full xs:w-auto min-h-[44px] sm:min-h-0 px-3 py-2.5 sm:py-2 xs:max-w-[140px] sm:max-w-none bg-bg-surface border border-border-default rounded-lg text-[13px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-border-focus"
-                aria-label="Sort competitions"
-              >
-                <option value="latest">Latest</option>
-                <option value="ending_soon">Ending Soon</option>
-                <option value="most_participants">Most Participants</option>
-              </select>
+            <div className="flex gap-4 sm:gap-[18px]">
+              {[
+                { value: 'latest', label: 'Latest' },
+                { value: 'ending_soon', label: 'Ending soon' },
+                { value: 'most_participants', label: 'Most people' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSortBy(option.value as SortOption)}
+                  className={`min-h-[44px] sm:min-h-0 shrink-0 border-b-2 py-1 text-xs font-bold uppercase tracking-[0.04em] whitespace-nowrap transition-colors ${
+                    sortBy === option.value
+                      ? 'border-primary-blue text-text-primary'
+                      : 'border-transparent text-text-tertiary hover:text-text-secondary'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Loading State — a single card grid: the one shape common to every
-            outcome (spotlight, live, or past-only). A spotlight appearing on
-            top of it reads far better than a skeleton spotlight vanishing. */}
+        {/* Loading — the shape every outcome shares */}
         {loading && (
           <div className="space-y-4 sm:space-y-5">
-            <SectionHeadingSkeleton kicker />
+            <SectionHeadingSkeleton />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
               {[0, 1, 2, 3].map((i) => (
                 <CompetitionCardSkeleton key={i} />
@@ -423,20 +416,19 @@ export default function CompetitionsPage() {
           <SpotlightCard competition={spotlight} isLoggedIn={!!userId} />
         )}
 
-        {/* Empty State */}
+        {/* Empty */}
         {!loading && !spotlight && filteredAndSortedCompetitions.length === 0 && (
-          <Card className="p-8 sm:p-12 text-center">
-            <Trophy className="h-14 w-14 sm:h-16 sm:w-16 mx-auto mb-4 text-text-tertiary" />
-            <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-2">No competitions found</h3>
-            <p className="text-text-secondary">
+          <div className="border-y border-border-subtle py-16 text-center">
+            <h3 className="text-lg font-extrabold text-text-primary mb-2">No competitions found</h3>
+            <p className="text-sm text-text-tertiary">
               {isFiltering
-                ? 'Try adjusting your filters or search query'
-                : 'Check back soon for new competitions'}
+                ? 'Try adjusting your filters or search query.'
+                : 'Check back soon for new competitions.'}
             </p>
-          </Card>
+          </div>
         )}
 
-        {/* Competitions Grid */}
+        {/* Grid */}
         {!loading && filteredAndSortedCompetitions.length > 0 && (
           isFiltering ? (
             <CompetitionSection
@@ -445,10 +437,9 @@ export default function CompetitionsPage() {
               isLoggedIn={!!userId}
             />
           ) : (
-            <div className="space-y-8 sm:space-y-12">
+            <div className="space-y-8 sm:space-y-10">
               {liveCompetitions.length > 0 && (
                 <CompetitionSection
-                  kicker="Open · Running · Upcoming"
                   title={spotlight ? 'More Competitions' : 'Live & Upcoming'}
                   competitions={liveCompetitions}
                   isLoggedIn={!!userId}
@@ -456,10 +447,10 @@ export default function CompetitionsPage() {
               )}
               {pastCompetitions.length > 0 && (
                 <CompetitionSection
-                  kicker="Archive"
                   title="Past Competitions"
                   competitions={pastCompetitions}
                   isLoggedIn={!!userId}
+                  past
                 />
               )}
             </div>
@@ -505,46 +496,93 @@ function getPhaseEndDate(comp: CompetitionWithStats): string | null {
   return null;
 }
 
-// Overall timeline progress (registration start -> final end), clamped to [0, 100]
-function getTimelineProgress(comp: Competition): number {
-  const start = new Date(comp.registration_start).getTime();
-  const end = new Date(comp.private_test_end ?? comp.public_test_end).getTime();
-  if (end <= start) return 0;
-  const elapsed = Date.now() - start;
-  return Math.min(100, Math.max(0, (elapsed / (end - start)) * 100));
-}
-
-const PHASE_CONFIG = {
-  upcoming: { label: 'Coming Soon', variant: 'secondary' as const },
-  registration: { label: 'Registration Open', variant: 'registration' as const },
-  public_test: { label: 'Public Test', variant: 'public' as const },
-  private_test: { label: 'Private Test', variant: 'private' as const },
-  ended: { label: 'Ended', variant: 'ended' as const },
+// Phase → coloured-word config. label is sentence-case; colour class drives the dot.
+const PHASE_CONFIG: Record<
+  CompetitionPhase,
+  { label: string; tone: string }
+> = {
+  upcoming: { label: 'Coming soon', tone: 'text-text-tertiary' },
+  registration: { label: 'Registration open', tone: 'text-[#A78BFA]' },
+  public_test: { label: 'Public test', tone: 'text-[#60A5FA]' },
+  private_test: { label: 'Private test', tone: 'text-[#22D3EE]' },
+  ended: { label: 'Ended', tone: 'text-text-tertiary' },
 };
 
-function RegistrationStatusBadge({
+// A coloured phase word with a leading dot — not a pill.
+function PhaseWord({ phase }: { phase: CompetitionPhase }) {
+  const { label, tone } = PHASE_CONFIG[phase];
+  const glow = phase !== 'ended' && phase !== 'upcoming';
+  return (
+    <span className={`inline-flex items-center gap-[7px] font-bold ${tone}`}>
+      <span
+        className="w-[7px] h-[7px] rounded-full bg-current"
+        style={glow ? { boxShadow: '0 0 0 3px color-mix(in srgb, currentColor 20%, transparent)' } : undefined}
+      />
+      {label}
+    </span>
+  );
+}
+
+// Registration status as a plain coloured "fact" word in the eyebrow.
+function registrationFact(
+  competition: CompetitionWithStats,
+  isLoggedIn: boolean
+): { label: string; className: string } | null {
+  if (!isLoggedIn || !competition.registration_status) return null;
+  switch (competition.registration_status) {
+    case 'approved':
+      return { label: 'Registered', className: 'text-[#22D3EE]' };
+    case 'pending':
+      return { label: 'Pending', className: 'text-[#FBBF24]' };
+    case 'rejected':
+      return { label: 'Rejected', className: 'text-[#F87171]' };
+    default:
+      return null;
+  }
+}
+
+const metricArrow = (metric: string) =>
+  SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false
+    ? '↓'
+    : '↑';
+
+const metricName = (metric: string) =>
+  SCORING_METRIC_INFO[metric as keyof typeof SCORING_METRIC_INFO]?.name ??
+  metric.replace('_', ' ');
+
+// Eyebrow row: phase word + sentence-case facts.
+function CardEyebrow({
   competition,
   isLoggedIn,
 }: {
   competition: CompetitionWithStats;
   isLoggedIn: boolean;
 }) {
-  if (!isLoggedIn || !competition.registration_status) return null;
-
-  const statusConfig = {
-    not_registered: null,
-    pending: { label: 'Pending', variant: 'yellow' as const },
-    approved: { label: 'Registered', variant: 'green' as const },
-    rejected: { label: 'Rejected', variant: 'red' as const },
-  };
-
-  const config = statusConfig[competition.registration_status];
-  if (!config) return null;
-
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  const regFact = registrationFact(competition, isLoggedIn);
+  return (
+    <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 text-xs">
+      <PhaseWord phase={competition.phase} />
+      <span className="font-semibold text-text-tertiary">
+        {metricName(competition.scoring_metric)} {metricArrow(competition.scoring_metric)}
+      </span>
+      {(competition.participation_type === 'team' || competition.competition_type === '4-phase') && (
+        <span className="font-semibold text-text-tertiary">
+          {[
+            competition.participation_type === 'team' ? 'Team' : null,
+            competition.competition_type === '4-phase' ? '4-phase' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+      )}
+      {regFact && (
+        <span className={`font-semibold ${regFact.className}`}>{regFact.label}</span>
+      )}
+    </div>
+  );
 }
 
-// Featured competition with a large countdown and CTA
+// The spotlight — a horizontal band bounded by two hairlines, not a card.
 function SpotlightCard({
   competition,
   isLoggedIn,
@@ -552,88 +590,82 @@ function SpotlightCard({
   competition: CompetitionWithStats;
   isLoggedIn: boolean;
 }) {
-  const phaseInfo = PHASE_CONFIG[competition.phase];
   const isOpen = competition.phase === 'registration';
   const notRegistered =
     !competition.registration_status || competition.registration_status === 'not_registered';
+  const cd = competition.countdown;
+
+  const runsRange = `${new Date(competition.registration_start).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })} – ${new Date(competition.private_test_end ?? competition.public_test_end).toLocaleDateString(
+    'en-US',
+    { month: 'short', day: 'numeric' }
+  )}`;
 
   return (
     <section className="mb-8 sm:mb-12">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2.5 sm:mb-3 px-1">
+      <p className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mb-3">
         {isOpen ? 'Registration closing soon' : 'Up next'}
       </p>
       <Link href={`/competitions/${competition.id}`} className="group block">
-        <Card className="relative overflow-hidden p-5 sm:p-8 bg-bg-surface ring-1 ring-primary-blue/35 shadow-glow-blue-sm hover:-translate-y-1 hover:shadow-lg">
-          <Trophy className="absolute -bottom-8 -right-8 h-44 w-44 text-primary-blue opacity-[0.08] rotate-[-12deg] pointer-events-none select-none [filter:drop-shadow(0_0_24px_rgba(37,99,235,0.35))]" />
-          <div className="relative grid lg:grid-cols-[1fr_300px] gap-6 lg:gap-10 items-center">
-            {/* Left: info */}
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
-                <Badge variant="tech">
-                  {competition.scoring_metric.replace('_', ' ').toUpperCase()}
-                </Badge>
-                {competition.participation_type === 'team' && <Badge variant="outline">Team</Badge>}
-                {competition.competition_type === '4-phase' && (
-                  <Badge variant="outline">4-Phase</Badge>
-                )}
-                <RegistrationStatusBadge competition={competition} isLoggedIn={isLoggedIn} />
-              </div>
-
-              <h2 className="text-xl sm:text-3xl font-bold leading-snug text-text-primary mb-2 sm:mb-3 group-hover:text-primary-blue transition-colors">
-                {competition.title}
-              </h2>
-              <p className="text-sm sm:text-base text-text-secondary leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4">
-                {competition.description}
-              </p>
-
-              <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
-                {competition.participant_count} participant{competition.participant_count !== 1 ? 's' : ''}
-                {competition.participation_type === 'team' && competition.team_count > 0 && (
-                  <> · {competition.team_count} team{competition.team_count !== 1 ? 's' : ''}</>
-                )}
-                {' · '}{competition.submission_count} submission{competition.submission_count !== 1 ? 's' : ''}
-                {' · '}
-                {new Date(competition.registration_start).toLocaleDateString()} –{' '}
-                {new Date(
-                  competition.private_test_end ?? competition.public_test_end
-                ).toLocaleDateString()}
-              </p>
-            </div>
-
-            {/* Right: countdown + CTA */}
-            <div className="bg-bg-elevated/60 border border-border-subtle/50 rounded-xl p-4 sm:p-5 text-center">
-              {competition.countdown ? (
-                <>
-                  <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary mb-3 flex items-center justify-center gap-2">
-                    <Clock className="h-3.5 w-3.5 text-primary-blue" />
-                    {competition.countdown.label.replace(' in', '')}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2 mb-5">
-                    {[
-                      { value: competition.countdown.days, unit: 'Days' },
-                      { value: competition.countdown.hours, unit: 'Hrs' },
-                      { value: competition.countdown.minutes, unit: 'Min' },
-                    ].map(({ value, unit }) => (
-                      <div key={unit}>
-                        <div className="text-2xl sm:text-3xl font-bold text-primary-blue font-mono">
-                          {value}
-                        </div>
-                        <div className="text-[11px] uppercase tracking-wide text-text-tertiary">
-                          {unit}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-              <Button variant="primary" className="w-full gap-2" size="md">
-                {isOpen && notRegistered ? 'Register now' : 'View details'}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
+        <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-center border-y border-border-subtle py-[22px]">
+          <div className="min-w-0">
+            <CardEyebrow competition={competition} isLoggedIn={isLoggedIn} />
+            <h2 className="text-lg sm:text-[1.3rem] font-extrabold leading-[1.25] text-text-primary mt-2.5 mb-1.5 group-hover:text-primary-blue transition-colors">
+              {competition.title}
+            </h2>
+            <p className="text-sm text-text-secondary leading-[1.55] line-clamp-2 sm:line-clamp-3 mb-3.5">
+              {competition.description}
+            </p>
+            <StatRun
+              size="sm"
+              items={[
+                { label: 'Participants', value: String(competition.participant_count) },
+                ...(competition.participation_type === 'team'
+                  ? [{ label: 'Teams', value: String(competition.team_count) }]
+                  : []),
+                { label: 'Submissions', value: String(competition.submission_count) },
+                { label: 'Runs', value: runsRange },
+              ]}
+            />
           </div>
-        </Card>
+
+          <div className="sm:text-right sm:pl-7 sm:border-l sm:border-border-default">
+            {cd && (
+              <>
+                <p className="text-xs font-mono font-bold uppercase tracking-[0.08em] text-text-tertiary mb-2">
+                  {cd.label.replace(' in', ' in')}
+                </p>
+                <div className="flex sm:justify-end items-start gap-1.5 mb-3.5">
+                  {[
+                    { value: cd.days, unit: 'Days' },
+                    { value: cd.hours, unit: 'Hrs' },
+                    { value: cd.minutes, unit: 'Min' },
+                  ].map(({ value, unit }, i, arr) => (
+                    <div key={unit} className="flex items-start gap-1.5">
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono font-bold text-[1.75rem] leading-none text-[#60A5FA] tabular-nums">
+                          {String(value).padStart(2, '0')}
+                        </span>
+                        <span className="text-[0.6875rem] uppercase tracking-[0.08em] text-text-tertiary mt-1">
+                          {unit}
+                        </span>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <span className="font-mono text-xl leading-none text-text-disabled">:</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            <Button variant="primary" className="w-full sm:w-auto gap-2" size="md">
+              {isOpen && notRegistered ? 'Register now' : 'View details'}
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </Link>
     </section>
   );
@@ -641,38 +673,34 @@ function SpotlightCard({
 
 // Titled section wrapping a grid of competition cards
 function CompetitionSection({
-  kicker,
   title,
   competitions,
   isLoggedIn,
+  past = false,
 }: {
-  kicker?: string;
   title: string;
   competitions: CompetitionWithStats[];
   isLoggedIn: boolean;
+  past?: boolean;
 }) {
   return (
-    <section className="space-y-4 sm:space-y-5">
-      <div className="flex items-end justify-between gap-2 px-1">
-        <div>
-          {kicker && (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-1">
-              {kicker}
-            </p>
-          )}
-          <h2 className="text-lg sm:text-xl font-bold">{title}</h2>
-        </div>
-        <p className="text-sm text-text-tertiary shrink-0">
+    <section className={past ? 'border-t border-border-default pt-4' : ''}>
+      <div className="flex items-baseline justify-between gap-2 mb-3.5">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary">
+          {title}
+        </h2>
+        <span className="font-mono text-xs text-text-disabled shrink-0">
           {competitions.length} competition{competitions.length !== 1 ? 's' : ''}
-        </p>
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         {competitions.map((competition) => (
           <CompetitionGridCard
             key={competition.id}
             competition={competition}
             isLoggedIn={isLoggedIn}
+            past={past}
           />
         ))}
       </div>
@@ -680,18 +708,16 @@ function CompetitionSection({
   );
 }
 
-// Competition Card Component (marketplace-style grid)
+// A quiet card — fill + hairline, no shadow. hover lifts.
 function CompetitionGridCard({
   competition,
   isLoggedIn,
+  past = false,
 }: {
   competition: CompetitionWithStats;
   isLoggedIn: boolean;
+  past?: boolean;
 }) {
-  const phaseInfo = PHASE_CONFIG[competition.phase];
-  const progress = getTimelineProgress(competition);
-  const start = new Date(competition.registration_start);
-  const end = new Date(competition.private_test_end ?? competition.public_test_end);
   const decimals =
     SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO]
       ?.decimals ?? 4;
@@ -700,88 +726,65 @@ function CompetitionGridCard({
     (competition.phase === 'ended' ||
       competition.phase === 'public_test' ||
       competition.phase === 'private_test');
+  const showTimeline = competition.phase !== 'ended';
 
   return (
     <Link href={`/competitions/${competition.id}`} className="group block h-full">
-      <Card
-        className={`h-full p-4 sm:p-6 bg-bg-surface shadow-md transition-all duration-200 border-border-default hover:border-border-focus hover:-translate-y-1 hover:shadow-lg ${
-          competition.phase === 'registration' ? 'ring-1 ring-primary-blue/35 shadow-glow-blue-sm' : ''
+      <div
+        className={`h-full flex flex-col gap-3 rounded-xl border p-4 sm:p-[18px] transition-all duration-200 hover:-translate-y-1 hover:border-border-focus ${
+          past ? 'bg-transparent border-border-default' : 'bg-bg-surface'
+        } ${
+          competition.phase === 'registration'
+            ? 'border-[color:rgba(37,99,235,0.35)]'
+            : 'border-border-default'
         }`}
       >
-        <div className="h-full flex flex-col gap-3.5 sm:gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={phaseInfo.variant}>{phaseInfo.label}</Badge>
-            <Badge variant="tech">{competition.scoring_metric.replace('_', ' ').toUpperCase()}</Badge>
-            {competition.participation_type === 'team' && <Badge variant="outline">Team</Badge>}
-            {competition.competition_type === '4-phase' && <Badge variant="outline">4-Phase</Badge>}
-            <RegistrationStatusBadge competition={competition} isLoggedIn={isLoggedIn} />
-          </div>
-
-          <div>
-            <h3 className="text-lg sm:text-xl font-bold leading-snug text-text-primary mb-2 line-clamp-2 group-hover:text-primary-blue transition-colors">
-              {competition.title}
-            </h3>
-            <p className="text-sm text-text-secondary leading-relaxed line-clamp-2">
-              {competition.description}
-            </p>
-          </div>
-
-          {/* Timeline */}
-          <div>
-            <div className="relative h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-1.5 text-[11px] text-text-tertiary">
-              <span className="order-1">{start.toLocaleDateString()}</span>
-              {competition.countdown ? (
-                // Drops to its own centered line on phones, sits between the dates on larger screens
-                <span className="order-3 sm:order-2 w-full sm:w-auto flex items-center justify-center gap-1 text-text-secondary">
-                  <Clock className="h-3 w-3 text-primary-blue" />
-                  {competition.countdown.label.toLowerCase()}{' '}
-                  <span className="font-mono font-semibold text-primary-blue">
-                    {competition.countdown.days}d {competition.countdown.hours}h
-                  </span>
-                </span>
-              ) : (
-                <span className="order-2">{competition.phase === 'ended' ? 'Ended' : ''}</span>
-              )}
-              <span className="order-2 sm:order-3">{end.toLocaleDateString()}</span>
-            </div>
-          </div>
-
-          {/* Leader / winner */}
-          {showLeader && (
-            <div className="flex items-center gap-2 text-xs rounded-lg border border-border-subtle/50 bg-bg-elevated/40 px-2.5 py-1.5 sm:px-3 sm:py-2">
-              <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
-              <span className="font-mono uppercase tracking-wide text-text-tertiary shrink-0">
-                {competition.phase === 'ended' ? 'Winner' : 'Leading'}
-              </span>
-              <span className="font-semibold text-text-primary truncate">
-                {competition.leader!.name}
-              </span>
-              <span className="font-mono text-accent-cyan ml-auto shrink-0">
-                {competition.leader!.score.toFixed(decimals)}
-              </span>
-            </div>
-          )}
-
-          <div className="mt-auto border-t border-border-subtle/60 pt-3 flex items-center justify-between gap-3 text-sm">
-            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary truncate">
-              {competition.participant_count} participant{competition.participant_count !== 1 ? 's' : ''}
-              {competition.participation_type === 'team' && competition.team_count > 0 && (
-                <> · {competition.team_count} team{competition.team_count !== 1 ? 's' : ''}</>
-              )}
-              {' · '}{competition.submission_count} subs
-            </span>
-            <span className="font-semibold text-primary-blue shrink-0 group-hover:translate-x-0.5 transition-transform">
-              View &rarr;
-            </span>
-          </div>
+        <div>
+          <CardEyebrow competition={competition} isLoggedIn={isLoggedIn} />
+          <h3 className="text-lg font-extrabold leading-[1.25] text-text-primary mt-2 mb-1.5 line-clamp-2 group-hover:text-primary-blue transition-colors">
+            {competition.title}
+          </h3>
+          <p className="text-sm text-text-secondary leading-[1.55] line-clamp-2">
+            {competition.description}
+          </p>
         </div>
-      </Card>
+
+        {showTimeline && <PhaseTimeline competition={competition} compact />}
+
+        {showLeader && (
+          <div className="flex items-baseline gap-2 text-sm text-text-tertiary">
+            <Crown className="h-3.5 w-3.5 text-[#FBBF24] shrink-0 self-center" />
+            <span className="shrink-0">
+              {competition.phase === 'ended' ? 'Winner' : 'Leading'}
+            </span>
+            <span className="font-bold text-text-primary truncate">
+              {competition.leader!.name}
+            </span>
+            <span className="font-mono text-[#22D3EE] ml-auto shrink-0">
+              {competition.leader!.score.toFixed(decimals)}
+            </span>
+          </div>
+        )}
+
+        <div className="mt-auto pt-1 flex items-center justify-between gap-3">
+          <span className="text-sm text-text-tertiary truncate">
+            <b className="font-mono font-bold text-text-primary">{competition.participant_count}</b>{' '}
+            participant{competition.participant_count !== 1 ? 's' : ''}
+            {competition.participation_type === 'team' && competition.team_count > 0 && (
+              <>
+                {' · '}
+                <b className="font-mono font-bold text-text-primary">{competition.team_count}</b>{' '}
+                team{competition.team_count !== 1 ? 's' : ''}
+              </>
+            )}
+            {' · '}
+            <b className="font-mono font-bold text-text-primary">{competition.submission_count}</b> subs
+          </span>
+          <span className="text-xs font-bold text-[#60A5FA] shrink-0 group-hover:translate-x-0.5 transition-transform">
+            View &rarr;
+          </span>
+        </div>
+      </div>
     </Link>
   );
 }
