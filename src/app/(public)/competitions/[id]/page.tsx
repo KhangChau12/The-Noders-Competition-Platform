@@ -1,30 +1,29 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import CountdownTimer from '@/components/competition/CountdownTimer';
-import HorizontalTimeline from '@/components/competition/HorizontalTimeline';
+import { StatRun, type StatItem } from '@/components/ui/StatRun';
+import PhaseTimeline from '@/components/competition/PhaseTimeline';
 import CompetitionTabs from './CompetitionTabs';
+import DetailCountdown from './DetailCountdown';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
-import { getCompetitionPhase, getNextDeadline, getCountdownLabel } from '@/lib/utils/competition';
-import {
-  Clock,
-  Trophy,
-  Users,
-  Target,
-  Download,
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  FileText,
-} from 'lucide-react';
+import { getCompetitionPhase, getNextDeadline } from '@/lib/utils/competition';
+import { Download, ArrowRight, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 
 interface CompetitionDetailPageProps {
   params: { id: string };
 }
+
+const PHASE_WORD: Record<
+  ReturnType<typeof getCompetitionPhase>,
+  { label: string; tone: string; glow: boolean }
+> = {
+  upcoming: { label: 'Upcoming', tone: 'text-text-tertiary', glow: false },
+  registration: { label: 'Registration open', tone: 'text-[#A78BFA]', glow: true },
+  public_test: { label: 'Public test', tone: 'text-[#60A5FA]', glow: true },
+  private_test: { label: 'Private test', tone: 'text-[#22D3EE]', glow: true },
+  ended: { label: 'Ended', tone: 'text-text-tertiary', glow: false },
+};
 
 export default async function CompetitionDetailPage({ params }: CompetitionDetailPageProps) {
   const { id } = params;
@@ -205,378 +204,193 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
     !totalLimitReached &&
     (currentPhase === 'public_test' || currentPhase === 'private_test');
 
-  const phaseBadgeVariant =
-    currentPhase === 'registration' ? 'registration' :
-    currentPhase === 'public_test' ? 'public' :
-    currentPhase === 'private_test' ? 'private' :
-    currentPhase === 'ended' ? 'ended' : 'secondary';
+  const phaseWord = PHASE_WORD[currentPhase];
 
-  const phaseLabel =
-    currentPhase === 'upcoming' ? 'Upcoming' :
-    currentPhase === 'registration' ? 'Registration Open' :
-    currentPhase === 'public_test' ? 'Public Test' :
-    currentPhase === 'private_test' ? 'Private Test' : 'Ended';
+  const heroStats: StatItem[] = [
+    { label: 'Participants', value: String(participantCount) },
+    {
+      label: 'Scoring metric',
+      value: `${metricInfo?.name ?? competition.scoring_metric} ${metricInfo?.higher_is_better === false ? '↓' : '↑'}`,
+      tone: 'blue',
+    },
+    {
+      label: 'Team size',
+      value:
+        competition.participation_type === 'team'
+          ? `${competition.min_team_size}–${competition.max_team_size}`
+          : 'Individual',
+    },
+    { label: 'Total subs', value: String(allSubmissions?.length ?? 0) },
+  ];
+  if (registration?.status === 'approved') {
+    heroStats.splice(3, 0, {
+      label: 'Your quota',
+      value: (
+        <>
+          {submissionCount.daily}
+          <span className="text-xs font-normal text-text-disabled"> / {dailyLimit} today</span>
+        </>
+      ),
+      tone: dailyLimitReached ? 'warn' : 'default',
+    });
+  }
+
+  const showRegisterPanel = currentPhase !== 'ended' && (!registration || !user);
 
   return (
-    <div className="min-h-screen">
-      {/* ── Hero header ── */}
-      <div className="px-4 sm:px-6 pt-8 pb-6 sm:pt-10 sm:pb-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Phase + meta */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <Badge variant={phaseBadgeVariant}>{phaseLabel}</Badge>
-            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
-              {competition.participation_type} · {competition.competition_type}
-            </span>
-          </div>
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto">
 
-          {/* Title */}
-          <h1 className="font-brand text-3xl sm:text-4xl lg:text-5xl mb-3 gradient-text leading-tight">
-            {competition.title}
-          </h1>
-
-          {/* Description */}
-          <p className="text-sm sm:text-base text-text-secondary mb-5 max-w-3xl leading-relaxed">
-            {competition.description}
-          </p>
-
-          {/* Quick stats row — scrollable on mobile */}
-          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-none pb-1 text-sm text-text-secondary">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Users className="w-4 h-4 text-text-tertiary" />
-              <span>
-                {competition.participation_type === 'team'
-                  ? `${competition.min_team_size}–${competition.max_team_size} members`
-                  : 'Individual'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Target className="w-4 h-4 text-text-tertiary" />
-              <span>
-                {metricInfo?.name || 'F1 Score'}
-                {metricInfo?.higher_is_better === false && ' ↓'}
-                {metricInfo?.higher_is_better === true && ' ↑'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Trophy className="w-4 h-4 text-text-tertiary" />
-              <span>{participantCount} participants</span>
-            </div>
-          </div>
+        {/* ── Eyebrow ── */}
+        <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 mb-2.5 text-xs">
+          <span className={`inline-flex items-center gap-[7px] font-bold ${phaseWord.tone}`}>
+            <span
+              className="w-[7px] h-[7px] rounded-full bg-current"
+              style={phaseWord.glow ? { boxShadow: '0 0 0 3px color-mix(in srgb, currentColor 20%, transparent)' } : undefined}
+            />
+            {phaseWord.label}
+          </span>
+          <span className="font-semibold text-text-tertiary capitalize">
+            {competition.participation_type} · {competition.competition_type}
+          </span>
         </div>
-      </div>
 
-      {/* ── Main body ── */}
-      <div className="px-4 sm:px-6 pb-12">
-        <div className="max-w-7xl mx-auto">
+        {/* ── Title ── */}
+        <h1 className="font-brand text-[1.375rem] sm:text-3xl leading-[1.12] text-text-primary mb-2.5">
+          {competition.title}
+        </h1>
 
-          {/* ── Mobile action strip (visible < lg) ── */}
-          {user && registration?.status === 'approved' && (
-            <div className="lg:hidden mb-5 flex gap-2">
-              {competition.dataset_url && (
-                <a href={competition.dataset_url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full gap-1.5">
-                    <Download className="w-4 h-4" />
-                    Dataset
-                  </Button>
-                </a>
-              )}
-              {canSubmit ? (
-                <Link href={`/competitions/${id}/submit`} className="flex-1">
-                  <Button variant="primary" size="sm" className="w-full gap-1.5">
+        {/* ── Description ── */}
+        <p className="text-sm text-text-secondary leading-[1.55] max-w-[72ch] line-clamp-3 mb-4">
+          {competition.description}
+        </p>
+
+        {/* ── Hero stat run ── */}
+        <StatRun items={heroStats} className="mb-5" />
+
+        {/* ── Phase timeline (+ demoted countdown on desktop) ── */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-5">
+          <PhaseTimeline competition={competition} className="flex-1 min-w-0" />
+          {nextDeadline && currentPhase !== 'ended' && (
+            <div className="hidden sm:block text-right shrink-0 pt-0.5">
+              <DetailCountdown target={nextDeadline.toISOString()} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Action line / register panel ── */}
+        {showRegisterPanel ? (
+          <div className="mb-6 rounded-xl border border-[color:rgba(37,99,235,0.35)] bg-bg-surface p-4 sm:p-[18px] shadow-[0_0_24px_rgba(37,99,235,0.12)]">
+            <h3 className="text-sm font-extrabold text-text-primary mb-1">
+              {currentPhase === 'registration' ? 'Registration is open' : 'Late registration available'}
+            </h3>
+            <p className="text-sm text-text-secondary mb-3">
+              {user
+                ? 'Register to download the dataset and submit solutions.'
+                : 'Log in to register and compete.'}
+            </p>
+            <Link href={user ? `/competitions/${id}/register` : '/login'}>
+              <Button variant="primary" size="sm" className="gap-2">
+                {user
+                  ? currentPhase === 'registration'
+                    ? 'Register now'
+                    : 'Late registration'
+                  : 'Log in to register'}
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-[18px] gap-y-3 mb-6">
+            <RegistrationStatusLine
+              registration={registration}
+              participationType={competition.participation_type}
+            />
+            <span className="flex-1 hidden sm:block" />
+            {canDownloadDataset && competition.dataset_url && (
+              <a
+                href={competition.dataset_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-text-secondary"
+              >
+                <Download className="w-3.5 h-3.5 text-[#60A5FA]" />
+                Download dataset
+              </a>
+            )}
+            {registration?.status === 'approved' &&
+              (canSubmit ? (
+                <Link href={`/competitions/${id}/submit`}>
+                  <Button variant="primary" size="sm" className="gap-2">
+                    Submit solution
                     <ArrowRight className="w-4 h-4" />
-                    Submit
                   </Button>
                 </Link>
               ) : (
-                <Button variant="primary" size="sm" disabled className="flex-1">
-                  Submit
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled
+                  title={
+                    dailyLimitReached
+                      ? 'Daily limit reached'
+                      : totalLimitReached
+                        ? 'Total limit reached'
+                        : 'Submissions not open'
+                  }
+                >
+                  Submit solution
                 </Button>
-              )}
-            </div>
-          )}
-
-          {/* ── Not registered — mobile CTA ── */}
-          {user && !registration && currentPhase !== 'ended' && (
-            <div className="lg:hidden mb-5">
-              <Link href={`/competitions/${id}/register`}>
-                <Button variant="primary" size="sm" className="w-full">
-                  {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
-                </Button>
-              </Link>
-            </div>
-          )}
-          {!user && currentPhase !== 'ended' && (
-            <div className="lg:hidden mb-5">
-              <Link href="/login">
-                <Button variant="primary" size="sm" className="w-full">
-                  Log in to Register
-                </Button>
-              </Link>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* ── Left / main (2 cols on lg) ── */}
-            <div className="lg:col-span-2 space-y-5">
-
-              {/* Countdown + timeline */}
-              <Card className="p-4 sm:p-6 overflow-hidden">
-                {nextDeadline && currentPhase !== 'ended' ? (
-                  <>
-                    <CountdownTimer
-                      targetDate={nextDeadline}
-                      label={getCountdownLabel(currentPhase)}
-                      className="w-full mb-5"
-                    />
-                    <div className="pt-4 border-t border-border-default overflow-x-auto">
-                      <HorizontalTimeline competition={competition} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-center text-text-tertiary text-sm mb-4">Competition Ended</p>
-                    <div className="overflow-x-auto">
-                      <HorizontalTimeline competition={competition} />
-                    </div>
-                  </>
-                )}
-              </Card>
-
-              {/* Dataset + submit (desktop only — shown in sidebar on desktop) */}
-              {canDownloadDataset && (
-                <Card className="hidden lg:block p-5">
-                  <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wide mb-4">
-                    Dataset & Submission
-                  </h3>
-                  <div className="flex gap-3">
-                    {competition.dataset_url && (
-                      <a href={competition.dataset_url} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button variant="outline" className="w-full gap-2">
-                          <Download className="w-4 h-4" />
-                          Download Dataset
-                        </Button>
-                      </a>
-                    )}
-                    {canSubmit ? (
-                      <Link href={`/competitions/${id}/submit`} className="flex-1">
-                        <Button variant="primary" className="w-full gap-2">
-                          <ArrowRight className="w-4 h-4" />
-                          Submit Solution
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Button variant="primary" disabled className="flex-1" title={
-                        dailyLimitReached ? 'Daily limit reached' :
-                        totalLimitReached ? 'Total limit reached' :
-                        'Submissions not available'
-                      }>
-                        Submit Solution
-                      </Button>
-                    )}
-                  </div>
-                  {!canSubmit && (
-                    <p className="text-xs text-text-tertiary mt-3">
-                      {dailyLimitReached && 'Daily submission limit reached. '}
-                      {totalLimitReached && 'Total submission limit reached. '}
-                      {!dailyLimitReached && !totalLimitReached && currentPhase === 'registration' && 'Submissions open after registration phase. '}
-                      {!dailyLimitReached && !totalLimitReached && currentPhase === 'ended' && 'Competition has ended. '}
-                    </p>
-                  )}
-                </Card>
-              )}
-
-              {/* Tabs */}
-              <CompetitionTabs
-                competition={competition}
-                leaderboard={leaderboard || []}
-                isRegistered={registration?.status === 'approved'}
-                userId={user?.id}
-              />
-            </div>
-
-            {/* ── Sidebar (right, 1 col on lg) ── */}
-            <div className="space-y-5">
-
-              {/* Registration status */}
-              {user ? (
-                <Card className="p-4 sm:p-5">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-4">
-                    Your Status
-                  </h3>
-
-                  {!registration && (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
-                        <XCircle className="w-4 h-4 text-text-disabled shrink-0" />
-                        Not registered
-                      </div>
-                      {currentPhase !== 'ended' && (
-                        <Link href={`/competitions/${id}/register`} className="block">
-                          <Button variant="primary" size="sm" className="w-full">
-                            {currentPhase === 'registration' ? 'Register Now' : 'Late Registration'}
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  )}
-
-                  {registration?.status === 'pending' && (
-                    <div className="flex items-start gap-3 p-3 bg-warning/10 border border-warning/20 rounded-xl">
-                      <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-warning">Pending Approval</p>
-                        <p className="text-xs text-text-tertiary mt-0.5">Awaiting admin review</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {registration?.status === 'approved' && (
-                    <>
-                      <div className="flex items-start gap-3 p-3 bg-success/10 border border-success/20 rounded-xl mb-4">
-                        <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-success">Registered & Approved</p>
-                          <p className="text-xs text-text-tertiary mt-0.5">You can submit solutions</p>
-                        </div>
-                      </div>
-
-                      {/* Quota grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-bg-elevated rounded-xl border border-border-default">
-                          <p className="text-xs text-text-tertiary mb-1">Daily</p>
-                          <p className="text-xl font-bold leading-none">
-                            <span className={dailyLimitReached ? 'text-error' : 'text-primary-blue'}>
-                              {submissionCount.daily}
-                            </span>
-                            <span className="text-text-disabled text-base">/{dailyLimit}</span>
-                          </p>
-                          {dailyLimitReached && (
-                            <p className="text-[10px] text-error mt-1">Limit reached</p>
-                          )}
-                        </div>
-                        <div className="p-3 bg-bg-elevated rounded-xl border border-border-default">
-                          <p className="text-xs text-text-tertiary mb-1">Total</p>
-                          <p className="text-xl font-bold text-primary-blue leading-none">
-                            {submissionCount.total}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Mobile submit button inside card */}
-                      {canSubmit && (
-                        <Link href={`/competitions/${id}/submit`} className="block mt-4 lg:hidden">
-                          <Button variant="primary" size="sm" className="w-full gap-2">
-                            <ArrowRight className="w-4 h-4" />
-                            Submit Solution
-                          </Button>
-                        </Link>
-                      )}
-                    </>
-                  )}
-
-                  {registration?.status === 'rejected' && (
-                    <div className="flex items-start gap-3 p-3 bg-error/10 border border-error/20 rounded-xl">
-                      <XCircle className="w-4 h-4 text-error mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-error">Registration Rejected</p>
-                        <p className="text-xs text-text-tertiary mt-0.5">Not approved by admins</p>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              ) : (
-                <Card className="p-4 sm:p-5">
-                  <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-3">
-                    Participation
-                  </h3>
-                  <p className="text-sm text-text-secondary mb-4">
-                    Log in to register and compete.
-                  </p>
-                  <Link href="/login" className="block">
-                    <Button variant="primary" size="sm" className="w-full">Log In to Register</Button>
-                  </Link>
-                </Card>
-              )}
-
-              {/* Evaluation criteria */}
-              <Card className="p-4 sm:p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-4">
-                  Evaluation
-                </h3>
-                <div className="space-y-3">
-                  <div className="p-3 bg-bg-elevated rounded-xl border border-border-default">
-                    <p className="text-xs text-text-tertiary mb-1">Scoring Metric</p>
-                    <p className="font-semibold text-primary-blue text-sm">
-                      {metricInfo?.name || competition.scoring_metric}
-                    </p>
-                    <p className="text-xs text-text-secondary mt-0.5">
-                      {metricInfo?.higher_is_better === false ? 'Lower is better ↓' : 'Higher is better ↑'}
-                    </p>
-                    {metricInfo?.description && (
-                      <p className="text-xs text-text-tertiary mt-2 leading-relaxed">
-                        {metricInfo.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-3 bg-bg-elevated rounded-xl border border-border-default">
-                    <p className="text-xs text-text-tertiary mb-1">Submission Format</p>
-                    <p className="font-semibold text-sm flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-text-tertiary" />
-                      CSV File
-                    </p>
-                    <p className="text-xs text-text-tertiary mt-0.5">
-                      Max {competition.max_file_size_mb || 10} MB
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Top participants preview */}
-              <Card className="p-4 sm:p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-4">
-                  Top Participants
-                </h3>
-                {leaderboard && leaderboard.length > 0 ? (
-                  <div className="space-y-2">
-                    {leaderboard.slice(0, 5).map((entry: any, index: number) => (
-                      <div
-                        key={entry.id}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${
-                          index === 0 ? 'bg-warning/5 border-warning/20' : 'bg-bg-elevated border-border-default'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className={`font-bold text-sm shrink-0 ${
-                            index === 0 ? 'text-warning' :
-                            index === 1 ? 'text-text-secondary' :
-                            index === 2 ? 'text-phase-registration' : 'text-text-tertiary'
-                          }`}>
-                            #{index + 1}
-                          </span>
-                          <span className="text-sm text-text-secondary truncate">
-                            {competition.participation_type === 'team'
-                              ? (entry.teams?.name || 'Unknown Team')
-                              : (entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous')}
-                          </span>
-                        </div>
-                        <span className="font-mono font-bold text-primary-blue text-sm shrink-0 ml-2">
-                          {entry.score?.toFixed(4) || '0.0000'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Trophy className="w-8 h-8 mx-auto mb-2 text-text-disabled opacity-40" />
-                    <p className="text-sm text-text-tertiary">No submissions yet</p>
-                  </div>
-                )}
-              </Card>
-            </div>
+              ))}
           </div>
-        </div>
+        )}
+
+        {/* ── Tabs ── */}
+        <CompetitionTabs
+          competition={competition}
+          leaderboard={leaderboard || []}
+          isRegistered={registration?.status === 'approved'}
+          userId={user?.id}
+          currentPhase={currentPhase}
+        />
       </div>
     </div>
   );
+}
+
+function RegistrationStatusLine({
+  registration,
+  participationType,
+}: {
+  registration: any;
+  participationType: string;
+}) {
+  if (registration?.status === 'approved') {
+    return (
+      <span className="inline-flex items-center gap-2 text-sm text-text-tertiary">
+        <CheckCircle2 className="w-4 h-4 text-[#34D399] shrink-0" />
+        Registered &amp; approved
+        {participationType === 'team' && registration.team_id && (
+          <span className="text-text-secondary font-bold">— your team</span>
+        )}
+      </span>
+    );
+  }
+  if (registration?.status === 'pending') {
+    return (
+      <span className="inline-flex items-center gap-2 text-sm text-[#FBBF24]">
+        <AlertCircle className="w-4 h-4 shrink-0" />
+        Registration pending admin review
+      </span>
+    );
+  }
+  if (registration?.status === 'rejected') {
+    return (
+      <span className="inline-flex items-center gap-2 text-sm text-[#F87171]">
+        <XCircle className="w-4 h-4 shrink-0" />
+        Registration rejected
+      </span>
+    );
+  }
+  return null;
 }

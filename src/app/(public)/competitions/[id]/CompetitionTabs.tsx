@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Trophy, FileText, History, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { Markdown } from '@/components/ui/Markdown';
+import { StatRun } from '@/components/ui/StatRun';
+import LeaderboardTable, { type LeaderboardEntry } from '@/components/leaderboard/LeaderboardTable';
+import type { CompetitionPhase } from '@/lib/utils/competition';
 
 interface CompetitionTabsProps {
   competition: any;
   leaderboard: any[];
   isRegistered: boolean;
   userId?: string;
+  currentPhase: CompetitionPhase;
 }
 
 type TabType = 'overview' | 'leaderboard' | 'individual_leaderboard' | 'submissions';
@@ -20,9 +22,15 @@ export default function CompetitionTabs({
   competition,
   leaderboard: initialLeaderboard,
   isRegistered,
-  userId
+  userId,
+  currentPhase,
 }: CompetitionTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  // Leaderboard leads once the competition is running or finished; Overview otherwise.
+  const [activeTab, setActiveTab] = useState<TabType>(
+    currentPhase === 'public_test' || currentPhase === 'private_test' || currentPhase === 'ended'
+      ? 'leaderboard'
+      : 'overview'
+  );
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [individualLeaderboard, setIndividualLeaderboard] = useState<any[]>([]);
@@ -495,38 +503,30 @@ export default function CompetitionTabs({
 
   const isTeamCompetition = competition.participation_type === 'team';
 
-  const tabs = [
-    { id: 'overview' as TabType, label: 'Overview', shortLabel: 'Overview', icon: FileText },
-    { id: 'leaderboard' as TabType, label: isTeamCompetition ? 'Team Leaderboard' : 'Leaderboard', shortLabel: isTeamCompetition ? 'Teams' : 'Leaderboard', icon: Trophy },
-    ...(isTeamCompetition ? [{ id: 'individual_leaderboard' as TabType, label: 'Individual Leaderboard', shortLabel: 'Individual', icon: Trophy }] : []),
-    ...(isRegistered ? [{ id: 'submissions' as TabType, label: 'My Submissions', shortLabel: 'My Subs', icon: History }] : []),
+  const tabs: { id: TabType; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'leaderboard', label: isTeamCompetition ? 'Team Leaderboard' : 'Leaderboard' },
+    ...(isTeamCompetition ? [{ id: 'individual_leaderboard' as TabType, label: 'Individual' }] : []),
+    ...(isRegistered ? [{ id: 'submissions' as TabType, label: 'My Submissions' }] : []),
   ];
 
   return (
     <div className="space-y-5">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-border-default overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                flex items-center gap-1.5 px-3 sm:px-5 py-3 text-sm font-semibold transition-all
-                border-b-2 -mb-px whitespace-nowrap shrink-0
-                ${activeTab === tab.id
-                  ? 'border-primary-blue text-primary-blue'
-                  : 'border-transparent text-text-tertiary hover:text-text-secondary'
-                }
-              `}
-            >
-              <Icon className="w-4 h-4 hidden sm:block" />
-              <span className="sm:hidden">{tab.shortLabel}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Tab navigation — underline style */}
+      <div className="flex gap-1 border-b border-border-default overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-3 py-[11px] text-sm font-bold whitespace-nowrap shrink-0 border-b-2 -mb-px transition-colors ${
+              activeTab === tab.id
+                ? 'border-primary-blue text-text-primary'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
@@ -605,22 +605,37 @@ export default function CompetitionTabs({
   }
 }
 
-// Overview Tab Component
+// Overview Tab — Markdown problem statement + an Evaluation section
+// (folded in from the removed sidebar so nothing is lost).
 function OverviewTab({ competition }: { competition: any }) {
+  const metricInfo =
+    SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const direction =
+    metricInfo?.higher_is_better === false ? 'Lower is better ↓' : 'Higher is better ↑';
+
   return (
-    <div className="space-y-4">
-      <Card className="p-4 sm:p-6">
-        <h3 className="text-lg sm:text-xl font-bold mb-4">Problem Statement</h3>
-        <div className="text-text-secondary leading-relaxed text-sm sm:text-base break-words overflow-hidden">
-          {competition.problem_statement ? (
-            <div className="whitespace-pre-wrap break-words">
-              {competition.problem_statement}
-            </div>
-          ) : (
-            <p className="text-text-tertiary">No problem statement provided yet.</p>
-          )}
-        </div>
-      </Card>
+    <div className="max-w-[72ch]">
+      <h3 className="text-lg font-extrabold text-text-primary mb-3">Problem statement</h3>
+      {competition.problem_statement ? (
+        <Markdown>{competition.problem_statement}</Markdown>
+      ) : (
+        <p className="text-sm text-text-tertiary">No problem statement provided yet.</p>
+      )}
+
+      <h3 className="text-lg font-extrabold text-text-primary mt-8 mb-2">Evaluation</h3>
+      <p className="text-sm text-text-secondary leading-[1.65] mb-1.5">
+        <span className="text-text-primary font-bold">
+          {metricInfo?.name ?? competition.scoring_metric}
+        </span>{' '}
+        — {direction}.
+      </p>
+      {metricInfo?.description && (
+        <p className="text-sm text-text-tertiary leading-[1.65] mb-3">{metricInfo.description}</p>
+      )}
+      <p className="text-sm text-text-secondary leading-[1.65]">
+        Submit a <span className="font-mono text-[#22D3EE]">.csv</span> file, up to{' '}
+        {competition.max_file_size_mb ?? 10} MB.
+      </p>
     </div>
   );
 }
@@ -642,35 +657,29 @@ function PhaseTabsNav({
     return null;
   }
 
-  const tabClass = (isActive: boolean, activeColor = 'border-primary-blue text-primary-blue') =>
-    `px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all border-b-2 -mb-px whitespace-nowrap shrink-0 ${
-      isActive ? activeColor : 'border-transparent text-text-tertiary hover:text-text-secondary'
+  const linkClass = (isActive: boolean, active = 'text-text-primary border-primary-blue') =>
+    `pb-1 text-sm font-bold whitespace-nowrap shrink-0 border-b-2 transition-colors ${
+      isActive ? active : 'border-transparent text-text-tertiary hover:text-text-secondary'
     }`;
 
   return (
-    <div className="flex gap-1 sm:gap-2 mb-6 border-b border-border-default overflow-x-auto scrollbar-none">
+    <div className="flex gap-5 mb-5 overflow-x-auto scrollbar-none">
+      <button onClick={() => onPhaseChange('public')} className={linkClass(phase === 'public')}>
+        Public Phase
+      </button>
+      {showPrivate && (
+        <button onClick={() => onPhaseChange('private')} className={linkClass(phase === 'private')}>
+          Private Phase
+        </button>
+      )}
       {showFinal && (
         <button
           onClick={() => onPhaseChange('final')}
-          className={tabClass(phase === 'final', 'border-warning text-warning')}
+          className={linkClass(phase === 'final', 'text-[#FBBF24] border-[#FBBF24]')}
         >
           Final
         </button>
       )}
-      {showPrivate && (
-        <button
-          onClick={() => onPhaseChange('private')}
-          className={tabClass(phase === 'private')}
-        >
-          Private Phase
-        </button>
-      )}
-      <button
-        onClick={() => onPhaseChange('public')}
-        className={tabClass(phase === 'public')}
-      >
-        Public Phase
-      </button>
     </div>
   );
 }
@@ -815,90 +824,61 @@ function ScoreDistributionChart({
     ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
     : sortedScores[Math.floor(sortedScores.length / 2)];
 
-  // Calculate median position for line indicator
-  const mainBinsStartIndex = outlierCount.low > 0 ? 1 : 0;
-  const mainBinsEndIndex = bins.length - (outlierCount.high > 0 ? 1 : 0);
-  const medianPosition = focusMax !== focusMin
-    ? ((median - focusMin) / (focusMax - focusMin)) * 100
-    : 50;
-  const medianInRange = median >= focusMin && median <= focusMax;
+  const behindLeader = higherIsBetter
+    ? sortedScores[sortedScores.length - 1] - (userBestScore ?? 0)
+    : (userBestScore ?? 0) - sortedScores[0];
 
   return (
-    <Card className="p-4 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <h3 className="text-sm font-semibold text-text-secondary">
-          Score Distribution
-          <span className="text-xs font-normal text-text-tertiary ml-2">
-            {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
-          </span>
-        </h3>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
-          <span>Participants: <span className="font-semibold text-text-secondary">{totalParticipants}</span></span>
-          <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
-          <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
-        </div>
-      </div>
+    <div className="mb-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary mb-2.5">
+        Score distribution{' '}
+        <span className="font-mono normal-case tracking-normal text-text-secondary">
+          · {higherIsBetter ? 'higher is better →' : 'lower is better ←'} · {totalParticipants}{' '}
+          {totalParticipants === 1 ? 'entry' : 'entries'} · avg {avg.toFixed(decimals)} · median{' '}
+          {median.toFixed(decimals)}
+        </span>
+      </p>
 
-      {/* Histogram */}
-      <div className="relative flex items-end gap-1 mb-2" style={{ height: '120px' }}>
-        {/* Median line indicator */}
-        {medianInRange && (
-          <div
-            className="absolute bottom-0 top-0 w-0.5 bg-cyan-400 z-10 opacity-60"
-            style={{
-              left: `calc(${outlierCount.low > 0 ? '8% + ' : ''}${medianPosition * (outlierCount.low > 0 && outlierCount.high > 0 ? 0.84 : outlierCount.low > 0 || outlierCount.high > 0 ? 0.92 : 1)}%)`
-            }}
-            title={`Median: ${median.toFixed(decimals)}`}
-          />
-        )}
-
+      {/* Histogram — bars only, no card */}
+      <div className="flex items-end gap-[3px] h-[72px]">
         {bins.map((bin, index) => {
           const heightPercent = maxCount > 0 ? (bin.count / maxCount) * 100 : 0;
           const isHovered = hoveredBar === index;
           const displayHeight = bin.count > 0 ? Math.max(heightPercent, 6) : 0;
-          const heightPx = (displayHeight / 100) * 120;
           const isOutlierBin = bin.isOutlier;
 
           return (
             <div
               key={index}
-              className={`relative group cursor-pointer ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
-              style={{ minWidth: isOutlierBin ? '24px' : '12px' }}
+              className={`relative cursor-default ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
               onMouseEnter={() => setHoveredBar(index)}
               onMouseLeave={() => setHoveredBar(null)}
             >
               <div
-                className={`
-                  w-full rounded-t-sm transition-all duration-200
-                  ${bin.hasUser
-                    ? 'bg-gradient-to-t from-warning to-yellow-400'
+                className={`w-full rounded-t-[2px] transition-opacity ${
+                  bin.hasUser
+                    ? 'bg-gradient-to-t from-[#D97706] to-[#FBBF24] opacity-100'
                     : isOutlierBin
-                      ? 'bg-gradient-to-t from-slate-500 to-slate-400'
-                      : 'bg-gradient-to-t from-primary-blue to-cyan-400'
-                  }
-                  ${isHovered ? 'opacity-100' : 'opacity-80'}
-                `}
-                style={{ height: `${heightPx}px` }}
+                      ? 'bg-bg-elevated'
+                      : 'bg-gradient-to-t from-[#2563EB] to-[#22D3EE] opacity-75'
+                }`}
+                style={{ height: `${(displayHeight / 100) * 72}px` }}
               />
-
-              {/* Tooltip */}
               {isHovered && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap">
                   <div className="bg-bg-primary border border-border-default rounded-lg px-3 py-2 shadow-lg">
                     <div className="text-xs font-mono text-text-secondary">
-                      {isOutlierBin ? (
-                        index === 0 && outlierCount.low > 0 ? `< ${focusMin.toFixed(2)} (outliers)` : `> ${focusMax.toFixed(2)} (outliers)`
-                      ) : (
-                        `${bin.min.toFixed(2)} - ${bin.max.toFixed(2)}`
-                      )}
+                      {isOutlierBin
+                        ? index === 0 && outlierCount.low > 0
+                          ? `< ${focusMin.toFixed(2)} (outliers)`
+                          : `> ${focusMax.toFixed(2)} (outliers)`
+                        : `${bin.min.toFixed(2)} – ${bin.max.toFixed(2)}`}
                     </div>
-                    <div className="text-sm font-semibold text-text-primary">
-                      {bin.count} {bin.count === 1 ? 'participant' : 'participants'}
+                    <div className="text-sm font-bold text-text-primary">
+                      {bin.count} {bin.count === 1 ? 'entry' : 'entries'}
                     </div>
                     {bin.hasUser && (
-                      <div className="text-xs text-warning font-medium mt-1">
-                        Your score is here
-                      </div>
+                      <div className="text-xs text-[#FBBF24] font-medium mt-1">Your score is here</div>
                     )}
                   </div>
                 </div>
@@ -908,71 +888,43 @@ function ScoreDistributionChart({
         })}
       </div>
 
-      {/* X-axis labels */}
-      <div className="flex justify-between text-xs text-text-tertiary font-mono px-1">
+      {/* Axis */}
+      <div className="flex justify-between font-mono text-[0.6875rem] text-text-disabled mt-1.5 pt-1.5 border-t border-border-default">
         <span>{sortedScores[0].toFixed(2)}</span>
-        <span className="text-cyan-400">{median.toFixed(2)}</span>
+        <span className="text-[#22D3EE]">{median.toFixed(2)} median</span>
         <span>{sortedScores[sortedScores.length - 1].toFixed(2)}</span>
       </div>
 
-      {/* User position info */}
-      <div className="mt-4 pt-4 border-t border-border-default">
-        {isLoggedIn && isRegistered ? (
-          userBestScore !== undefined ? (
-            <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <Trophy className="hidden xs:block w-5 h-5 text-warning shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs text-text-tertiary">Your Best Score</div>
-                  <div className="font-mono font-bold text-warning truncate">{userBestScore.toFixed(decimals)}</div>
-                </div>
-              </div>
-              <div className="text-center sm:text-right">
-                <div className="text-xs text-text-tertiary">Your Rank</div>
-                <div className="font-bold text-text-primary">
-                  #{userRank} <span className="text-text-tertiary font-normal">/ {totalParticipants}</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-text-tertiary">
-                  {higherIsBetter ? 'Behind Leader' : 'Above Leader'}
-                </div>
-                <div className="font-mono text-sm text-text-secondary truncate">
-                  {higherIsBetter
-                    ? (sortedScores[sortedScores.length - 1] - userBestScore).toFixed(decimals)
-                    : (userBestScore - sortedScores[0]).toFixed(decimals)
-                  }
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 text-text-tertiary">
-              <FileText className="w-5 h-5 shrink-0" />
-              <div>
-                <div className="text-sm">You haven't submitted yet</div>
-                <div className="text-xs">Submit your solution to see your position!</div>
-              </div>
-            </div>
-          )
-        ) : isLoggedIn ? (
-          <div className="flex items-center gap-3 text-text-tertiary">
-            <FileText className="w-5 h-5 shrink-0" />
-            <div>
-              <div className="text-sm">Register to participate</div>
-              <div className="text-xs">Join this competition to submit your solution!</div>
-            </div>
-          </div>
+      {/* Your position — a stat run, or a one-line prompt */}
+      <div className="mt-5">
+        {isLoggedIn && isRegistered && userBestScore !== undefined ? (
+          <StatRun
+            size="sm"
+            items={[
+              { label: 'Your best score', value: userBestScore.toFixed(decimals), tone: 'warn' },
+              {
+                label: 'Your rank',
+                value: (
+                  <>
+                    #{userRank}
+                    <span className="text-xs font-normal text-text-disabled"> / {totalParticipants}</span>
+                  </>
+                ),
+              },
+              { label: higherIsBetter ? 'Behind leader' : 'Above leader', value: behindLeader.toFixed(decimals) },
+            ]}
+          />
         ) : (
-          <div className="flex items-center gap-3 text-text-tertiary">
-            <FileText className="w-5 h-5 shrink-0" />
-            <div>
-              <div className="text-sm">Login to participate</div>
-              <div className="text-xs">Create an account or login to join this competition!</div>
-            </div>
-          </div>
+          <p className="text-sm text-text-tertiary">
+            {isLoggedIn && isRegistered
+              ? "You haven't submitted yet — submit a solution to see your position."
+              : isLoggedIn
+                ? 'Register to submit and see your position on this chart.'
+                : 'Log in and register to submit and see your position.'}
+          </p>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -1030,85 +982,55 @@ function FinalScoreDistributionChart({
     ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
     : sortedScores[Math.floor(sortedScores.length / 2)];
 
-  // Calculate median position for line indicator
-  const medianPosition = focusMax !== focusMin
-    ? ((median - focusMin) / (focusMax - focusMin)) * 100
-    : 50;
-  const medianInRange = median >= focusMin && median <= focusMax;
-
   return (
-    <Card className="p-4 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <h3 className="text-sm font-semibold text-text-secondary">
-          Final Score Distribution (Average)
-          <span className="text-xs font-normal text-text-tertiary ml-2">
-            {higherIsBetter ? '(Higher is better →)' : '(← Lower is better)'}
-          </span>
-        </h3>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-tertiary">
-          <span>Complete: <span className="font-semibold text-text-secondary">{entriesWithAverage.length}</span></span>
-          <span>Avg: <span className="font-mono font-semibold text-text-secondary">{avg.toFixed(decimals)}</span></span>
-          <span>Median: <span className="font-mono font-semibold text-text-secondary">{median.toFixed(decimals)}</span></span>
-        </div>
-      </div>
+    <div className="mb-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary mb-2.5">
+        Final score distribution{' '}
+        <span className="font-mono normal-case tracking-normal text-text-secondary">
+          · average of public + private · {entriesWithAverage.length} complete · avg{' '}
+          {avg.toFixed(decimals)} · median {median.toFixed(decimals)}
+        </span>
+      </p>
 
-      {/* Histogram */}
-      <div className="relative flex items-end gap-1 mb-2" style={{ height: '120px' }}>
-        {/* Median line indicator */}
-        {medianInRange && (
-          <div
-            className="absolute bottom-0 top-0 w-0.5 bg-cyan-400 z-10 opacity-60"
-            style={{
-              left: `calc(${outlierCount.low > 0 ? '8% + ' : ''}${medianPosition * (outlierCount.low > 0 && outlierCount.high > 0 ? 0.84 : outlierCount.low > 0 || outlierCount.high > 0 ? 0.92 : 1)}%)`
-            }}
-            title={`Median: ${median.toFixed(decimals)}`}
-          />
-        )}
-
+      <div className="flex items-end gap-[3px] h-[72px]">
         {bins.map((bin, index) => {
           const heightPercent = maxCount > 0 ? (bin.count / maxCount) * 100 : 0;
           const isHovered = hoveredBar === index;
           const displayHeight = bin.count > 0 ? Math.max(heightPercent, 6) : 0;
-          const heightPx = (displayHeight / 100) * 120;
           const isOutlierBin = bin.isOutlier;
 
           return (
             <div
               key={index}
-              className={`relative group cursor-pointer ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
-              style={{ minWidth: isOutlierBin ? '24px' : '12px' }}
+              className={`relative cursor-default ${isOutlierBin ? 'flex-[0.5]' : 'flex-1'}`}
               onMouseEnter={() => setHoveredBar(index)}
               onMouseLeave={() => setHoveredBar(null)}
             >
               <div
-                className={`
-                  w-full rounded-t-sm transition-all duration-200
-                  ${bin.hasUser
-                    ? 'bg-gradient-to-t from-warning to-yellow-400'
+                className={`w-full rounded-t-[2px] transition-opacity ${
+                  bin.hasUser
+                    ? 'bg-gradient-to-t from-[#D97706] to-[#FBBF24] opacity-100'
                     : isOutlierBin
-                      ? 'bg-gradient-to-t from-slate-500 to-slate-400'
-                      : 'bg-gradient-to-t from-primary-blue to-cyan-400'
-                  }
-                  ${isHovered ? 'opacity-100' : 'opacity-80'}
-                `}
-                style={{ height: `${heightPx}px` }}
+                      ? 'bg-bg-elevated'
+                      : 'bg-gradient-to-t from-[#2563EB] to-[#22D3EE] opacity-75'
+                }`}
+                style={{ height: `${(displayHeight / 100) * 72}px` }}
               />
-
               {isHovered && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 whitespace-nowrap">
                   <div className="bg-bg-primary border border-border-default rounded-lg px-3 py-2 shadow-lg">
                     <div className="text-xs font-mono text-text-secondary">
-                      {isOutlierBin ? (
-                        index === 0 && outlierCount.low > 0 ? `< ${focusMin.toFixed(2)} (outliers)` : `> ${focusMax.toFixed(2)} (outliers)`
-                      ) : (
-                        `${bin.min.toFixed(2)} - ${bin.max.toFixed(2)}`
-                      )}
+                      {isOutlierBin
+                        ? index === 0 && outlierCount.low > 0
+                          ? `< ${focusMin.toFixed(2)} (outliers)`
+                          : `> ${focusMax.toFixed(2)} (outliers)`
+                        : `${bin.min.toFixed(2)} – ${bin.max.toFixed(2)}`}
                     </div>
-                    <div className="text-sm font-semibold text-text-primary">
-                      {bin.count} {bin.count === 1 ? 'participant' : 'participants'}
+                    <div className="text-sm font-bold text-text-primary">
+                      {bin.count} {bin.count === 1 ? 'entry' : 'entries'}
                     </div>
                     {bin.hasUser && (
-                      <div className="text-xs text-warning font-medium mt-1">Your average is here</div>
+                      <div className="text-xs text-[#FBBF24] font-medium mt-1">Your average is here</div>
                     )}
                   </div>
                 </div>
@@ -1118,67 +1040,42 @@ function FinalScoreDistributionChart({
         })}
       </div>
 
-      <div className="flex justify-between text-xs text-text-tertiary font-mono px-1">
+      <div className="flex justify-between font-mono text-[0.6875rem] text-text-disabled mt-1.5 pt-1.5 border-t border-border-default">
         <span>{sortedScores[0].toFixed(2)}</span>
-        <span className="text-cyan-400">{median.toFixed(2)}</span>
+        <span className="text-[#22D3EE]">{median.toFixed(2)} median</span>
         <span>{sortedScores[sortedScores.length - 1].toFixed(2)}</span>
       </div>
 
-      {/* User position info */}
-      <div className="mt-4 pt-4 border-t border-border-default">
-        {isLoggedIn && isRegistered ? (
-          userAverage !== undefined && userAverage !== null ? (
-            <div className="flex items-center justify-between gap-x-4 gap-y-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <Trophy className="hidden xs:block w-5 h-5 text-warning shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs text-text-tertiary">Your Final Average</div>
-                  <div className="font-mono font-bold text-warning truncate">{userAverage.toFixed(decimals)}</div>
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-xs text-text-tertiary">Final Rank</div>
-                <div className="font-bold text-text-primary">
-                  #{userRank} <span className="text-text-tertiary font-normal">/ {entriesWithAverage.length}</span>
-                </div>
-              </div>
-            </div>
-          ) : userEntry ? (
-            <div className="flex items-center gap-3 text-text-tertiary">
-              <FileText className="w-5 h-5 shrink-0" />
-              <div>
-                <div className="text-sm">Missing scores for final ranking</div>
-                <div className="text-xs">You need both public and private scores for final ranking</div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 text-text-tertiary">
-              <FileText className="w-5 h-5 shrink-0" />
-              <div>
-                <div className="text-sm">You didn't participate</div>
-                <div className="text-xs">No submissions found for this competition</div>
-              </div>
-            </div>
-          )
-        ) : isLoggedIn ? (
-          <div className="flex items-center gap-3 text-text-tertiary">
-            <FileText className="w-5 h-5 shrink-0" />
-            <div>
-              <div className="text-sm">You weren't registered</div>
-              <div className="text-xs">This competition has ended</div>
-            </div>
-          </div>
+      <div className="mt-5">
+        {isLoggedIn && isRegistered && userAverage !== undefined && userAverage !== null ? (
+          <StatRun
+            size="sm"
+            items={[
+              { label: 'Your final average', value: userAverage.toFixed(decimals), tone: 'warn' },
+              {
+                label: 'Final rank',
+                value: (
+                  <>
+                    #{userRank}
+                    <span className="text-xs font-normal text-text-disabled"> / {entriesWithAverage.length}</span>
+                  </>
+                ),
+              },
+            ]}
+          />
         ) : (
-          <div className="flex items-center gap-3 text-text-tertiary">
-            <FileText className="w-5 h-5 shrink-0" />
-            <div>
-              <div className="text-sm">Login to see your results</div>
-              <div className="text-xs">If you participated, login to view your final ranking</div>
-            </div>
-          </div>
+          <p className="text-sm text-text-tertiary">
+            {isLoggedIn && isRegistered && userEntry
+              ? 'You need both a public and a private score to appear in the final ranking.'
+              : isLoggedIn && isRegistered
+                ? 'No submissions found for this competition.'
+                : isLoggedIn
+                  ? "You weren't registered for this competition."
+                  : 'Log in to view your final ranking if you participated.'}
+          </p>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -1204,14 +1101,26 @@ function FinalLeaderboardTable({
 
   if (data.length === 0) {
     return (
-      <Card className="p-12">
-        <div className="text-center text-text-tertiary">
-          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p>No submissions yet for the final leaderboard.</p>
-        </div>
-      </Card>
+      <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+        No submissions yet for the final leaderboard.
+      </div>
     );
   }
+
+  const rows: LeaderboardEntry[] = data.map((entry, index) => ({
+    rank: index + 1,
+    userId: isIndividual ? entry.entityId : undefined,
+    teamId: isIndividual ? undefined : entry.entityId,
+    userName: isIndividual
+      ? entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous'
+      : entry.teamName || entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous',
+    teamName: isIndividual ? entry.teamName : undefined,
+    publicScore: entry.publicScore,
+    privateScore: entry.privateScore,
+    averageScore: entry.average,
+    totalSubmissions: entry.totalSubmissions,
+    isCurrentUser: !!userEntityId && entry.entityId === userEntityId,
+  }));
 
   return (
     <>
@@ -1222,103 +1131,14 @@ function FinalLeaderboardTable({
         isLoggedIn={isLoggedIn}
         competition={competition}
       />
-      <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-bg-elevated border-b border-border-default">
-            <tr>
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">
-                {isIndividual ? 'Member' : (isTeamCompetition ? 'Team' : 'Participant')}
-              </th>
-              {isIndividual && isTeamCompetition && (
-                <th className="px-3 sm:px-4 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Team</th>
-              )}
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Public</th>
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Private</th>
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Average</th>
-              <th className="px-3 sm:px-4 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-default">
-            {data.map((entry, index) => (
-              <tr
-                key={entry.entityId}
-                className={`
-                  transition-colors hover:bg-bg-elevated
-                  ${index === 0 ? 'bg-warning/5' : ''}
-                  ${index === 1 ? 'bg-text-secondary/5' : ''}
-                  ${index === 2 ? 'bg-phase-registration/5' : ''}
-                  ${!entry.hasBoth ? 'opacity-70' : ''}
-                `}
-              >
-                <td className="px-3 sm:px-4 py-3 sm:py-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`
-                      font-bold text-lg
-                      ${index === 0 ? 'text-warning' : ''}
-                      ${index === 1 ? 'text-text-secondary' : ''}
-                      ${index === 2 ? 'text-phase-registration' : ''}
-                      ${index > 2 ? 'text-text-tertiary' : ''}
-                    `}>
-                      #{index + 1}
-                    </span>
-                    {index < 3 && <Trophy className="w-4 h-4" />}
-                  </div>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-4">
-                  <span className="font-medium">
-                    {isIndividual
-                      ? (entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous')
-                      : (entry.teamName || entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous')
-                    }
-                  </span>
-                </td>
-                {isIndividual && isTeamCompetition && (
-                  <td className="px-3 sm:px-4 py-3 sm:py-4">
-                    <span className="text-sm text-text-tertiary">
-                      {entry.teamName || '—'}
-                    </span>
-                  </td>
-                )}
-                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
-                  {entry.publicScore !== null ? (
-                    <span className="font-mono font-bold text-phase-public">
-                      {entry.publicScore.toFixed(decimals)}
-                    </span>
-                  ) : (
-                    <span className="text-text-tertiary">—</span>
-                  )}
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
-                  {entry.privateScore !== null ? (
-                    <span className="font-mono font-bold text-phase-private">
-                      {entry.privateScore.toFixed(decimals)}
-                    </span>
-                  ) : (
-                    <span className="text-text-tertiary">—</span>
-                  )}
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
-                  {entry.average !== null ? (
-                    <span className="font-mono font-bold text-warning">
-                      {entry.average.toFixed(decimals)}
-                    </span>
-                  ) : (
-                    <span className="text-text-tertiary">—</span>
-                  )}
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
-                  <span className="text-sm text-text-tertiary">
-                    {entry.totalSubmissions}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+      <LeaderboardTable
+        data={rows}
+        variant="final"
+        showTeam={isIndividual && isTeamCompetition}
+        decimals={decimals}
+        showWhen={false}
+        emptyMessage="No submissions yet for the final leaderboard."
+      />
     </>
   );
 }
@@ -1366,13 +1186,28 @@ function LeaderboardTab({
   // Extract scores for distribution chart
   const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const metricName = metricInfo?.name || 'Score';
+  const decimals = metricInfo?.decimals || 4;
+  const ascending = metricInfo?.higher_is_better === false;
+  const arrow = ascending ? ' ↓' : ' ↑';
+
+  const nav = is4Phase ? (
+    <PhaseTabsNav
+      phase={phase}
+      onPhaseChange={onPhaseChange}
+      showFinal={showFinalTab}
+      showPrivate={showPrivateTab}
+    />
+  ) : null;
+
   if (loading) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">Loading leaderboard...</div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          Loading leaderboard…
+        </div>
       </div>
     );
   }
@@ -1380,30 +1215,23 @@ function LeaderboardTab({
   if (showPrivateNotStartedMessage) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center">
-            <Clock className="w-12 h-12 mx-auto mb-4 text-text-tertiary opacity-30" />
-            <p className="text-lg font-semibold text-text-secondary mb-2">Private Phase Not Started</p>
-            <p className="text-text-tertiary">
-              The private test phase will start after the public phase ends.
-            </p>
-            {privateTestStart && (
-              <p className="text-sm text-text-tertiary mt-2">
-                Starts: {privateTestStart.toLocaleDateString()} at {privateTestStart.toLocaleTimeString()}
-              </p>
-            )}
-          </div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center">
+          <p className="text-sm font-bold text-text-secondary mb-1">Private phase not started</p>
+          <p className="text-sm text-text-tertiary">
+            The private test phase begins after the public phase ends.
+            {privateTestStart &&
+              ` Starts ${privateTestStart.toLocaleDateString()} at ${privateTestStart.toLocaleTimeString()}.`}
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Show Final leaderboard
   if (currentPhase === 'final') {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
+        {nav}
         <FinalLeaderboardTable
           data={finalLeaderboard}
           competition={competition}
@@ -1419,27 +1247,30 @@ function LeaderboardTab({
   if (leaderboard.length === 0) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">
-            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>No submissions yet. Be the first to submit!</p>
-          </div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          No submissions yet. Be the first to submit!
+        </div>
       </div>
     );
   }
 
-  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const metricName = metricInfo?.name || 'Score';
-  const decimals = metricInfo?.decimals || 4;
-  const isTeamCompetition = competition.participation_type === 'team';
+  const rows: LeaderboardEntry[] = leaderboard.map((entry, index) => ({
+    rank: index + 1,
+    userId: entry.user_id ?? undefined,
+    teamId: entry.team_id ?? undefined,
+    userName: entry.users?.full_name || entry.users?.email?.split('@')[0] || undefined,
+    teamName: entry.teams?.name || undefined,
+    score: entry.score,
+    totalSubmissions: entry.submission_count || 0,
+    lastSubmissionAt: entry.submitted_at,
+    isCurrentUser:
+      !!userEntityId && (entry.team_id === userEntityId || entry.user_id === userEntityId),
+  }));
 
   return (
     <div>
-      {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-
-      {/* Score Distribution Chart */}
+      {nav}
       <ScoreDistributionChart
         scores={scores}
         userBestScore={userBestScore}
@@ -1449,69 +1280,13 @@ function LeaderboardTab({
         totalParticipants={leaderboard.length}
         competition={competition}
       />
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-          <thead className="bg-bg-elevated border-b border-border-default">
-            <tr>
-              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
-              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">
-                {isTeamCompetition ? 'Team' : 'Participant'}
-              </th>
-              <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
-              <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
-                {metricName}
-                {metricInfo?.higher_is_better === false && ' ↓'}
-                {metricInfo?.higher_is_better === true && ' ↑'}
-              </th>
-              <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-default">
-            {leaderboard.map((entry, index) => (
-              <tr
-                key={entry.id}
-                className={`
-                  transition-colors hover:bg-bg-elevated
-                  ${index === 0 ? 'bg-warning/5' : ''}
-                  ${index === 1 ? 'bg-text-secondary/5' : ''}
-                  ${index === 2 ? 'bg-phase-registration/5' : ''}
-                `}
-              >
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`font-bold text-base ${
-                      index === 0 ? 'text-warning' :
-                      index === 1 ? 'text-text-secondary' :
-                      index === 2 ? 'text-phase-registration' : 'text-text-tertiary'
-                    }`}>
-                      #{index + 1}
-                    </span>
-                    {index < 3 && <Trophy className="w-3.5 h-3.5" />}
-                  </div>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                  <span className="font-medium text-sm">
-                    {entry.teams?.name || entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
-                  </span>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
-                  <span className="text-sm text-text-tertiary">{entry.submission_count || 0}</span>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
-                  <span className="font-mono font-bold text-primary-blue text-sm">
-                    {entry.score?.toFixed(decimals) || '0.0000'}
-                  </span>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right text-xs text-text-tertiary whitespace-nowrap">
-                  {new Date(entry.submitted_at).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+      <LeaderboardTable
+        data={rows}
+        variant="standard"
+        metricLabel={`${metricName}${arrow}`}
+        decimals={decimals}
+        scoreAscending={ascending}
+      />
     </div>
   );
 }
@@ -1557,13 +1332,27 @@ function IndividualLeaderboardTab({
   // Extract scores for distribution chart
   const scores = leaderboard.map(entry => entry.score).filter((s): s is number => s !== null && s !== undefined);
 
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const metricName = metricInfo?.name || 'Score';
+  const decimals = metricInfo?.decimals || 4;
+  const ascending = metricInfo?.higher_is_better === false;
+
+  const nav = is4Phase ? (
+    <PhaseTabsNav
+      phase={phase}
+      onPhaseChange={onPhaseChange}
+      showFinal={showFinalTab}
+      showPrivate={showPrivateTab}
+    />
+  ) : null;
+
   if (loading) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">Loading individual leaderboard...</div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          Loading individual leaderboard…
+        </div>
       </div>
     );
   }
@@ -1571,30 +1360,23 @@ function IndividualLeaderboardTab({
   if (showPrivateNotStartedMessage) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center">
-            <Clock className="w-12 h-12 mx-auto mb-4 text-text-tertiary opacity-30" />
-            <p className="text-lg font-semibold text-text-secondary mb-2">Private Phase Not Started</p>
-            <p className="text-text-tertiary">
-              The private test phase will start after the public phase ends.
-            </p>
-            {privateTestStart && (
-              <p className="text-sm text-text-tertiary mt-2">
-                Starts: {privateTestStart.toLocaleDateString()} at {privateTestStart.toLocaleTimeString()}
-              </p>
-            )}
-          </div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center">
+          <p className="text-sm font-bold text-text-secondary mb-1">Private phase not started</p>
+          <p className="text-sm text-text-tertiary">
+            The private test phase begins after the public phase ends.
+            {privateTestStart &&
+              ` Starts ${privateTestStart.toLocaleDateString()} at ${privateTestStart.toLocaleTimeString()}.`}
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Show Final leaderboard
   if (currentPhase === 'final') {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
+        {nav}
         <FinalLeaderboardTable
           data={finalLeaderboard}
           competition={competition}
@@ -1610,26 +1392,28 @@ function IndividualLeaderboardTab({
   if (leaderboard.length === 0) {
     return (
       <div>
-        {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">
-            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>No submissions yet. Individual members will be ranked here based on their contributions.</p>
-          </div>
-        </Card>
+        {nav}
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          No submissions yet. Individual members are ranked here by their contributions.
+        </div>
       </div>
     );
   }
 
-  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const metricName = metricInfo?.name || 'Score';
-  const decimals = metricInfo?.decimals || 4;
+  const rows: LeaderboardEntry[] = leaderboard.map((entry, index) => ({
+    rank: index + 1,
+    userId: entry.submitted_by ?? undefined,
+    userName: entry.users?.full_name || entry.users?.email?.split('@')[0] || undefined,
+    teamName: entry.teams?.name || 'Unknown team',
+    score: entry.score,
+    totalSubmissions: entry.submission_count || 0,
+    lastSubmissionAt: entry.submitted_at,
+    isCurrentUser: !!userId && entry.submitted_by === userId,
+  }));
 
   return (
     <div>
-      {is4Phase && <PhaseTabsNav phase={phase} onPhaseChange={onPhaseChange} showFinal={showFinalTab} showPrivate={showPrivateTab} />}
-
-      {/* Score Distribution Chart */}
+      {nav}
       <ScoreDistributionChart
         scores={scores}
         userBestScore={userBestScore}
@@ -1639,72 +1423,14 @@ function IndividualLeaderboardTab({
         totalParticipants={leaderboard.length}
         competition={competition}
       />
-
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-bg-elevated border-b border-border-default">
-              <tr>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Rank</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Member</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Team</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Submissions</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">
-                  {metricName}
-                  {metricInfo?.higher_is_better === false && ' ↓'}
-                  {metricInfo?.higher_is_better === true && ' ↑'}
-                </th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-default">
-              {leaderboard.map((entry, index) => (
-                <tr
-                  key={entry.id}
-                  className={`
-                    transition-colors hover:bg-bg-elevated
-                    ${index === 0 ? 'bg-warning/5' : ''}
-                    ${index === 1 ? 'bg-text-secondary/5' : ''}
-                    ${index === 2 ? 'bg-phase-registration/5' : ''}
-                  `}
-                >
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`font-bold text-base ${
-                        index === 0 ? 'text-warning' :
-                        index === 1 ? 'text-text-secondary' :
-                        index === 2 ? 'text-phase-registration' : 'text-text-tertiary'
-                      }`}>
-                        #{index + 1}
-                      </span>
-                      {index < 3 && <Trophy className="w-3.5 h-3.5" />}
-                    </div>
-                  </td>
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                    <span className="font-medium text-sm">
-                      {entry.users?.full_name || entry.users?.email?.split('@')[0] || 'Anonymous'}
-                    </span>
-                  </td>
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                    <span className="text-xs text-text-tertiary">{entry.teams?.name || 'Unknown Team'}</span>
-                  </td>
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
-                    <span className="text-sm text-text-tertiary">{entry.submission_count || 0}</span>
-                  </td>
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
-                    <span className="font-mono font-bold text-primary-blue text-sm">
-                      {entry.score?.toFixed(decimals) || '0.0000'}
-                    </span>
-                  </td>
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right text-xs text-text-tertiary whitespace-nowrap">
-                    {new Date(entry.submitted_at).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <LeaderboardTable
+        data={rows}
+        variant="standard"
+        showTeam
+        metricLabel={`${metricName}${ascending ? ' ↓' : ' ↑'}`}
+        decimals={decimals}
+        scoreAscending={ascending}
+      />
     </div>
   );
 }
@@ -1721,7 +1447,7 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
     : submissions.filter((sub: any) => sub.phase === phaseFilter);
 
   const phaseFilterNav = is4Phase ? (
-    <div className="flex gap-1 sm:gap-2 mb-6 border-b border-border-default overflow-x-auto scrollbar-none">
+    <div className="flex gap-5 mb-5 overflow-x-auto scrollbar-none">
       {([
         { value: 'all', label: 'All Phases' },
         { value: 'public', label: 'Public Phase' },
@@ -1730,9 +1456,9 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
         <button
           key={value}
           onClick={() => setPhaseFilter(value)}
-          className={`px-3 sm:px-6 py-3 text-sm sm:text-base font-semibold transition-all border-b-2 -mb-px whitespace-nowrap shrink-0 ${
+          className={`pb-1 text-sm font-bold whitespace-nowrap shrink-0 border-b-2 transition-colors ${
             phaseFilter === value
-              ? 'border-primary-blue text-primary-blue'
+              ? 'border-primary-blue text-text-primary'
               : 'border-transparent text-text-tertiary hover:text-text-secondary'
           }`}
         >
@@ -1746,9 +1472,9 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
     return (
       <div>
         {phaseFilterNav}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">Loading submissions...</div>
-        </Card>
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          Loading submissions…
+        </div>
       </div>
     );
   }
@@ -1757,12 +1483,9 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
     return (
       <div>
         {phaseFilterNav}
-        <Card className="p-12">
-          <div className="text-center text-text-tertiary">
-            <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>No submissions yet{phaseFilter !== 'all' ? ` in ${phaseFilter} phase` : ''}. Submit your first solution!</p>
-          </div>
-        </Card>
+        <div className="rounded-[10px] border border-border-default py-16 text-center text-sm text-text-tertiary">
+          No submissions yet{phaseFilter !== 'all' ? ` in the ${phaseFilter} phase` : ''}. Submit your first solution!
+        </div>
       </div>
     );
   }
@@ -1770,68 +1493,95 @@ function SubmissionsTab({ submissions, loading, competition }: { submissions: an
   return (
     <div>
       {phaseFilterNav}
-      <Card className="overflow-hidden">
+      <div className="rounded-[10px] border border-border-default overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-bg-elevated border-b border-border-default">
+          <table className="w-full border-collapse text-sm">
+            <thead className="bg-bg-elevated">
               <tr>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">File</th>
-                {is4Phase && <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Phase</th>}
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-sm font-semibold text-text-secondary whitespace-nowrap">Status</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Score</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm font-semibold text-text-secondary whitespace-nowrap">Submitted</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-sm font-semibold text-text-secondary whitespace-nowrap">Best</th>
+                {(
+                  [
+                    ['File', 'left'],
+                    ...(is4Phase ? ([['Phase', 'left']] as const) : []),
+                    ['Status', 'left'],
+                    ['Score', 'right'],
+                    ['Submitted', 'right'],
+                    ['Best', 'center'],
+                  ] as const
+                ).map(([label, align]) => (
+                  <th
+                    key={label}
+                    className={`px-3.5 py-[9px] text-xs font-semibold uppercase tracking-[0.07em] text-text-tertiary whitespace-nowrap ${
+                      align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'
+                    }`}
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-default">
-              {filteredSubmissions.map((submission) => (
-              <tr key={submission.id} className="transition-colors hover:bg-bg-elevated">
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 max-w-[120px] sm:max-w-xs">
-                  <span className="font-medium text-xs sm:text-sm truncate block">{submission.file_name}</span>
-                </td>
-                {is4Phase && (
-                  <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                    <Badge variant={submission.phase === 'public' ? 'blue' : 'cyan'}>
-                      {submission.phase === 'public' ? 'Pub' : 'Priv'}
-                    </Badge>
-                  </td>
-                )}
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5">
-                  <Badge
-                    variant={
-                      submission.validation_status === 'valid' ? 'success' :
-                      submission.validation_status === 'invalid' ? 'danger' :
-                      'secondary'
-                    }
+            <tbody>
+              {filteredSubmissions.map((submission) => {
+                const status = submission.validation_status;
+                return (
+                  <tr
+                    key={submission.id}
+                    className="border-t border-border-default first:border-t-0 hover:bg-bg-elevated transition-colors"
                   >
-                    {submission.validation_status === 'valid' ? '✓' : submission.validation_status === 'invalid' ? '✗' : '…'}
-                  </Badge>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
-                  {submission.score !== null ? (
-                    <span className="font-mono font-bold text-primary-blue text-sm">
-                      {submission.score.toFixed(4)}
-                    </span>
-                  ) : (
-                    <span className="text-text-tertiary text-sm">—</span>
-                  )}
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-right">
-                  <span className="text-xs text-text-tertiary whitespace-nowrap">
-                    {new Date(submission.submitted_at).toLocaleDateString()}
-                  </span>
-                </td>
-                <td className="px-3 sm:px-4 py-3 sm:py-3.5 text-center">
-                  {submission.is_best_score && (
-                    <Trophy className="w-4 h-4 text-warning mx-auto" />
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <td className="px-3.5 py-[11px] max-w-[140px] sm:max-w-xs">
+                      <span className="text-text-primary font-bold truncate block">
+                        {submission.file_name}
+                      </span>
+                    </td>
+                    {is4Phase && (
+                      <td className="px-3.5 py-[11px]">
+                        <span
+                          className={`font-bold ${
+                            submission.phase === 'public' ? 'text-[#60A5FA]' : 'text-[#22D3EE]'
+                          }`}
+                        >
+                          {submission.phase === 'public' ? 'Public' : 'Private'}
+                        </span>
+                      </td>
+                    )}
+                    <td className="px-3.5 py-[11px]">
+                      <span
+                        className={`font-bold ${
+                          status === 'valid'
+                            ? 'text-[#34D399]'
+                            : status === 'invalid'
+                              ? 'text-[#F87171]'
+                              : 'text-text-tertiary'
+                        }`}
+                      >
+                        {status === 'valid' ? 'Valid' : status === 'invalid' ? 'Invalid' : 'Pending'}
+                      </span>
+                    </td>
+                    <td className="px-3.5 py-[11px] text-right">
+                      {submission.score !== null ? (
+                        <span className="font-mono font-bold text-[#60A5FA]">
+                          {submission.score.toFixed(4)}
+                        </span>
+                      ) : (
+                        <span className="text-text-tertiary">—</span>
+                      )}
+                    </td>
+                    <td className="px-3.5 py-[11px] text-right">
+                      <span className="font-mono text-xs text-text-tertiary whitespace-nowrap">
+                        {new Date(submission.submitted_at).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="px-3.5 py-[11px] text-center">
+                      {submission.is_best_score && (
+                        <span className="font-mono text-xs font-bold text-[#FBBF24]">BEST</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </Card>
     </div>
   );
 }
