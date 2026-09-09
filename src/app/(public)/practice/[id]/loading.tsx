@@ -3,104 +3,135 @@ import { Card } from '@/components/ui/Card';
 
 const S = Skeleton;
 
+// Mirrors src/app/(public)/practice/[id]/page.tsx + PracticeTabs.tsx:
+//   header (breadcrumb, difficulty + tag pills, big title, description,
+//   inline quick-stats row) then a 3-col grid — tab nav + "Problem Statement"
+//   card on the left (col-span-2), CTA / "At a Glance" / "Top Participants"
+//   cards in the sidebar. Sidebar renders first on mobile (order-1).
 export default function PracticeDetailLoading() {
   return (
     <div className="min-h-screen">
 
-      {/* ── Header area ── */}
-      <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-5 sm:pb-6">
-        <div className="max-w-6xl mx-auto">
+      {/* ── Hero header ── */}
+      <div className="px-4 sm:px-6 pt-8 pb-6 sm:pt-10 sm:pb-8">
+        <div className="max-w-7xl mx-auto">
 
-          {/* ← Practice breadcrumb link */}
-          <S variant="text" height="0.9rem" width="6rem" className="mb-5" />
+          {/* ← Practice breadcrumb */}
+          <S variant="text" height="0.9rem" width="5rem" className="mb-5" />
 
-          {/* Difficulty + metric text + tag pill badges */}
+          {/* difficulty pill + tag pills */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <S height="1.4rem" width="5.5rem" className="rounded-full" />
-            <S variant="text" height="0.75rem" width="4rem" />
-            <S height="1.4rem" width="5rem" className="rounded-full" />
-            <S height="1.4rem" width="4.5rem" className="rounded-full" />
+            <S height="1.375rem" width="5.5rem" className="rounded-full" />
+            <S height="1.375rem" width="6rem" className="rounded-full" />
+            <S height="1.375rem" width="4.5rem" className="rounded-full" />
           </div>
 
-          {/* Title */}
-          <S variant="text" height="2.5rem" width="75%" className="mb-3" />
+          {/* title — font-brand text-3xl sm:text-4xl lg:text-5xl */}
+          <S variant="text" height="2.5rem" width="60%" className="mb-3 max-w-full" />
 
-          {/* Description */}
-          <S variant="text" height="1rem" width="100%" className="mb-1.5" />
-          <S variant="text" height="1rem" width="80%" className="mb-5" />
+          {/* description (2 lines, max-w-3xl) */}
+          <div className="space-y-1.5 mb-5 max-w-3xl">
+            <S variant="text" height="1rem" width="100%" />
+            <S variant="text" height="1rem" width="70%" />
+          </div>
 
-          {/* Personal stats strip (shown when user has submitted) */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-6 py-3 px-4 bg-bg-surface rounded-xl border border-border-default/60 mb-2">
-            <div className="space-y-1">
-              <S variant="text" height="0.6rem" width="5rem" />
-              <S variant="text" height="1.1rem" width="5rem" />
-            </div>
-            <div className="space-y-1">
-              <S variant="text" height="0.6rem" width="5rem" />
-              <S variant="text" height="1.1rem" width="3.5rem" />
-            </div>
-            <div className="ml-auto">
-              <S height="2rem" width="8rem" />
-            </div>
+          {/* quick stats row — 3 inline icon + text items */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <S variant="text" height="0.9rem" width="7rem" />
+            <S variant="text" height="0.9rem" width="6rem" />
+            <S variant="text" height="0.9rem" width="8rem" />
           </div>
         </div>
       </div>
 
-      {/* ── Tab content ── */}
+      {/* ── Main body ── */}
       <div className="px-4 sm:px-6 pb-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
 
-          {/* Tab navigation */}
-          <div className="flex border-b border-border-default mb-6 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-            {['Overview', 'Leaderboard', 'My Submissions'].map((label) => (
-              <S key={label} height="2.75rem" width="7rem" className="shrink-0 mr-1" />
-            ))}
-          </div>
+            {/* Left / main — 2 cols on lg, second on mobile */}
+            <div className="lg:col-span-2 min-w-0 order-2 lg:order-1">
 
-          {/* Overview tab: 2-col on lg */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-            {/* Problem statement */}
-            <Card className="lg:col-span-2 p-4 sm:p-6 space-y-3">
-              <S variant="text" height="1.4rem" width="12rem" />
-              <S variant="text" height="1rem" width="100%" />
-              <S variant="text" height="1rem" width="95%" />
-              <S variant="text" height="1rem" width="88%" />
-              <S variant="text" height="1rem" width="100%" />
-              <S variant="text" height="1rem" width="70%" />
-            </Card>
+              {/* tab nav — 3 items with icon, along a bottom border */}
+              <div className="flex border-b border-border-default mb-5 sm:mb-6 gap-2 sm:gap-4">
+                {['6.5rem', '9rem', '8rem'].map((w, i) => (
+                  <div key={i} className="flex items-center gap-1.5 py-3.5 shrink-0">
+                    <S height="1rem" width="1rem" className="rounded" />
+                    <S variant="text" height="0.9rem" width={w} />
+                  </div>
+                ))}
+              </div>
 
-            {/* Sidebar */}
-            <div className="space-y-4">
-              {/* At a glance */}
-              <Card className="p-4 sm:p-5 space-y-4">
-                <S variant="text" height="0.7rem" width="7rem" />
-                <div className="space-y-2.5">
-                  {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+              {/* Overview tab — "Problem Statement" card */}
+              <Card className="p-4 sm:p-6 min-w-0">
+                <S variant="text" height="1.4rem" width="12rem" className="mb-4" />
+                <div className="space-y-2">
+                  {['100%', '96%', '90%', '100%', '85%', '70%'].map((w, i) => (
+                    <S key={i} variant="text" height="0.95rem" width={w} />
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Sidebar — first on mobile, right col on lg */}
+            <div className="space-y-4 sm:space-y-5 self-start min-w-0 order-1 lg:order-2">
+
+              {/* "Ready to practice?" CTA */}
+              <Card className="p-4 sm:p-5 bg-primary-blue/5 border-primary-blue/20">
+                <S variant="text" height="0.95rem" width="9rem" className="mb-2" />
+                <div className="space-y-1.5 mb-3">
+                  <S variant="text" height="0.8rem" width="100%" />
+                  <S variant="text" height="0.8rem" width="80%" />
+                </div>
+                <S height="2.25rem" width="100%" className="rounded-lg" />
+              </Card>
+
+              {/* "At a Glance" */}
+              <Card className="p-4 sm:p-5">
+                <S variant="text" height="0.7rem" width="6rem" className="mb-4" />
+                <div className="space-y-3">
+                  {[0, 1].map((i) => (
+                    <div
+                      key={i}
+                      className="p-3 bg-bg-elevated rounded-xl border border-border-default space-y-1.5"
+                    >
+                      <S variant="text" height="0.7rem" width="45%" />
+                      <S variant="text" height="0.95rem" width="60%" />
+                      <S variant="text" height="0.7rem" width="70%" />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 space-y-2 border-t border-border-default pt-3">
+                  {[0, 1].map((i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
-                      <S variant="text" height="0.85rem" width="40%" />
-                      <S variant="text" height="0.85rem" width="35%" />
+                      <S variant="text" height="0.85rem" width="30%" />
+                      <S variant="text" height="0.85rem" width="20%" />
                     </div>
                   ))}
                 </div>
               </Card>
 
-              {/* Downloads */}
-              <Card className="p-4 sm:p-5 space-y-3">
-                <S variant="text" height="0.7rem" width="6rem" />
-                <S height="2.25rem" width="100%" />
-                <S height="2.25rem" width="100%" />
-              </Card>
-
-              {/* Submit CTA */}
-              <Card className="p-4 sm:p-5 space-y-3">
-                <S variant="text" height="0.9rem" width="8rem" />
-                <S variant="text" height="0.8rem" width="100%" />
-                <S variant="text" height="0.8rem" width="85%" />
-                <S height="2.25rem" width="100%" />
+              {/* "Top Participants" — 5 rows */}
+              <Card className="p-4 sm:p-5">
+                <S variant="text" height="0.7rem" width="8rem" className="mb-4" />
+                <div className="space-y-2">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-border-default bg-bg-elevated"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <S variant="text" height="0.85rem" width="1.5rem" />
+                        <S variant="text" height="0.85rem" width="6rem" />
+                      </div>
+                      <S variant="text" height="0.85rem" width="3rem" />
+                    </div>
+                  ))}
+                </div>
               </Card>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     </div>

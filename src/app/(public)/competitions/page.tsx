@@ -17,7 +17,6 @@ import {
   Crown,
 } from 'lucide-react';
 import {
-  SpotlightCardSkeleton,
   CompetitionCardSkeleton,
   SectionHeadingSkeleton,
 } from '@/components/ui/PageSkeletons';
@@ -405,19 +404,16 @@ export default function CompetitionsPage() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State — a single card grid: the one shape common to every
+            outcome (spotlight, live, or past-only). A spotlight appearing on
+            top of it reads far better than a skeleton spotlight vanishing. */}
         {loading && (
-          <div className="space-y-8 sm:space-y-12">
-            <div className="mb-8 sm:mb-12">
-              <SpotlightCardSkeleton />
-            </div>
-            <div className="space-y-4 sm:space-y-5">
-              <SectionHeadingSkeleton kicker />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                {[0, 1, 2, 3].map((i) => (
-                  <CompetitionCardSkeleton key={i} />
-                ))}
-              </div>
+          <div className="space-y-4 sm:space-y-5">
+            <SectionHeadingSkeleton kicker />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+              {[0, 1, 2, 3].map((i) => (
+                <CompetitionCardSkeleton key={i} />
+              ))}
             </div>
           </div>
         )}

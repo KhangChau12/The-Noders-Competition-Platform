@@ -21,57 +21,45 @@ export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
 }
 
 // ─── Competition card skeleton ────────────────────────────────────────────────
+// Mirrors <CompetitionGridCard>: badges row → title (2 lines) + description
+// (2 lines) → timeline bar + date row → bordered mono footer.
 export function CompetitionCardSkeleton() {
   return (
-    <Card className="p-4 sm:p-6 space-y-4">
-      {/* badges row */}
-      <div className="flex gap-2">
-        <S height="1.5rem" width="7rem" className="rounded-full" />
-        <S height="1.5rem" width="5rem" className="rounded-full" />
-      </div>
-      {/* title */}
-      <div className="space-y-2">
-        <S variant="text" height="1.4rem" width="80%" />
-        <S variant="text" height="0.9rem" width="100%" />
-        <S variant="text" height="0.9rem" width="75%" />
-      </div>
-      {/* progress bar */}
-      <S height="0.375rem" width="100%" className="rounded-full" />
-      {/* meta row */}
-      <div className="flex justify-between">
-        <S variant="text" height="0.75rem" width="45%" />
-        <S variant="text" height="0.75rem" width="20%" />
-      </div>
-    </Card>
-  );
-}
-
-// ─── Spotlight card skeleton ──────────────────────────────────────────────────
-export function SpotlightCardSkeleton() {
-  return (
-    <Card className="p-5 sm:p-8">
-      <div className="grid lg:grid-cols-[1fr_300px] gap-6 lg:gap-10">
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <S height="1.5rem" width="8rem" className="rounded-full" />
-            <S height="1.5rem" width="5rem" className="rounded-full" />
-          </div>
-          <S variant="text" height="2rem" width="85%" />
-          <S variant="text" height="0.9rem" width="100%" />
-          <S variant="text" height="0.9rem" width="90%" />
-          <S variant="text" height="0.75rem" width="55%" />
+    <Card className="h-full p-4 sm:p-6 bg-bg-surface shadow-md border-border-default">
+      <div className="h-full flex flex-col gap-3.5 sm:gap-4">
+        {/* badges row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <S height="1.375rem" width="7.5rem" className="rounded-full" />
+          <S height="1.375rem" width="4.5rem" className="rounded-full" />
+          <S height="1.375rem" width="3.5rem" className="rounded-full" />
         </div>
-        <div className="bg-bg-elevated/60 border border-border-subtle/50 rounded-xl p-4 sm:p-5 space-y-4">
-          <S variant="text" height="0.75rem" width="70%" className="mx-auto" />
-          <div className="grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="space-y-1 text-center">
-                <S height="2rem" width="100%" />
-                <S variant="text" height="0.7rem" width="60%" className="mx-auto" />
-              </div>
-            ))}
+
+        {/* title (2 lines) + description (2 lines) */}
+        <div>
+          <div className="space-y-1.5 mb-2">
+            <S variant="text" height="1.4rem" width="90%" />
+            <S variant="text" height="1.4rem" width="55%" />
           </div>
-          <S height="2.5rem" width="100%" />
+          <div className="space-y-1.5">
+            <S variant="text" height="0.85rem" width="100%" />
+            <S variant="text" height="0.85rem" width="80%" />
+          </div>
+        </div>
+
+        {/* timeline bar + date/countdown row */}
+        <div>
+          <S height="0.375rem" width="100%" className="rounded-full" />
+          <div className="flex items-center justify-between mt-1.5">
+            <S variant="text" height="0.7rem" width="4.5rem" />
+            <S variant="text" height="0.7rem" width="6rem" />
+            <S variant="text" height="0.7rem" width="4.5rem" />
+          </div>
+        </div>
+
+        {/* footer — top border, mono stats + View link */}
+        <div className="mt-auto border-t border-border-subtle/60 pt-3 flex items-center justify-between gap-3">
+          <S variant="text" height="0.7rem" width="55%" />
+          <S variant="text" height="0.8rem" width="3.5rem" />
         </div>
       </div>
     </Card>
@@ -79,19 +67,39 @@ export function SpotlightCardSkeleton() {
 }
 
 // ─── Practice problem card skeleton ──────────────────────────────────────────
+// Mirrors <PracticeProblemCard>: 3px top edge accent → difficulty pill →
+// title (2 lines) → mono metric line → description (2 lines) → tags line →
+// bordered footer (participants / top score · Solve link).
 export function PracticeProblemCardSkeleton() {
   return (
-    <Card className="p-4 sm:p-5 space-y-3">
-      <div className="flex gap-2">
-        <S height="1.5rem" width="5rem" className="rounded-full" />
-        <S height="1.5rem" width="4rem" className="rounded-full" />
+    <Card className="relative p-4 sm:p-6 h-full flex flex-col overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:rounded-t-xl before:bg-border-subtle/70">
+      {/* difficulty pill */}
+      <div className="flex items-center gap-2 mb-3">
+        <S height="1.375rem" width="5.5rem" className="rounded-full" />
       </div>
-      <S variant="text" height="1.25rem" width="75%" />
-      <S variant="text" height="0.85rem" width="100%" />
-      <S variant="text" height="0.85rem" width="85%" />
-      <div className="flex justify-between pt-1">
-        <S variant="text" height="0.75rem" width="40%" />
-        <S variant="text" height="0.75rem" width="20%" />
+
+      {/* title (2 lines) */}
+      <div className="space-y-1.5 mb-1">
+        <S variant="text" height="1.25rem" width="95%" />
+        <S variant="text" height="1.25rem" width="60%" />
+      </div>
+
+      {/* mono metric / task line */}
+      <S variant="text" height="0.7rem" width="55%" className="mb-2" />
+
+      {/* description (2 lines) */}
+      <div className="space-y-1.5 mb-3 sm:mb-4 flex-grow">
+        <S variant="text" height="0.85rem" width="100%" />
+        <S variant="text" height="0.85rem" width="75%" />
+      </div>
+
+      {/* tags line */}
+      <S variant="text" height="0.7rem" width="45%" className="mb-3 sm:mb-4" />
+
+      {/* footer — top border, stats + Solve link */}
+      <div className="mt-auto pt-3.5 border-t border-border-default flex items-center justify-between gap-3">
+        <S variant="text" height="0.75rem" width="30%" />
+        <S variant="text" height="0.8rem" width="4rem" />
       </div>
     </Card>
   );
@@ -117,11 +125,16 @@ export function DashboardCompetitionRowSkeleton() {
 }
 
 // ─── Section heading skeleton ─────────────────────────────────────────────────
+// Mirrors <CompetitionSection>'s header: optional kicker + h2 on the left,
+// a competition-count line on the right, aligned along the baseline.
 export function SectionHeadingSkeleton({ kicker = false }: { kicker?: boolean }) {
   return (
-    <div className="space-y-1.5 mb-5">
-      {kicker && <S variant="text" height="0.7rem" width="12rem" />}
-      <S variant="text" height="1.6rem" width="18rem" />
+    <div className="flex items-end justify-between gap-2 px-1">
+      <div className="space-y-1.5">
+        {kicker && <S variant="text" height="0.7rem" width="11rem" />}
+        <S variant="text" height="1.25rem" width="12rem" />
+      </div>
+      <S variant="text" height="0.85rem" width="6rem" className="shrink-0" />
     </div>
   );
 }
