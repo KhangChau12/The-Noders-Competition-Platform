@@ -57,41 +57,35 @@ export function CompetitionCardSkeleton() {
 }
 
 // ─── Practice problem card skeleton ──────────────────────────────────────────
-// Mirrors <PracticeProblemCard>: 3px top edge accent → difficulty pill →
-// title (2 lines) → mono metric line → description (2 lines) → tags line →
-// bordered footer (participants / top score · Solve link).
+// Mirrors <PracticeProblemCard>: 3px top edge accent → difficulty word →
+// title (2 lines) → metric line → description (2 lines) → tags line → footer.
 export function PracticeProblemCardSkeleton() {
   return (
-    <Card className="relative p-4 sm:p-6 h-full flex flex-col overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:rounded-t-xl before:bg-border-subtle/70">
-      {/* difficulty pill */}
-      <div className="flex items-center gap-2 mb-3">
-        <S height="1.375rem" width="5.5rem" className="rounded-full" />
-      </div>
+    <div className="relative h-full flex flex-col gap-3 rounded-xl border border-border-default bg-bg-surface p-4 sm:p-[18px] overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:rounded-t-xl before:bg-border-subtle/70">
+      {/* difficulty word */}
+      <S variant="text" height="0.75rem" width="6rem" />
 
-      {/* title (2 lines) */}
-      <div className="space-y-1.5 mb-1">
-        <S variant="text" height="1.25rem" width="95%" />
-        <S variant="text" height="1.25rem" width="60%" />
-      </div>
-
-      {/* mono metric / task line */}
-      <S variant="text" height="0.7rem" width="55%" className="mb-2" />
-
-      {/* description (2 lines) */}
-      <div className="space-y-1.5 mb-3 sm:mb-4 flex-grow">
-        <S variant="text" height="0.85rem" width="100%" />
-        <S variant="text" height="0.85rem" width="75%" />
+      <div>
+        <div className="space-y-1.5 mb-1.5">
+          <S variant="text" height="1.1rem" width="95%" />
+          <S variant="text" height="1.1rem" width="60%" />
+        </div>
+        <S variant="text" height="0.7rem" width="55%" className="mb-2" />
+        <div className="space-y-1.5">
+          <S variant="text" height="0.85rem" width="100%" />
+          <S variant="text" height="0.85rem" width="75%" />
+        </div>
       </div>
 
       {/* tags line */}
-      <S variant="text" height="0.7rem" width="45%" className="mb-3 sm:mb-4" />
+      <S variant="text" height="0.7rem" width="50%" />
 
-      {/* footer — top border, stats + Solve link */}
-      <div className="mt-auto pt-3.5 border-t border-border-default flex items-center justify-between gap-3">
-        <S variant="text" height="0.75rem" width="30%" />
-        <S variant="text" height="0.8rem" width="4rem" />
+      {/* footer */}
+      <div className="mt-auto pt-1 flex items-center justify-between gap-3">
+        <S variant="text" height="0.85rem" width="55%" />
+        <S variant="text" height="0.75rem" width="3.5rem" />
       </div>
-    </Card>
+    </div>
   );
 }
 

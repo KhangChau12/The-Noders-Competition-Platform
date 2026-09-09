@@ -1,7 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { Card } from '../ui/Card';
-import { Users, Tag, CheckCircle2, Crown } from 'lucide-react';
 import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO } from '@/lib/constants';
 import type { PracticeProblemRow, PracticeTag } from '@/types/database.types';
 
@@ -19,10 +17,16 @@ interface Props {
   className?: string;
 }
 
-const DIFFICULTY_EDGE: Record<string, string> = {
+// difficulty → a coloured word (label size), not a pill
+const DIFF_COLOR: Record<string, string> = {
+  beginner: 'text-success',
+  intermediate: 'text-[#FBBF24]',
+  advanced: 'text-[#F87171]',
+};
+const DIFF_EDGE: Record<string, string> = {
   beginner: 'before:bg-success/70',
-  intermediate: 'before:bg-warning/70',
-  advanced: 'before:bg-error/70',
+  intermediate: 'before:bg-[#FBBF24]/70',
+  advanced: 'before:bg-[#F87171]/70',
 };
 
 const PracticeProblemCard: React.FC<Props> = ({
@@ -40,91 +44,74 @@ const PracticeProblemCard: React.FC<Props> = ({
   const hasTop = topScore !== null && topScore !== undefined;
   const decimals = metricInfo?.decimals ?? 4;
   const participants = problem.participant_count ?? 0;
-  const edge = problem.difficulty ? DIFFICULTY_EDGE[problem.difficulty] : null;
+  const edge = problem.difficulty ? DIFF_EDGE[problem.difficulty] : null;
+  const diffColor = problem.difficulty ? DIFF_COLOR[problem.difficulty] : '';
 
   return (
     <Link href={`/practice/${problem.id}`} className="group block h-full">
-      <Card
-        className={`relative p-4 sm:p-6 hover:border-border-focus transition-all glow-on-hover h-full flex flex-col overflow-hidden ${
+      <div
+        className={`relative h-full flex flex-col gap-3 rounded-xl border border-border-default bg-bg-surface p-4 sm:p-[18px] overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-border-focus ${
           edge
             ? `before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:rounded-t-xl ${edge}`
             : ''
         } ${className}`}
       >
-        {/* Classification pills: difficulty + attempted state */}
-        <div className="flex items-center gap-2 mb-3">
+        {/* eyebrow: difficulty word + attempted / rank */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
           {diffInfo && (
-            <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${diffInfo.bgColor} ${diffInfo.color} ${diffInfo.borderColor}`}
-            >
+            <span className={`font-extrabold uppercase tracking-[0.06em] ${diffColor}`}>
               {diffInfo.label}
             </span>
           )}
           {hasBest && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20">
-              <CheckCircle2 className="h-3 w-3" />
-              {yourRank ? `Your rank #${yourRank}` : 'Attempted'}
+            <span className="font-mono font-bold text-[#22D3EE]">
+              {yourRank ? `✓ your rank #${yourRank}` : '✓ Attempted'}
             </span>
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="text-lg sm:text-xl font-bold text-text-primary mb-1 line-clamp-2 group-hover:text-primary-blue transition-colors">
-          {problem.title}
-        </h3>
+        <div>
+          <h3 className="text-lg font-extrabold leading-[1.25] text-text-primary mb-1.5 line-clamp-2 group-hover:text-primary-blue transition-colors">
+            {problem.title}
+          </h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary mb-2">
+            {metricInfo?.name ?? problem.scoring_metric.replace('_', ' ')} ·{' '}
+            {metricInfo?.type === 'regression' ? 'Regression' : 'Classification'}
+          </p>
+          <p className="text-sm text-text-secondary leading-[1.55] line-clamp-2">
+            {problem.description}
+          </p>
+        </div>
 
-        {/* Metric / task meta */}
-        <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary mb-2">
-          {metricInfo?.name ?? problem.scoring_metric.replace('_', ' ')}
-          {' · '}
-          {metricInfo?.type === 'regression' ? 'Regression' : 'Classification'}
-        </p>
-
-        {/* Description */}
-        <p className="text-text-secondary text-sm leading-relaxed mb-3 sm:mb-4 line-clamp-2 flex-grow">
-          {problem.description}
-        </p>
-
-        {/* Tags as plain text */}
         {(problem.tags?.length ?? 0) > 0 && (
-          <p className="text-xs text-text-tertiary mb-3 sm:mb-4 line-clamp-1">
-            <Tag className="inline h-3 w-3 mr-1.5 align-[-1px]" />
-            {problem.tags!.map((tag) => tag.name).join(', ')}
+          <p className="text-xs text-text-disabled line-clamp-1">
+            🏷 {problem.tags!.map((tag) => tag.name).join(', ')}
           </p>
         )}
 
-        {/* Footer: community stats vs your standing */}
-        <div className="mt-auto pt-3.5 border-t border-border-default">
-          <div className="flex items-center justify-between gap-3 text-sm text-text-tertiary">
-            <span className="flex items-center gap-3 min-w-0">
-              <span className="flex items-center gap-1.5 shrink-0">
-                <Users className="h-3.5 w-3.5" />
-                <span className="text-xs font-mono">{participants}</span>
-              </span>
-              {hasTop && (
-                <span className="flex items-center gap-1.5 min-w-0">
-                  <Crown className="h-3.5 w-3.5 text-warning shrink-0" />
-                  <span className="text-xs font-mono truncate text-text-secondary">
-                    {topScore!.toFixed(decimals)}
-                  </span>
-                </span>
-              )}
-            </span>
-            {hasBest ? (
-              <span className="font-mono text-xs text-text-secondary shrink-0">
-                You:{' '}
-                <span className="font-semibold text-accent-cyan">
-                  {bestScore!.toFixed(decimals)}
-                </span>
-              </span>
-            ) : (
-              <span className="text-primary-blue text-sm font-semibold shrink-0 group-hover:translate-x-0.5 transition-transform">
-                {participants === 0 ? 'Be first →' : 'Solve →'}
-              </span>
+        <div className="mt-auto pt-1 flex items-center justify-between gap-3">
+          <span className="text-sm text-text-tertiary truncate">
+            <b className="font-mono font-bold text-text-primary">{participants}</b> people
+            {hasTop && (
+              <>
+                {' · '}top{' '}
+                <span className="font-mono text-text-secondary">{topScore!.toFixed(decimals)}</span>
+              </>
             )}
-          </div>
+            {hasBest && (
+              <>
+                {' · '}you{' '}
+                <span className="font-mono text-[#22D3EE]">{bestScore!.toFixed(decimals)}</span>
+              </>
+            )}
+          </span>
+          {!hasBest && (
+            <span className="text-xs font-bold text-[#60A5FA] shrink-0 group-hover:translate-x-0.5 transition-transform">
+              {participants === 0 ? 'Be first →' : 'Solve →'}
+            </span>
+          )}
         </div>
-      </Card>
+      </div>
     </Link>
   );
 };

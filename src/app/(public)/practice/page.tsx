@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import PracticeProblemCard from '@/components/practice/PracticeProblemCard';
-import { BookOpen, Search, Flame } from 'lucide-react';
+import { StatRun } from '@/components/ui/StatRun';
+import { Search } from 'lucide-react';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
 import type { PracticeTag, PracticeProblemRow } from '@/types/database.types';
 
@@ -136,138 +137,118 @@ export default async function PracticePage({
   return (
     <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="relative mb-6 sm:mb-10 overflow-hidden">
-          <BookOpen className="absolute -top-4 -right-6 h-32 w-32 text-primary-blue/10 rotate-[10deg] pointer-events-none hidden sm:block [filter:drop-shadow(0_0_20px_rgba(37,99,235,0.25))]" />
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-cyan mb-2">
-            Self-paced · Always open
-          </p>
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl gradient-text mb-3 leading-tight">
+        {/* Header — h1 + tertiary subtitle + a stat run */}
+        <div className="mb-6 sm:mb-10">
+          <h1 className="text-2xl font-bold tracking-[-0.01em] text-text-primary mb-1">
             Practice Problems
           </h1>
-          <p className="text-sm sm:text-base text-text-secondary max-w-2xl mb-3 sm:mb-4">
-            Sharpen your ML skills with permanent practice problems. Submit your predictions anytime
-            and compare your score on the global leaderboard.
+          <p className="text-sm text-text-tertiary mb-5">
+            Permanent problems with a global leaderboard. Submit anytime.
           </p>
-          <p className="text-xs font-mono uppercase tracking-wide text-text-tertiary">
-            {allProblems.length} problem{allProblems.length !== 1 ? 's' : ''}
-            {' · '}{tags?.length ?? 0} topic{(tags?.length ?? 0) !== 1 ? 's' : ''}
-            {' · '}{totalSubmissions} submission{totalSubmissions !== 1 ? 's' : ''}
-          </p>
+          <StatRun
+            items={[
+              { label: 'Problems', value: String(allProblems.length) },
+              { label: 'Topics', value: String(tags?.length ?? 0) },
+              { label: 'Submissions', value: totalSubmissions.toLocaleString() },
+            ]}
+          />
         </div>
 
-        {/* Personal progress strip */}
+        {/* Personal progress strip — labelled bar + a stat run, no box */}
         {user && attemptedCount > 0 && (
-          <div className="relative overflow-hidden mb-6 sm:mb-8 rounded-xl border border-border-default bg-bg-surface p-4 sm:p-5">
-            <Flame className="absolute -bottom-5 -right-4 h-20 w-20 text-accent-cyan/[0.08] rotate-[-10deg] pointer-events-none select-none [filter:drop-shadow(0_0_18px_rgba(6,182,212,0.3))]" />
-            <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent-cyan mb-2">
-                  Your progress
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="relative h-2 flex-1 bg-bg-elevated rounded-full overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-mono text-text-secondary whitespace-nowrap">
-                    {attemptedCount}/{allProblems.length} attempted
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-baseline sm:items-center gap-6 sm:gap-8 shrink-0">
-                {bestRank !== null && (
-                  <div className="flex items-baseline gap-2 sm:block">
-                    <p className="text-lg sm:text-2xl font-bold font-mono text-text-primary leading-none sm:mb-1">
-                      #{bestRank}
-                    </p>
-                    <p className="text-[11px] uppercase tracking-wide text-text-tertiary">
-                      Best rank
-                    </p>
-                  </div>
-                )}
-                {top3Count > 0 && (
-                  <div className="flex items-baseline gap-2 sm:block">
-                    <p className="text-lg sm:text-2xl font-bold font-mono text-warning leading-none sm:mb-1">
-                      {top3Count}
-                    </p>
-                    <p className="text-[11px] uppercase tracking-wide text-text-tertiary">
-                      Top-3 finishes
-                    </p>
-                  </div>
-                )}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-8 mb-6 sm:mb-10">
+            <div className="flex-1 min-w-0 sm:max-w-md">
+              <p className="text-xs font-semibold uppercase tracking-[0.09em] text-text-tertiary mb-[9px]">
+                Your progress
+              </p>
+              <div className="h-[5px] bg-bg-elevated rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-blue to-accent-cyan rounded-full"
+                  style={{ width: `${progressPct}%` }}
+                />
               </div>
             </div>
+            <StatRun
+              size="sm"
+              items={[
+                {
+                  label: 'Attempted',
+                  value: (
+                    <>
+                      {attemptedCount}
+                      <span className="text-xs font-normal text-text-disabled"> / {allProblems.length}</span>
+                    </>
+                  ),
+                },
+                ...(bestRank !== null
+                  ? [{ label: 'Best rank', value: `#${bestRank}`, tone: 'blue' as const }]
+                  : []),
+                ...(top3Count > 0
+                  ? [{ label: 'Top-3 finishes', value: String(top3Count), tone: 'warn' as const }]
+                  : []),
+              ]}
+            />
           </div>
         )}
 
-        {/* Toolbar: search + difficulty */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        {/* Toolbar — bottom-border search + underline-link difficulty control */}
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-end mb-4">
           <form method="GET" action="/practice" className="flex-1 sm:max-w-sm">
             {params.tag && <input type="hidden" name="tag" value={params.tag} />}
             {params.difficulty && <input type="hidden" name="difficulty" value={params.difficulty} />}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 name="q"
                 type="text"
-                placeholder="Search problems..."
+                placeholder="Search problems…"
                 defaultValue={params.q ?? ''}
-                className="w-full pl-10 pr-4 py-2.5 bg-bg-surface border border-border-default rounded-lg text-sm focus:outline-none focus:border-border-focus text-text-primary"
+                className="w-full min-h-[44px] sm:min-h-0 bg-transparent border-0 border-b border-border-subtle pl-6 pr-2 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-primary-blue"
               />
             </div>
           </form>
 
-          {/* Difficulty segmented control: full-width equal segments on phones */}
-          <div className="flex w-full sm:w-auto sm:inline-flex sm:self-start rounded-lg border border-border-default bg-bg-surface p-1">
+          <div className="flex gap-4 sm:gap-[18px] overflow-x-auto scrollbar-none">
             {[
-              { value: '', label: 'All', fullLabel: 'All Levels' },
-              { value: 'beginner', label: 'Beginner', fullLabel: 'Beginner' },
-              { value: 'intermediate', label: 'Medium', fullLabel: 'Intermediate' },
-              { value: 'advanced', label: 'Advanced', fullLabel: 'Advanced' },
-            ].map(({ value, label, fullLabel }) => (
+              { value: '', label: 'All levels' },
+              { value: 'beginner', label: 'Beginner' },
+              { value: 'intermediate', label: 'Intermediate' },
+              { value: 'advanced', label: 'Advanced' },
+            ].map(({ value, label }) => (
               <a
                 key={value}
                 href={buildUrl({ difficulty: value || undefined })}
-                className={`flex items-center justify-center flex-1 sm:flex-none min-h-[40px] sm:min-h-0 text-center px-2 sm:px-3 py-2 sm:py-1.5 rounded-md text-[13px] sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`min-h-[44px] sm:min-h-0 flex items-center shrink-0 border-b-2 py-1 text-xs font-bold uppercase tracking-[0.04em] whitespace-nowrap transition-colors ${
                   selectedDifficulty === value
-                    ? 'bg-primary-blue text-white'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'border-primary-blue text-text-primary'
+                    : 'border-transparent text-text-tertiary hover:text-text-secondary'
                 }`}
               >
-                <span className="sm:hidden">{label}</span>
-                <span className="hidden sm:inline">{fullLabel}</span>
+                {label}
               </a>
             ))}
           </div>
         </div>
 
-        {/* Topic filter: edge-to-edge swipe row on phones, wrapping row on larger screens */}
+        {/* Topic filter — underline-link row */}
         {(tags?.length ?? 0) > 0 && (
-          <div className="flex items-center gap-2 mb-6 sm:mb-8 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
-            <span className="text-xs font-mono uppercase tracking-wide text-text-tertiary mr-1 shrink-0">
-              Topics
-            </span>
+          <div className="flex items-center gap-4 sm:gap-[18px] mb-6 sm:mb-8 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap text-xs">
             <a
               href={buildUrl({ tag: undefined })}
-              className={`shrink-0 whitespace-nowrap px-3 py-1.5 sm:py-1 rounded-full text-xs font-medium border transition-colors ${
-                !selectedTag
-                  ? 'bg-primary-blue text-white border-primary-blue'
-                  : 'bg-bg-surface text-text-secondary border-border-default hover:border-primary-blue'
+              className={`shrink-0 whitespace-nowrap font-bold transition-colors ${
+                !selectedTag ? 'text-[#60A5FA]' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
-              All
+              All topics
             </a>
             {(tags as PracticeTag[] | null)?.map((tag) => (
               <a
                 key={tag.id}
                 href={buildUrl({ tag: tag.slug })}
-                className={`shrink-0 whitespace-nowrap px-3 py-1.5 sm:py-1 rounded-full text-xs font-medium border transition-colors ${
+                className={`shrink-0 whitespace-nowrap font-bold transition-colors ${
                   selectedTag === tag.slug
-                    ? 'bg-primary-blue text-white border-primary-blue'
-                    : 'bg-bg-surface text-text-secondary border-border-default hover:border-primary-blue'
+                    ? 'text-[#60A5FA]'
+                    : 'text-text-tertiary hover:text-text-secondary'
                 }`}
               >
                 {tag.name}
@@ -285,7 +266,7 @@ export default async function PracticePage({
 
         {/* Grid */}
         {problems.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {problems.map((problem) => (
               <PracticeProblemCard
                 key={problem.id}
@@ -297,10 +278,9 @@ export default async function PracticePage({
             ))}
           </div>
         ) : (
-          <div className="py-24 text-center text-text-tertiary">
-            <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-40" />
-            <p className="text-lg mb-2">No problems found</p>
-            <p className="text-sm">Try adjusting your filters</p>
+          <div className="border-y border-border-subtle py-16 text-center">
+            <p className="text-lg font-extrabold text-text-primary mb-2">No problems found</p>
+            <p className="text-sm text-text-tertiary">Try adjusting your filters.</p>
           </div>
         )}
       </div>
