@@ -37,7 +37,9 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
   // Fetch competition details
   const { data: competition } = (await supabase
     .from('competitions')
-    .select('*')
+    .select(
+      'id, title, description, problem_statement, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb, min_team_size, max_team_size, scoring_metric, dataset_url, created_by, created_at, updated_at'
+    )
     .eq('id', id)
     .is('deleted_at', null)
     .single()) as { data: any };
@@ -54,14 +56,13 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
     // Individual registration
     const { data: individualReg } = (await supabase
       .from('registrations')
-      .select('*')
+      .select('id, competition_id, user_id, team_id, status, registered_at')
       .eq('user_id', user.id)
       .eq('competition_id', id)
       .single()) as { data: any };
     registration = individualReg;
   } else {
     // Team registration - find team where user is a member and team is registered
-    // Optimized: Single query using JOIN instead of N+1 queries
     const { data: teamMemberships } = (await supabase
       .from('team_members')
       .select('team_id')
@@ -73,7 +74,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
       // Single query to find approved registration for any of user's teams
       const { data: teamReg } = (await supabase
         .from('registrations')
-        .select('*')
+        .select('id, competition_id, user_id, team_id, status, registered_at')
         .eq('competition_id', id)
         .in('team_id', teamIds)
         .eq('status', 'approved')
@@ -91,59 +92,57 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
     redirect(`/competitions/${id}`);
   }
 
-  // Get submissions (individual or team)
-  let submissions: any = null;
-  if (competition.participation_type === 'individual') {
-    const { data: individualSubs } = (await supabase
-      .from('submissions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('competition_id', id)
-      .order('submitted_at', { ascending: false })) as { data: any };
-    submissions = individualSubs;
-  } else if (registeredTeamId) {
-    const { data: teamSubs } = (await supabase
-      .from('submissions')
-      .select('*')
-      .eq('team_id', registeredTeamId)
-      .eq('competition_id', id)
-      .order('submitted_at', { ascending: false })) as { data: any };
-    submissions = teamSubs;
-  }
-
-  // Sort submissions by score based on competition metric
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const isHigherBetter = metricInfo?.higher_is_better !== false;
 
-  const sortedSubmissions = [...(submissions || [])].sort((a: any, b: any) => {
-    // Handle null scores (put at end)
-    if (a.score === null && b.score === null) return 0;
-    if (a.score === null) return 1;
-    if (b.score === null) return -1;
-
-    // Sort by score based on metric direction
-    if (isHigherBetter) {
-      return b.score - a.score; // DESC for higher is better
-    } else {
-      return a.score - b.score; // ASC for lower is better
-    }
-  });
-
-  // Count daily and total submissions (only VALID submissions count towards limit)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const validSubmissions = submissions?.filter(
-    (sub: any) => sub.validation_status === 'valid'
-  ) || [];
+  // Entity column for the current registration (individual vs team).
+  const entityCol = competition.participation_type === 'individual' ? 'user_id' : 'team_id';
+  const entityVal = competition.participation_type === 'individual' ? user.id : registeredTeamId;
 
-  const dailyValidSubmissions = validSubmissions.filter(
-    (sub: any) => new Date(sub.submitted_at) >= todayStart
-  );
+  // The quota only needs counts (indexed, no row transfer). The table still
+  // shows every submission, but with an explicit narrow column list — dropping
+  // the large `validation_errors` JSON and other unused columns. All three run
+  // concurrently.
+  const [
+    { data: allSubmissions },
+    { count: totalValidCount },
+    { count: dailyValidCount },
+  ] = await Promise.all([
+    supabase
+      .from('submissions')
+      .select('id, score, phase, validation_status, is_best_score, submitted_at')
+      .eq('competition_id', id)
+      .eq(entityCol, entityVal as string)
+      .order('submitted_at', { ascending: false }),
+    supabase
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('competition_id', id)
+      .eq(entityCol, entityVal as string)
+      .eq('validation_status', 'valid'),
+    supabase
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('competition_id', id)
+      .eq(entityCol, entityVal as string)
+      .eq('validation_status', 'valid')
+      .gte('submitted_at', todayStart.toISOString()),
+  ]);
+
+  // Sort the visible rows by score based on competition metric (nulls last).
+  const sortedSubmissions = [...(allSubmissions || [])].sort((a: any, b: any) => {
+    if (a.score === null && b.score === null) return 0;
+    if (a.score === null) return 1;
+    if (b.score === null) return -1;
+    return isHigherBetter ? b.score - a.score : a.score - b.score;
+  });
 
   const submissionCount = {
-    daily: dailyValidSubmissions.length,
-    total: validSubmissions.length,
+    daily: dailyValidCount || 0,
+    total: totalValidCount || 0,
   };
 
   return (

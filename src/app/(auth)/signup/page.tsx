@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -71,27 +72,27 @@ export default function SignupPage() {
         <div className="relative w-[78%] h-[430px] flex items-center justify-center select-none pointer-events-none z-10">
           {/* Center — Dashboard */}
           <div className="w-[66%] z-20 animate-levitate shadow-2xl shadow-primary-blue/20 rounded-xl border border-white/10 overflow-hidden bg-bg-surface/80 backdrop-blur-md">
-            <img src="/hero-images/dashboard.png" alt="Dashboard" className="w-full h-auto object-contain" />
+            <Image src="/hero-images/dashboard.png" alt="Dashboard" width={1515} height={907} sizes="(max-width: 1024px) 0px, 30vw" className="w-full h-auto object-contain" />
           </div>
 
           {/* Feature 1 — top left, lifted higher */}
           <div className="absolute -top-[8%] left-[0%] w-[37%] z-10 animate-levitate [animation-delay:1.5s] shadow-xl shadow-black/40 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
-            <img src="/hero-images/feature-1.png" alt="Feature 1" className="w-full h-auto object-contain" />
+            <Image src="/hero-images/feature-1.png" alt="Feature 1" width={886} height={832} sizes="(max-width: 1024px) 0px, 17vw" className="w-full h-auto object-contain" />
           </div>
 
           {/* Feature 2 — bottom right */}
           <div className="absolute bottom-[0%] right-[0%] w-[31%] z-30 animate-levitate [animation-delay:2.5s] shadow-xl shadow-black/40 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
-            <img src="/hero-images/feature-2.png" alt="Feature 2" className="w-full h-auto object-contain" />
+            <Image src="/hero-images/feature-2.png" alt="Feature 2" width={1343} height={801} sizes="(max-width: 1024px) 0px, 14vw" className="w-full h-auto object-contain" />
           </div>
 
           {/* Feature 3 — top right */}
           <div className="absolute top-[2%] right-[0%] w-[25%] z-30 animate-levitate [animation-delay:0.5s] shadow-lg rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
-            <img src="/hero-images/feature-3.png" alt="Feature 3" className="w-full h-auto object-contain" />
+            <Image src="/hero-images/feature-3.png" alt="Feature 3" width={413} height={358} sizes="(max-width: 1024px) 0px, 12vw" className="w-full h-auto object-contain" />
           </div>
 
           {/* Feature 4 — bottom left, pushed lower */}
           <div className="absolute bottom-[0%] left-[0%] w-[27%] z-10 animate-levitate [animation-delay:3.5s] shadow-lg rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
-            <img src="/hero-images/feature-4.png" alt="Feature 4" className="w-full h-auto object-contain" />
+            <Image src="/hero-images/feature-4.png" alt="Feature 4" width={852} height={767} sizes="(max-width: 1024px) 0px, 12vw" className="w-full h-auto object-contain" />
           </div>
         </div>
 

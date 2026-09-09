@@ -17,9 +17,12 @@ export default async function PracticeProblemPage({ params }: Props) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Fetch the problem first (its scoring_metric decides the leaderboard sort
+  // direction), then fetch the leaderboard and the user's own submissions
+  // concurrently — those two don't depend on each other.
   const { data: problem } = await (supabase as any)
     .from('practice_problems')
-    .select('*, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
+    .select('id, title, description, problem_statement, scoring_metric, dataset_url, sample_submission_url, daily_submission_limit, total_submission_limit, max_file_size_mb, difficulty, created_by, created_at, updated_at, deleted_at, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
     .eq('id', id)
     .is('deleted_at', null)
     .single();
@@ -30,15 +33,29 @@ export default async function PracticeProblemPage({ params }: Props) {
     .map((pt: any) => pt.practice_tags)
     .filter(Boolean) as PracticeTag[];
 
-  const { data: leaderboardRaw } = await (supabase as any)
-    .from('practice_submissions')
-    .select('user_id, score, submitted_at, users(full_name)')
-    .eq('problem_id', id)
-    .eq('is_best_score', true)
-    .eq('validation_status', 'valid')
-    .not('score', 'is', null)
-    .order('score', { ascending: SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better === false })
-    .limit(100);
+  const higherIsBetter =
+    SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO]?.higher_is_better !== false;
+
+  const [{ data: leaderboardRaw }, { data: mySubmissionsData }] = await Promise.all([
+    (supabase as any)
+      .from('practice_submissions')
+      .select('user_id, score, submitted_at, users(full_name)')
+      .eq('problem_id', id)
+      .eq('is_best_score', true)
+      .eq('validation_status', 'valid')
+      .not('score', 'is', null)
+      .order('score', { ascending: !higherIsBetter })
+      .limit(100),
+    user
+      ? (supabase as any)
+          .from('practice_submissions')
+          .select('id, score, is_best_score, validation_status, validation_errors, file_name, submitted_at')
+          .eq('problem_id', id)
+          .eq('user_id', user.id)
+          .order('submitted_at', { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const leaderboard = (leaderboardRaw ?? []).map((row: any, index: number) => ({
     rank: index + 1,
@@ -49,17 +66,7 @@ export default async function PracticeProblemPage({ params }: Props) {
     lastSubmissionAt: row.submitted_at,
   }));
 
-  let mySubmissions: any[] = [];
-  if (user) {
-    const { data } = await (supabase as any)
-      .from('practice_submissions')
-      .select('id, score, is_best_score, validation_status, validation_errors, file_name, submitted_at')
-      .eq('problem_id', id)
-      .eq('user_id', user.id)
-      .order('submitted_at', { ascending: false })
-      .limit(50);
-    mySubmissions = data ?? [];
-  }
+  const mySubmissions: any[] = mySubmissionsData ?? [];
 
   const metricInfo = SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const diffInfo = problem.difficulty

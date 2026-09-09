@@ -12,35 +12,34 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Team details + leader
-  const { data: team } = (await supabase
-    .from('teams')
-    .select(`
-      id, name, description, leader_id, created_at,
-      leader:users!teams_leader_id_fkey (id, full_name, email)
-    `)
-    .eq('id', params.id)
-    .single()) as { data: any };
+  // Team, members, and pending invitations all key off the team id from the URL
+  // and don't depend on one another — fetch them concurrently.
+  const [{ data: team }, { data: members }, { data: pendingInvites }] = (await Promise.all([
+    supabase
+      .from('teams')
+      .select(`
+        id, name, description, leader_id, created_at,
+        leader:users!teams_leader_id_fkey (id, full_name, email)
+      `)
+      .eq('id', params.id)
+      .single(),
+    supabase
+      .from('team_members')
+      .select(`
+        id, user_id, joined_at,
+        users (id, full_name, email)
+      `)
+      .eq('team_id', params.id)
+      .order('joined_at', { ascending: true }),
+    supabase
+      .from('team_invitations')
+      .select(`id, invited_at, users (id, full_name, email)`)
+      .eq('team_id', params.id)
+      .eq('status', 'pending')
+      .order('invited_at', { ascending: false }),
+  ])) as [{ data: any }, { data: any }, { data: any }];
 
   if (!team) redirect('/teams');
-
-  // Members (ordered: leader first, then by join date)
-  const { data: members } = (await supabase
-    .from('team_members')
-    .select(`
-      id, user_id, joined_at,
-      users (id, full_name, email)
-    `)
-    .eq('team_id', params.id)
-    .order('joined_at', { ascending: true })) as { data: any };
-
-  // Pending invitations (leader only — safe to always fetch, filtered in UI)
-  const { data: pendingInvites } = (await supabase
-    .from('team_invitations')
-    .select(`id, invited_at, users (id, full_name, email)`)
-    .eq('team_id', params.id)
-    .eq('status', 'pending')
-    .order('invited_at', { ascending: false })) as { data: any };
 
   const isLeader = team.leader_id === user.id;
   const isMember = members?.some((m: any) => m.user_id === user.id);

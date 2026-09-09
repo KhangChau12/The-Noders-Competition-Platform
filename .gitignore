@@ -15,6 +15,9 @@ dist-ssr
 CLAUDE.md
 .next
 
+# AI content autopilot workshop (internal, not part of the shipped app)
+autopilot-learn
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

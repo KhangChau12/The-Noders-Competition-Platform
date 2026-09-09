@@ -23,23 +23,34 @@ export default async function PracticePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch all tags for the filter bar
-  const { data: tags } = await (supabase as any)
-    .from('practice_tags')
-    .select('*')
-    .order('name');
-
-  // Fetch all problems with tags (filters applied in JS so header stats reflect the full set)
-  const { data: rawProblems } = await (supabase as any)
-    .from('practice_problems')
-    .select('*, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  // Fetch participant + submission counts
-  const { data: counts } = await (supabase as any)
-    .from('practice_problem_submission_counts')
-    .select('problem_id, participant_count, total_submission_count');
+  // All four reads are independent — run them concurrently instead of serially.
+  const [
+    { data: tags },
+    { data: rawProblems },
+    { data: counts },
+    { data: bestEntries },
+  ] = await Promise.all([
+    // Tags for the filter bar
+    (supabase as any).from('practice_tags').select('id, name, slug, created_at').order('name'),
+    // All problems with tags (filters applied in JS so header stats reflect the full set)
+    (supabase as any)
+      .from('practice_problems')
+      .select('id, title, description, problem_statement, scoring_metric, dataset_url, sample_submission_url, daily_submission_limit, total_submission_limit, max_file_size_mb, difficulty, created_by, created_at, updated_at, deleted_at, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    // Participant + submission counts
+    (supabase as any)
+      .from('practice_problem_submission_counts')
+      .select('problem_id, participant_count, total_submission_count'),
+    // Global leaderboard entries: every user's best valid score per problem.
+    // Used to derive the top score and (when logged in) the user's rank on each problem.
+    (supabase as any)
+      .from('practice_submissions')
+      .select('problem_id, user_id, score')
+      .eq('is_best_score', true)
+      .eq('validation_status', 'valid')
+      .not('score', 'is', null),
+  ]);
 
   const countMap: Record<string, number> = {};
   let totalSubmissions = 0;
@@ -47,15 +58,6 @@ export default async function PracticePage({
     countMap[c.problem_id] = c.participant_count;
     totalSubmissions += c.total_submission_count ?? 0;
   });
-
-  // Global leaderboard entries: every user's best valid score per problem.
-  // Used to derive the top score and (when logged in) the user's rank on each problem.
-  const { data: bestEntries } = await (supabase as any)
-    .from('practice_submissions')
-    .select('problem_id, user_id, score')
-    .eq('is_best_score', true)
-    .eq('validation_status', 'valid')
-    .not('score', 'is', null);
 
   const entriesByProblem: Record<string, { user_id: string; score: number }[]> = {};
   (bestEntries ?? []).forEach((e: any) => {

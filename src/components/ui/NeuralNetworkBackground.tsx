@@ -232,6 +232,7 @@ function NetworkSVG({
 
 export default function NeuralNetworkBackground() {
   const [simplified, setSimplified] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -239,8 +240,19 @@ export default function NeuralNetworkBackground() {
     setSimplified(prefersReduced || lowEnd);
   }, []);
 
+  // Stop burning paint/animation budget while the tab isn't visible.
+  useEffect(() => {
+    const onVisibility = () => setPaused(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    onVisibility();
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <div
+      className={`nn-bg fixed inset-0 pointer-events-none overflow-hidden -z-10${paused ? ' nn-bg--paused' : ''}`}
+    >
+      <style>{`.nn-bg--paused *, .nn-bg--paused { animation-play-state: paused !important; }`}</style>
       {/* Desktop: left + right networks */}
       <NetworkSVG
         side="left"

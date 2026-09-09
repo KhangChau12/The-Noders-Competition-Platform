@@ -46,6 +46,9 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
   const currentPhase = getCompetitionPhase(competition);
   const nextDeadline = getNextDeadline(competition, currentPhase);
 
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const ascending = metricInfo?.higher_is_better === false;
+
   let registration = null;
   let submissionCount = { daily: 0, total: 0 };
   let registeredTeamId: string | null = null;
@@ -87,61 +90,57 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (competition.participation_type === 'individual') {
-        const { count: totalCount } = await supabase
-          .from('submissions')
-          .select('id', { count: 'exact', head: true })
-          .eq('competition_id', id)
-          .eq('user_id', user.id)
-          .eq('validation_status', 'valid');
+      const entityFilter: [string, string] =
+        competition.participation_type === 'individual'
+          ? ['user_id', user.id]
+          : ['team_id', registeredTeamId as string];
 
-        const { count: dailyCount } = await supabase
-          .from('submissions')
-          .select('id', { count: 'exact', head: true })
-          .eq('competition_id', id)
-          .eq('user_id', user.id)
-          .eq('validation_status', 'valid')
-          .gte('submitted_at', today.toISOString());
-
-        submissionCount = { daily: dailyCount || 0, total: totalCount || 0 };
-      } else if (registeredTeamId) {
-        const { count: totalCount } = await supabase
-          .from('submissions')
-          .select('id', { count: 'exact', head: true })
-          .eq('competition_id', id)
-          .eq('team_id', registeredTeamId)
-          .eq('validation_status', 'valid');
-
-        const { count: dailyCount } = await supabase
-          .from('submissions')
-          .select('id', { count: 'exact', head: true })
-          .eq('competition_id', id)
-          .eq('team_id', registeredTeamId)
-          .eq('validation_status', 'valid')
-          .gte('submitted_at', today.toISOString());
+      if (competition.participation_type === 'individual' || registeredTeamId) {
+        const [{ count: totalCount }, { count: dailyCount }] = await Promise.all([
+          supabase
+            .from('submissions')
+            .select('id', { count: 'exact', head: true })
+            .eq('competition_id', id)
+            .eq(entityFilter[0], entityFilter[1])
+            .eq('validation_status', 'valid'),
+          supabase
+            .from('submissions')
+            .select('id', { count: 'exact', head: true })
+            .eq('competition_id', id)
+            .eq(entityFilter[0], entityFilter[1])
+            .eq('validation_status', 'valid')
+            .gte('submitted_at', today.toISOString()),
+        ]);
 
         submissionCount = { daily: dailyCount || 0, total: totalCount || 0 };
       }
     }
   }
 
-  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const ascending = metricInfo?.higher_is_better === false;
   const is4Phase = competition.competition_type === '4-phase';
   const privateTestStart = competition.private_test_start ? new Date(competition.private_test_start) : null;
   const isPrivatePhaseStarted = privateTestStart && new Date() >= privateTestStart;
 
-  const { data: allSubmissions } = (await supabase
-    .from('submissions')
-    .select(`
-      id, score, submitted_at, user_id, team_id, phase, validation_status,
-      users!submissions_user_id_fkey (id, full_name, email),
-      teams!submissions_team_id_fkey (id, name)
-    `)
-    .eq('competition_id', id)
-    .eq('validation_status', 'valid')
-    .order('score', { ascending })
-    .order('submitted_at', { ascending: true })) as { data: any; error: any };
+  // Leaderboard source and participant count are independent of one another and
+  // of the user's registration — fetch them together.
+  const [{ data: allSubmissions }, { data: participantData }] = (await Promise.all([
+    supabase
+      .from('submissions')
+      .select(`
+        id, score, submitted_at, user_id, team_id, phase, validation_status,
+        users!submissions_user_id_fkey (id, full_name, email),
+        teams!submissions_team_id_fkey (id, name)
+      `)
+      .eq('competition_id', id)
+      .eq('validation_status', 'valid')
+      .order('score', { ascending })
+      .order('submitted_at', { ascending: true }),
+    supabase
+      .from('competition_participant_counts')
+      .select('participant_count')
+      .eq('competition_id', id)
+      .single(),
+  ])) as [{ data: any }, { data: { participant_count: number } | null }];
 
   let leaderboard: any[] = [];
 
@@ -193,12 +192,6 @@ export default async function CompetitionDetailPage({ params }: CompetitionDetai
       submission_count: submissionCounts.get(entry.user_id || entry.team_id) || 0,
     })).slice(0, 10);
   }
-
-  const { data: participantData } = (await supabase
-    .from('competition_participant_counts')
-    .select('participant_count')
-    .eq('competition_id', id)
-    .single()) as { data: { participant_count: number } | null };
 
   const participantCount = participantData?.participant_count || 0;
 

@@ -70,39 +70,93 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login');
 
-  const { data: profile } = (await supabase
-    .from('users')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()) as { data: any };
-  const firstName = profile?.full_name?.trim().split(/\s+/).pop() ?? null;
-
-  // Fetch user's individual registrations
-  const { data: individualRegistrations } = await supabase
-    .from('registrations')
-    .select(`
-      id,
-      competition_id,
-      status,
-      registered_at,
-      competitions!inner (
-        id, title, description, competition_type, participation_type,
-        registration_start, registration_end, public_test_start, public_test_end,
-        private_test_start, private_test_end, scoring_metric
+  // ── Batch 1: everything that depends only on the user id ──────────────────
+  // These queries are independent of one another, so run them concurrently
+  // instead of paying a serial round-trip for each.
+  const [
+    { data: profile },
+    { data: individualRegistrations },
+    { data: teamMemberships },
+    { data: allCompetitions },
+    { data: participantCountsData },
+    { data: recentCompSubs },
+    { data: invitations },
+    { data: myPracticeSubs },
+    { data: rawPracticeProblems },
+    { data: practiceCounts },
+  ] = await Promise.all([
+    supabase.from('users').select('full_name').eq('id', user.id).single(),
+    supabase
+      .from('registrations')
+      .select(`
+        id,
+        competition_id,
+        status,
+        registered_at,
+        competitions!inner (
+          id, title, description, competition_type, participation_type,
+          registration_start, registration_end, public_test_start, public_test_end,
+          private_test_start, private_test_end, scoring_metric
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('registered_at', { ascending: false }),
+    supabase
+      .from('team_members')
+      .select('team_id, teams (id, name, leader_id)')
+      .eq('user_id', user.id),
+    supabase
+      .from('competitions')
+      .select(
+        'id, title, description, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, scoring_metric'
       )
-    `)
-    .eq('user_id', user.id)
-    .order('registered_at', { ascending: false });
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('competition_participant_counts')
+      .select('competition_id, participant_count'),
+    (supabase as any)
+      .from('submissions')
+      .select('id, score, submitted_at, validation_status, competition_id, competitions(title, scoring_metric)')
+      .eq('submitted_by', user.id)
+      .order('submitted_at', { ascending: false })
+      .limit(5),
+    supabase
+      .from('team_invitations')
+      .select(`
+        id, team_id, invited_at,
+        teams (id, name),
+        invited_by_user:users!team_invitations_invited_by_fkey (id, full_name, email)
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('invited_at', { ascending: false }),
+    // Scoped to the current user, so bounded by their own activity.
+    (supabase as any)
+      .from('practice_submissions')
+      .select('problem_id, score, is_best_score, validation_status, submitted_at')
+      .eq('user_id', user.id)
+      .order('submitted_at', { ascending: false }),
+    (supabase as any)
+      .from('practice_problems')
+      .select(
+        'id, title, description, problem_statement, scoring_metric, dataset_url, sample_submission_url, daily_submission_limit, total_submission_limit, max_file_size_mb, difficulty, created_by, created_at, updated_at, deleted_at, practice_problem_tags(tag_id, practice_tags(id, name, slug))'
+      )
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    (supabase as any)
+      .from('practice_problem_submission_counts')
+      .select('problem_id, participant_count'),
+  ]);
 
-  // Fetch team memberships
-  const { data: userTeamMemberships } = (await supabase
-    .from('team_members')
-    .select('team_id')
-    .eq('user_id', user.id)) as { data: any };
+  const firstName = (profile as any)?.full_name?.trim().split(/\s+/).pop() ?? null;
 
-  // Fetch team registrations
+  // Team memberships drive both the "team registrations" lookup and the teams sidebar.
+  const userTeamMemberships: any[] = (teamMemberships as any) ?? [];
+
+  // Fetch team registrations (depends on team memberships from batch 1)
   let teamRegistrations: any[] = [];
-  if (userTeamMemberships && userTeamMemberships.length > 0) {
+  if (userTeamMemberships.length > 0) {
     const teamIds = userTeamMemberships.map((m: any) => m.team_id);
     const { data: teamRegs } = await supabase
       .from('registrations')
@@ -121,25 +175,11 @@ export default async function DashboardPage() {
 
   const registrations = [...(individualRegistrations || []), ...teamRegistrations];
 
-  // Fetch ALL active competitions
-  const { data: allCompetitions } = (await supabase
-    .from('competitions')
-    .select(
-      'id, title, description, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, scoring_metric'
-    )
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })) as { data: any };
-
   const registrationStatusMap = new Map(
     registrations?.map((r: any) => [r.competition_id, r.status]) || []
   );
 
   const now = new Date();
-
-  // Fetch participant counts
-  const { data: participantCountsData } = await supabase
-    .from('competition_participant_counts')
-    .select('competition_id, participant_count');
 
   const participantCounts = (participantCountsData || []).reduce(
     (acc, item: any) => {
@@ -163,7 +203,7 @@ export default async function DashboardPage() {
   const processedAllCompetitions = allCompetitions ? processAllCompetitions(allCompetitions) : [];
 
   // Leaderboard rank per competition
-  const myTeamIdSet = new Set<string>((userTeamMemberships ?? []).map((m: any) => m.team_id));
+  const myTeamIdSet = new Set<string>(userTeamMemberships.map((m: any) => m.team_id));
   const myCompIds = registrations.map((r: any) => r.competition_id);
   const compRanks: Record<string, { rank: number; total: number }> = {};
 
@@ -196,23 +236,13 @@ export default async function DashboardPage() {
     });
   }
 
-  // Recent competition submissions
-  const { data: recentCompSubs } = await (supabase as any)
-    .from('submissions')
-    .select('id, score, submitted_at, validation_status, competition_id, competitions(title, scoring_metric)')
-    .eq('submitted_by', user.id)
-    .order('submitted_at', { ascending: false })
-    .limit(5);
-
-  // User teams
-  const { data: teamMemberships } = (await supabase
-    .from('team_members')
-    .select('team_id, teams (id, name, leader_id)')
-    .eq('user_id', user.id)) as { data: any };
-
+  // User teams — member counts for the user's teams need a follow-up query keyed
+  // by the team ids resolved above.
   let userTeams: any[] = [];
-  if (teamMemberships && teamMemberships.length > 0) {
-    const teamIds = teamMemberships.map((m: any) => m.teams.id);
+  if (userTeamMemberships.length > 0) {
+    const teamIds = userTeamMemberships
+      .map((m: any) => m.teams?.id)
+      .filter(Boolean);
     const { data: memberCounts } = (await supabase
       .from('team_members')
       .select('team_id')
@@ -221,32 +251,15 @@ export default async function DashboardPage() {
     if (memberCounts) {
       memberCounts.forEach((row: any) => { countMap.set(row.team_id, (countMap.get(row.team_id) || 0) + 1); });
     }
-    userTeams = teamMemberships.map((membership: any) => ({
-      id: membership.teams.id,
-      name: membership.teams.name,
-      member_count: countMap.get(membership.teams.id) || 0,
-      is_leader: membership.teams.leader_id === user.id,
-    }));
+    userTeams = userTeamMemberships
+      .filter((m: any) => m.teams)
+      .map((membership: any) => ({
+        id: membership.teams.id,
+        name: membership.teams.name,
+        member_count: countMap.get(membership.teams.id) || 0,
+        is_leader: membership.teams.leader_id === user.id,
+      }));
   }
-
-  // Pending invitations
-  const { data: invitations } = (await supabase
-    .from('team_invitations')
-    .select(`
-      id, team_id, invited_at,
-      teams (id, name),
-      invited_by_user:users!team_invitations_invited_by_fkey (id, full_name, email)
-    `)
-    .eq('user_id', user.id)
-    .eq('status', 'pending')
-    .order('invited_at', { ascending: false })) as { data: any };
-
-  // Practice activity
-  const { data: myPracticeSubs } = await (supabase as any)
-    .from('practice_submissions')
-    .select('problem_id, score, is_best_score, validation_status, submitted_at')
-    .eq('user_id', user.id)
-    .order('submitted_at', { ascending: false });
 
   const practiceBestScores: Record<string, number> = {};
   const attemptedInOrder: string[] = [];
@@ -254,16 +267,6 @@ export default async function DashboardPage() {
     if (s.is_best_score && s.score !== null) practiceBestScores[s.problem_id] = s.score;
     if (!attemptedInOrder.includes(s.problem_id)) attemptedInOrder.push(s.problem_id);
   });
-
-  const { data: rawPracticeProblems } = await (supabase as any)
-    .from('practice_problems')
-    .select('*, practice_problem_tags(tag_id, practice_tags(id, name, slug))')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  const { data: practiceCounts } = await (supabase as any)
-    .from('practice_problem_submission_counts')
-    .select('problem_id, participant_count');
 
   const practiceCountMap: Record<string, number> = {};
   practiceCounts?.forEach((c: any) => { practiceCountMap[c.problem_id] = c.participant_count; });

@@ -1,4 +1,5 @@
 ﻿import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import CompetitionCard from '@/components/competition/CompetitionCard';
@@ -124,35 +125,35 @@ export default async function HomePage() {
                <div className="w-[85%] lg:w-[80%] z-20 animate-levitate shadow-2xl shadow-primary-blue/10 rounded-xl border border-white/10 overflow-hidden bg-bg-surface/80 backdrop-blur-md relative">
                    {/* Main Dashboard Image - Auto Height based on image ratio */}
                    <div className="w-full flex items-center justify- relative overflow-hidden group">
-                        <img src="/hero-images/dashboard.png" alt="Maincenter Dashboard" className="w-full h-auto object-contain" />
+                        <Image src="/hero-images/dashboard.png" alt="Maincenter Dashboard" width={1515} height={907} priority sizes="(max-width: 1024px) 0px, 40vw" className="w-full h-auto object-contain" />
                    </div>
                </div>
 
                {/* Foreground: Feature Card 1 - Top Left */}
                <div className="absolute top-[-15%] left-[0%] lg:-left-[15%] w-[45%] z-10 animate-levitate [animation-delay:1.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
                    <div className="w-full flex items-center justify-center relative overflow-hidden">
-                        <img src="/hero-images/feature-1.png" alt="Feature 1" className="w-full h-auto object-contain" />
+                        <Image src="/hero-images/feature-1.png" alt="Feature 1" width={886} height={832} sizes="(max-width: 1024px) 0px, 22vw" className="w-full h-auto object-contain" />
                    </div>
                </div>
 
                {/* Foreground: Feature Card 2 - Bottom Right */}
                <div className="absolute bottom-[5%] right-[0%] lg:-right-[5%] w-[35%] z-30 animate-levitate [animation-delay:2.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
                     <div className="w-full flex items-center justify-center relative overflow-hidden">
-                        <img src="/hero-images/feature-2.png" alt="Feature 2" className="w-full h-auto object-contain" />
+                        <Image src="/hero-images/feature-2.png" alt="Feature 2" width={1343} height={801} sizes="(max-width: 1024px) 0px, 18vw" className="w-full h-auto object-contain" />
                    </div>
                </div>
 
                {/* Background: Feature Card 3 - Top Right (New) */}
                <div className="absolute -top-[5%] right-[0%] lg:-right-[2%] w-[28%] z-30 animate-levitate [animation-delay:0.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
                    <div className="w-full flex items-center justify-center relative overflow-hidden">
-                        <img src="/hero-images/feature-3.png" alt="Feature 3" className="w-full h-auto object-contain" />
+                        <Image src="/hero-images/feature-3.png" alt="Feature 3" width={413} height={358} sizes="(max-width: 1024px) 0px, 14vw" className="w-full h-auto object-contain" />
                    </div>
                </div>
 
                {/* Background: Feature Card 4 - Bottom Left (New) */}
                <div className="absolute -bottom-[5%] left-[0%] lg:-left-[2%] w-[30%] z-10 animate-levitate [animation-delay:3.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
                     <div className="w-full flex items-center justify-center relative overflow-hidden">
-                        <img src="/hero-images/feature-4.png" alt="Feature 4" className="w-full h-auto object-contain" />
+                        <Image src="/hero-images/feature-4.png" alt="Feature 4" width={852} height={767} sizes="(max-width: 1024px) 0px, 15vw" className="w-full h-auto object-contain" />
                    </div>
                </div>
             </div>

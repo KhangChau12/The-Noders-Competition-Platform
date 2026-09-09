@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import Header from './Header';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 async function logout() {
@@ -14,8 +13,6 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HeaderWithAuth() {
-  // Force fresh data on every request
-  const cookieStore = await cookies();
   const supabase = await createClient();
 
   const {
