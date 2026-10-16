@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { Button } from '@/components/ui/Button';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {

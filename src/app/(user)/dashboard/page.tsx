@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import Link from 'next/link';
 import {
   Trophy,

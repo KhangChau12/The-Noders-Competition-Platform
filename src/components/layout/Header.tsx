@@ -1,20 +1,15 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logoutUser } from '@/app/actions/auth';
 import MobileMenu from './MobileMenu';
-import { LogOut, LayoutDashboard, Shield, ChevronDown, Trophy, BookOpen, Users } from 'lucide-react';
+import HeaderUserMenu, { HeaderUserSkeleton, type HeaderUser } from './HeaderUserMenu';
+import { Trophy, BookOpen, Users } from 'lucide-react';
 
 interface HeaderProps {
-  user?: {
-    id: string;
-    email: string;
-    full_name?: string;
-    avatar_url?: string;
-    role: 'user' | 'admin';
-  } | null;
+  user?: HeaderUser | null;
 }
 
 const NAV_ICON_MAP: Record<string, React.ReactNode> = {
@@ -25,19 +20,7 @@ const NAV_ICON_MAP: Record<string, React.ReactNode> = {
 
 const Header: React.FC<HeaderProps> = ({ user }) => {
   const pathname = usePathname();
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -49,9 +32,6 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     { href: '/practice', label: 'Practice' },
     { href: 'https://thenodersptnk.com', label: 'Our Community', external: true },
   ];
-
-  const displayName = user?.full_name || user?.email?.split('@')[0] || 'User';
-  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <>
@@ -100,77 +80,9 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
         {/* Desktop Actions - Absolute Right */}
         <div className="hidden lg:flex items-center gap-2 absolute right-4 sm:right-6 lg:right-12 top-1/2 -translate-y-1/2">
-          {user ? (
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors duration-200 group"
-              >
-                {/* Avatar initials placeholder */}
-                <div className="w-7 h-7 rounded-full bg-gradient-brand flex items-center justify-center text-white text-xs font-semibold">
-                  {initials}
-                </div>
-                <span className="text-sm font-medium text-text-secondary group-hover:text-text-primary transition-colors max-w-[120px] truncate">
-                  {displayName}
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-text-tertiary transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute top-full right-0 mt-2 w-52 py-1.5 bg-bg-surface/95 backdrop-blur-md border border-border-default rounded-xl shadow-xl z-50">
-                  <div className="px-4 py-2 border-b border-border-default/60 mb-1">
-                    <p className="text-xs font-medium text-text-primary truncate">{displayName}</p>
-                    <p className="text-xs text-text-tertiary truncate">{user.email}</p>
-                  </div>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors"
-                  >
-                    <LayoutDashboard className="w-4 h-4 shrink-0" />
-                    Dashboard
-                  </Link>
-                  {user.role === 'admin' && (
-                    <Link
-                      href="/admin/dashboard"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors"
-                    >
-                      <Shield className="w-4 h-4 shrink-0" />
-                      Admin Panel
-                    </Link>
-                  )}
-                  <div className="border-t border-border-default/60 mt-1 pt-1">
-                    <button
-                      onClick={async () => {
-                        setShowUserMenu(false);
-                        await logoutUser();
-                      }}
-                      className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-tertiary hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 shrink-0" />
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="px-4 py-2 text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="px-4 py-2 text-sm font-medium bg-gradient-brand text-white rounded-lg hover:shadow-lg hover:shadow-primary-blue/30 transition-all duration-300"
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
+          <Suspense fallback={<HeaderUserSkeleton />}>
+            <HeaderUserMenu user={user} />
+          </Suspense>
         </div>
 
         {/* Mobile Menu Button - Absolute Right */}

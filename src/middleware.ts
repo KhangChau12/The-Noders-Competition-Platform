@@ -54,20 +54,29 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Helper to preserve cookies across redirects
+  function redirectWithCookies(url: string | URL): NextResponse {
+    const redirectResponse = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    return redirectResponse;
+  }
+
   // Handle email verification code in URL (redirect from email)
   const code = request.nextUrl.searchParams.get('code');
   if (code && !request.nextUrl.pathname.startsWith('/auth/callback')) {
     // Redirect to auth callback with code
     const callbackUrl = new URL('/auth/callback', request.url);
     callbackUrl.searchParams.set('code', code);
-    return NextResponse.redirect(callbackUrl);
+    return redirectWithCookies(callbackUrl);
   }
 
   // Refresh session if expired
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes - require authentication
-  const protectedPaths = ['/dashboard', '/admin'];
+  const protectedPaths = ['/dashboard', '/admin', '/profile', '/teams'];
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -76,7 +85,7 @@ export async function middleware(request: NextRequest) {
     // Redirect to login if accessing protected route without auth
     const redirectUrl = new URL('/login', request.url);
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    return redirectWithCookies(redirectUrl);
   }
 
   // Admin-only routes
@@ -91,7 +100,7 @@ export async function middleware(request: NextRequest) {
 
     if (profile?.role !== 'admin') {
       // Redirect non-admin users away from admin routes
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return redirectWithCookies(new URL('/dashboard', request.url));
     }
   }
 
@@ -110,9 +119,9 @@ export async function middleware(request: NextRequest) {
       .single();
 
     if (profile?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+      return redirectWithCookies(new URL('/admin/dashboard', request.url));
     }
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return redirectWithCookies(new URL('/dashboard', request.url));
   }
 
   return response;

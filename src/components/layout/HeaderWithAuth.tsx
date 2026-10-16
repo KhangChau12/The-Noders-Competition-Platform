@@ -9,9 +9,6 @@ async function logout() {
   redirect('/login');
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export default async function HeaderWithAuth() {
   const supabase = await createClient();
 

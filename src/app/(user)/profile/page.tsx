@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/Badge';
 import { User, Mail, Calendar, Trophy, Target, Award } from 'lucide-react';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ProfilePage() {
   const supabase = await createClient();
 

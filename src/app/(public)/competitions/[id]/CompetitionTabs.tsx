@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SCORING_METRIC_INFO, metricShortName } from '@/lib/constants';
 import { Markdown } from '@/components/ui/Markdown';
@@ -97,8 +97,17 @@ export default function CompetitionTabs({
     }
   }, [activeTab, isRegistered, userId]);
 
+  const isInitialMount = useRef(true);
+
   // Fetch full leaderboard when switching to leaderboard tab or changing phase
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialLeaderboard && initialLeaderboard.length > 0) {
+        return;
+      }
+    }
+
     if (activeTab === 'leaderboard') {
       if (leaderboardPhase === 'final') {
         fetchFinalLeaderboard(false);
@@ -187,8 +196,7 @@ export default function CompetitionTabs({
         validation_status,
         users!submissions_user_id_fkey (
           id,
-          full_name,
-          email
+          full_name
         ),
         teams!submissions_team_id_fkey (
           id,
@@ -197,7 +205,8 @@ export default function CompetitionTabs({
       `)
       .eq('competition_id', competition.id)
       .eq('validation_status', 'valid')
-      .eq('phase', leaderboardPhase);
+      .eq('phase', leaderboardPhase)
+      .eq('is_best_score', true);
 
     // CRITICAL: Filter by participation type to ensure fairness
     if (isTeamCompetition) {
@@ -206,37 +215,13 @@ export default function CompetitionTabs({
       query = query.not('user_id', 'is', null); // Only individual submissions
     }
 
-    const { data: allSubs } = await query
+    const { data: bestSubs } = await query
       .order('score', { ascending }) // Dynamic sorting based on metric
-      .order('submitted_at', { ascending: true });
+      .order('submitted_at', { ascending: true })
+      .limit(100);
 
-    if (allSubs) {
-      // Get unique entities (users OR teams) with their best scores and submission counts
-      const bestScores = new Map();
-      const submissionCounts = new Map(); // Track submission count per entity
-
-      allSubs.forEach((sub: any) => {
-        const entityId = isTeamCompetition ? sub.team_id : sub.user_id;
-        if (!entityId) return;
-
-        // Count submissions for this entity
-        submissionCounts.set(entityId, (submissionCounts.get(entityId) || 0) + 1);
-
-        if (!bestScores.has(entityId)) {
-          bestScores.set(entityId, sub);
-        }
-      });
-
-      // Add submission counts to leaderboard entries
-      const leaderboardWithCounts = Array.from(bestScores.values()).map((entry: any) => {
-        const entityId = isTeamCompetition ? entry.team_id : entry.user_id;
-        return {
-          ...entry,
-          submission_count: submissionCounts.get(entityId) || 0
-        };
-      });
-
-      setLeaderboard(leaderboardWithCounts.slice(0, 100));
+    if (bestSubs) {
+      setLeaderboard(bestSubs);
     }
     setLoading(false);
   };
@@ -294,7 +279,7 @@ export default function CompetitionTabs({
       const submitterIds = Array.from(bestScores.keys());
       const { data: users } = await supabase
         .from('users')
-        .select('id, full_name, email')
+        .select('id, full_name')
         .in('id', submitterIds);
 
       // Combine submissions with user data and submission counts
@@ -332,8 +317,7 @@ export default function CompetitionTabs({
         validation_status,
         users!submissions_user_id_fkey (
           id,
-          full_name,
-          email
+          full_name
         ),
         teams!submissions_team_id_fkey (
           id,
@@ -369,14 +353,12 @@ export default function CompetitionTabs({
         privateBestAt: string | null;
         teamName?: string;
         userName?: string;
-        userEmail?: string;
       }>();
 
       allSubs.forEach((sub: any) => {
         let entityId: string;
         let teamName: string | undefined;
         let userName: string | undefined;
-        let userEmail: string | undefined;
 
         if (isIndividual && isTeamComp) {
           entityId = sub.submitted_by;
@@ -387,7 +369,6 @@ export default function CompetitionTabs({
         } else {
           entityId = sub.user_id;
           userName = sub.users?.full_name;
-          userEmail = sub.users?.email;
         }
 
         if (!entityId) return;
@@ -403,7 +384,6 @@ export default function CompetitionTabs({
             privateBestAt: null,
             teamName,
             userName,
-            userEmail,
           });
         }
 
@@ -412,7 +392,6 @@ export default function CompetitionTabs({
         // Update team/user name if not set
         if (teamName && !entity.teamName) entity.teamName = teamName;
         if (userName && !entity.userName) entity.userName = userName;
-        if (userEmail && !entity.userEmail) entity.userEmail = userEmail;
 
         if (sub.phase === 'public') {
           entity.publicSubmissions++;
@@ -436,7 +415,7 @@ export default function CompetitionTabs({
         const submitterIds = Array.from(entityScores.keys());
         const { data: users } = await supabase
           .from('users')
-          .select('id, full_name, email')
+          .select('id, full_name')
           .in('id', submitterIds);
 
         if (users) {
@@ -444,7 +423,6 @@ export default function CompetitionTabs({
             const entity = entityScores.get(user.id);
             if (entity) {
               entity.userName = user.full_name;
-              entity.userEmail = user.email;
             }
           });
         }
@@ -1116,8 +1094,8 @@ function FinalLeaderboardTable({
     userId: isIndividual ? entry.entityId : undefined,
     teamId: isIndividual ? undefined : entry.entityId,
     userName: isIndividual
-      ? entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous'
-      : entry.teamName || entry.userName || entry.userEmail?.split('@')[0] || 'Anonymous',
+      ? entry.userName || 'Anonymous'
+      : entry.teamName || entry.userName || 'Anonymous',
     teamName: isIndividual ? entry.teamName : undefined,
     publicScore: entry.publicScore,
     privateScore: entry.privateScore,
@@ -1263,10 +1241,10 @@ function LeaderboardTab({
     rank: index + 1,
     userId: entry.user_id ?? undefined,
     teamId: entry.team_id ?? undefined,
-    userName: entry.users?.full_name || entry.users?.email?.split('@')[0] || undefined,
+    userName: entry.users?.full_name || undefined,
     teamName: entry.teams?.name || undefined,
     score: entry.score,
-    totalSubmissions: entry.submission_count || 0,
+    totalSubmissions: entry.submission_count || 1,
     lastSubmissionAt: entry.submitted_at,
     isCurrentUser:
       !!userEntityId && (entry.team_id === userEntityId || entry.user_id === userEntityId),
@@ -1407,7 +1385,7 @@ function IndividualLeaderboardTab({
   const rows: LeaderboardEntry[] = leaderboard.map((entry, index) => ({
     rank: index + 1,
     userId: entry.submitted_by ?? undefined,
-    userName: entry.users?.full_name || entry.users?.email?.split('@')[0] || undefined,
+    userName: entry.users?.full_name || undefined,
     teamName: entry.teams?.name || 'Unknown team',
     score: entry.score,
     totalSubmissions: entry.submission_count || 0,

@@ -59,8 +59,8 @@ const config: Config = {
       },
       keyframes: {
         levitate: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-20px)' },
+          '0%, 100%': { transform: 'translate3d(0, 0, 0)' },
+          '50%': { transform: 'translate3d(0, -20px, 0)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '200% 0' },

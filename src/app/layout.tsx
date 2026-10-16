@@ -29,9 +29,6 @@ export const metadata: Metadata = {
   keywords: ['AI', 'competition', 'machine learning', 'data science', 'The Noders Community'],
 };
 
-// Force dynamic rendering to prevent caching issues with auth
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default function RootLayout({
   children,

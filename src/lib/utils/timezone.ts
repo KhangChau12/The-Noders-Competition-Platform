@@ -97,3 +97,30 @@ export function formatDateTime(utcDateString: string): string {
 export function getTimezoneDisplay(): string {
   return 'GMT+7 (Vietnam)';
 }
+
+/**
+ * Returns the Date object representing 00:00:00 (midnight) of today in Vietnam timezone (Asia/Ho_Chi_Minh - UTC+7).
+ */
+export function getVietnamTodayStart(now: Date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: VIETNAM_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+
+  const year = parts.find((p) => p.type === 'year')?.value;
+  const month = parts.find((p) => p.type === 'month')?.value;
+  const day = parts.find((p) => p.type === 'day')?.value;
+
+  return new Date(`${year}-${month}-${day}T00:00:00+07:00`);
+}
+
+/**
+ * Returns the Date object representing 00:00:00 (midnight) of the next day in Vietnam timezone (Asia/Ho_Chi_Minh - UTC+7).
+ */
+export function getVietnamNextResetTime(now: Date = new Date()): Date {
+  const todayStart = getVietnamTodayStart(now);
+  return new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+}
+

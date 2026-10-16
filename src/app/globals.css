@@ -335,4 +335,26 @@
     90% { opacity: 1; }
     100% { offset-distance: 100%; opacity: 0; }
   }
+
+  /* GPU & SVG render optimizations for Neural Network Background */
+  @media (max-width: 768px) {
+    .nn-bg svg,
+    .nn-bg svg *,
+    .nn-bg [filter] {
+      filter: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nn-bg,
+    .nn-bg * {
+      animation: none !important;
+      transition: none !important;
+    }
+    .nn-bg svg,
+    .nn-bg svg *,
+    .nn-bg [filter] {
+      filter: none !important;
+    }
+  }
 }

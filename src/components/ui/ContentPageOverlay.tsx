@@ -10,7 +10,8 @@ export default function ContentPageOverlay() {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none -z-10"
+      aria-hidden="true"
+      className="fixed inset-0 pointer-events-none -z-10 select-none"
       style={{ background: 'rgba(15, 23, 42, 0.72)' }}
     />
   );

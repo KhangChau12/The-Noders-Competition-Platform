@@ -26,9 +26,15 @@ export default function HomePage() {
     <main className="min-h-screen">
       {/* ─── Hero: fully static, renders immediately (no data dependency) ─── */}
       <section className="relative lg:min-h-[90vh] flex items-center overflow-hidden py-10 sm:py-16 lg:py-24">
-        {/* Background: Blurred glow orbs */}
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary-blue/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-accent-cyan/20 rounded-full blur-[120px] pointer-events-none opacity-60" />
+        {/* Background: Glow orbs using zero-cost radial gradients (replaces expensive Gaussian blur) */}
+        <div
+          className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full pointer-events-none opacity-60"
+          style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0.08) 45%, transparent 70%)' }}
+        />
+        <div
+          className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full pointer-events-none opacity-60"
+          style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.22) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)' }}
+        />
 
         {/* Grid Background Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(51,65,85,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(51,65,85,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
@@ -84,7 +90,7 @@ export default function HomePage() {
           <div className="relative h-[400px] lg:h-[500px] w-full hidden lg:block select-none pointer-events-none mt-6">
             <div className="relative w-full h-full [perspective:1000px] flex items-center justify-center">
               {/* Center Hub: Main Dashboard - Anchor */}
-              <div className="w-[85%] lg:w-[80%] z-20 animate-levitate shadow-2xl shadow-primary-blue/10 rounded-xl border border-white/10 overflow-hidden bg-bg-surface/80 backdrop-blur-md relative">
+              <div className="w-[85%] lg:w-[80%] z-20 animate-levitate [will-change:transform] [transform:translateZ(0)] shadow-2xl shadow-primary-blue/10 rounded-xl border border-white/10 overflow-hidden bg-bg-surface relative">
                 {/* Main Dashboard Image - Auto Height based on image ratio */}
                 <div className="w-full flex items-center justify- relative overflow-hidden group">
                   <Image src="/hero-images/dashboard.png" alt="Maincenter Dashboard" width={1515} height={907} priority placeholder="blur" blurDataURL={HERO_BLUR} sizes="(max-width: 1024px) 0px, 40vw" className="w-full h-auto object-contain" />
@@ -92,28 +98,28 @@ export default function HomePage() {
               </div>
 
               {/* Foreground: Feature Card 1 - Top Left */}
-              <div className="absolute top-[-15%] left-[0%] lg:-left-[15%] w-[45%] z-10 animate-levitate [animation-delay:1.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+              <div className="absolute top-[-15%] left-[0%] lg:-left-[15%] w-[45%] z-10 animate-levitate [animation-delay:1.5s] [will-change:transform] [transform:translateZ(0)] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
                 <div className="w-full flex items-center justify-center relative overflow-hidden">
                   <Image src="/hero-images/feature-1.png" alt="Feature 1" width={886} height={832} placeholder="blur" blurDataURL={HERO_BLUR} sizes="(max-width: 1024px) 0px, 22vw" className="w-full h-auto object-contain" />
                 </div>
               </div>
 
               {/* Foreground: Feature Card 2 - Bottom Right */}
-              <div className="absolute bottom-[5%] right-[0%] lg:-right-[5%] w-[35%] z-30 animate-levitate [animation-delay:2.5s] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
+              <div className="absolute bottom-[5%] right-[0%] lg:-right-[5%] w-[35%] z-30 animate-levitate [animation-delay:2.5s] [will-change:transform] [transform:translateZ(0)] shadow-2xl shadow-black/50 rounded-lg border border-white/10 overflow-hidden bg-bg-surface">
                 <div className="w-full flex items-center justify-center relative overflow-hidden">
                   <Image src="/hero-images/feature-2.png" alt="Feature 2" width={1343} height={801} placeholder="blur" blurDataURL={HERO_BLUR} sizes="(max-width: 1024px) 0px, 18vw" className="w-full h-auto object-contain" />
                 </div>
               </div>
 
               {/* Background: Feature Card 3 - Top Right (New) */}
-              <div className="absolute -top-[5%] right-[0%] lg:-right-[2%] w-[28%] z-30 animate-levitate [animation-delay:0.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
+              <div className="absolute -top-[5%] right-[0%] lg:-right-[2%] w-[28%] z-30 animate-levitate [animation-delay:0.5s] [will-change:transform] [transform:translateZ(0)] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
                 <div className="w-full flex items-center justify-center relative overflow-hidden">
                   <Image src="/hero-images/feature-3.png" alt="Feature 3" width={413} height={358} placeholder="blur" blurDataURL={HERO_BLUR} sizes="(max-width: 1024px) 0px, 14vw" className="w-full h-auto object-contain" />
                 </div>
               </div>
 
               {/* Background: Feature Card 4 - Bottom Left (New) */}
-              <div className="absolute -bottom-[5%] left-[0%] lg:-left-[2%] w-[30%] z-10 animate-levitate [animation-delay:3.5s] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
+              <div className="absolute -bottom-[5%] left-[0%] lg:-left-[2%] w-[30%] z-10 animate-levitate [animation-delay:3.5s] [will-change:transform] [transform:translateZ(0)] shadow-xl rounded-lg border border-white/5 overflow-hidden bg-bg-surface">
                 <div className="w-full flex items-center justify-center relative overflow-hidden">
                   <Image src="/hero-images/feature-4.png" alt="Feature 4" width={852} height={767} placeholder="blur" blurDataURL={HERO_BLUR} sizes="(max-width: 1024px) 0px, 15vw" className="w-full h-auto object-contain" />
                 </div>
@@ -313,8 +319,14 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <Card className="relative overflow-hidden border-primary-blue/20 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_38%),linear-gradient(135deg,rgba(30,41,59,0.96),rgba(15,23,42,0.98))] p-5 sm:p-8 lg:p-10 shadow-2xl shadow-primary-blue/10">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
-            <div className="absolute -right-8 top-0 h-44 w-44 rounded-full bg-primary-blue/20 blur-3xl" />
-            <div className="absolute -left-8 bottom-0 h-44 w-44 rounded-full bg-accent-cyan/15 blur-3xl" />
+            <div
+              className="absolute -right-8 top-0 h-44 w-44 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0.05) 50%, transparent 70%)' }}
+            />
+            <div
+              className="absolute -left-8 bottom-0 h-44 w-44 rounded-full pointer-events-none"
+              style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.2) 0%, rgba(6,182,212,0.05) 50%, transparent 70%)' }}
+            />
 
             <div className="relative grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-stretch">
               <div className="flex h-full flex-col justify-between gap-8">

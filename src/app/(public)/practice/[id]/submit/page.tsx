@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { ChevronLeft } from 'lucide-react';
 import PracticeSubmitForm from './PracticeSubmitForm';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Props {
   params: Promise<{ id: string }>;
 }

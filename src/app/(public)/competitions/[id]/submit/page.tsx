@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import SubmitForm from './SubmitForm';
 import DailyResetCountdown from './DailyResetCountdown';
 import { SCORING_METRIC_INFO } from '@/lib/constants';
+import { getVietnamTodayStart } from '@/lib/utils/timezone';
 import {
   ArrowLeft,
   Calendar,
@@ -21,6 +22,9 @@ interface SubmitPageProps {
     id: string;
   };
 }
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function SubmitPage({ params }: SubmitPageProps) {
   const { id } = params;
@@ -95,8 +99,7 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
   const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
   const isHigherBetter = metricInfo?.higher_is_better !== false;
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const todayStart = getVietnamTodayStart();
 
   // Entity column for the current registration (individual vs team).
   const entityCol = competition.participation_type === 'individual' ? 'user_id' : 'team_id';
@@ -122,13 +125,13 @@ export default async function SubmitPage({ params }: SubmitPageProps) {
       .select('id', { count: 'exact', head: true })
       .eq('competition_id', id)
       .eq(entityCol, entityVal as string)
-      .eq('validation_status', 'valid'),
+      .in('validation_status', ['valid', 'pending']),
     supabase
       .from('submissions')
       .select('id', { count: 'exact', head: true })
       .eq('competition_id', id)
       .eq(entityCol, entityVal as string)
-      .eq('validation_status', 'valid')
+      .in('validation_status', ['valid', 'pending'])
       .gte('submitted_at', todayStart.toISOString()),
   ]);
 

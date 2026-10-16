@@ -3,6 +3,9 @@ import CreatePracticeProblemForm from './CreatePracticeProblemForm';
 
 export const metadata = { title: 'Create Practice Problem' };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CreatePracticeProblemPage() {
   const supabase = await createClient();
 

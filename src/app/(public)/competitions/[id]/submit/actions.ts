@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getCompetitionPhase } from '@/lib/utils/competition';
+import { getVietnamTodayStart } from '@/lib/utils/timezone';
 
 export async function submitSolution(
   competitionId: string,
@@ -23,7 +25,7 @@ export async function submitSolution(
   const { data: competition, error: compError } = (await supabase
     .from('competitions')
     .select(
-      'id, participation_type, registration_end, public_test_end, private_test_end, daily_submission_limit, max_file_size_mb'
+      'id, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb'
     )
     .eq('id', competitionId)
     .is('deleted_at', null)
@@ -80,47 +82,51 @@ export async function submitSolution(
   }
 
   // Check if competition is in valid phase for submissions
-  const now = new Date();
-  const publicTestEnd = new Date(competition.public_test_end);
-  const privateTestEnd = competition.private_test_end
-    ? new Date(competition.private_test_end)
-    : null;
-  const registrationEnd = new Date(competition.registration_end);
-
-  let currentPhase = 'ended';
-  if (now >= registrationEnd && now < publicTestEnd) {
-    currentPhase = 'public_test';
-  } else if (privateTestEnd && now >= publicTestEnd && now < privateTestEnd) {
-    currentPhase = 'private_test';
-  }
+  const currentPhase = getCompetitionPhase(competition);
 
   if (currentPhase !== 'public_test' && currentPhase !== 'private_test') {
     return { error: 'Submissions are not allowed in the current competition phase' };
   }
 
-  // Check daily submission limit (for individual or team)
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  // Check daily and total submission limits (for individual or team)
+  const todayStart = getVietnamTodayStart();
 
   let dailyCountQuery = supabase
     .from('submissions')
     .select('id', { count: 'exact', head: true })
     .eq('competition_id', competitionId)
-    .eq('validation_status', 'valid')
+    .in('validation_status', ['valid', 'pending'])
     .gte('submitted_at', todayStart.toISOString());
+
+  let totalCountQuery = supabase
+    .from('submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('competition_id', competitionId)
+    .in('validation_status', ['valid', 'pending']);
 
   if (submissionUserId) {
     dailyCountQuery = dailyCountQuery.eq('user_id', submissionUserId);
+    totalCountQuery = totalCountQuery.eq('user_id', submissionUserId);
   } else if (submissionTeamId) {
     dailyCountQuery = dailyCountQuery.eq('team_id', submissionTeamId);
+    totalCountQuery = totalCountQuery.eq('team_id', submissionTeamId);
   }
 
-  const { count: dailyCount } = await dailyCountQuery;
+  const [{ count: dailyCount }, { count: totalCount }] = await Promise.all([
+    dailyCountQuery,
+    totalCountQuery,
+  ]);
 
   // Check daily limit
   const dailyLimit = competition.daily_submission_limit ?? 15;
   if ((dailyCount || 0) >= dailyLimit) {
     return { error: 'Daily submission limit reached' };
+  }
+
+  // Check total submission limit
+  const totalLimit = competition.total_submission_limit;
+  if (totalLimit && totalLimit > 0 && (totalCount || 0) >= totalLimit) {
+    return { error: 'Total submission limit reached' };
   }
 
   // Get the file

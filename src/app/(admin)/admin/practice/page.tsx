@@ -11,6 +11,9 @@ import { SCORING_METRIC_INFO, PRACTICE_DIFFICULTY_INFO } from '@/lib/constants';
 
 export const metadata = { title: 'Manage Practice Problems' };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminPracticePage() {
   const supabase = await createClient();
 

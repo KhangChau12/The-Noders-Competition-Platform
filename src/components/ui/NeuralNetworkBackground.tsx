@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Node data with positions and animation assignments
 const leftNodes = [
@@ -79,9 +80,12 @@ const rightConnections = [
   { from: 16, to: 10 }, { from: 16, to: 9 },
 ];
 
-// Select some connections to have traveling particles (reduced from 8 to 5 per side)
-const leftParticleLines = [0, 6, 8, 14, 22];
-const rightParticleLines = [1, 7, 9, 15, 25];
+// Select some connections to have traveling particles (curated to 3 per side for optimal 60 FPS)
+const leftParticleLines = [0, 6, 14];
+const rightParticleLines = [1, 7, 15];
+
+// Curated active animated lines (7 lines per side instead of 48 simultaneous paint triggers)
+const activeAnimatedLines = new Set([0, 2, 4, 6, 8, 10, 14]);
 
 function NetworkSVG({
   side,
@@ -91,6 +95,7 @@ function NetworkSVG({
   className,
   mobile = false,
   simplified = false,
+  isLanding = true,
 }: {
   side: 'left' | 'right' | 'center';
   nodes: typeof leftNodes;
@@ -99,11 +104,10 @@ function NetworkSVG({
   className?: string;
   mobile?: boolean;
   simplified?: boolean;
+  isLanding?: boolean;
 }) {
   const prefix = `nn-${side}`;
-  // In simplified mode: no filters, no particles, animate only every other line
-  const useFilters = !mobile && !simplified;
-  const showParticles = !mobile && !simplified;
+  const showParticles = isLanding && !mobile && !simplified;
 
   return (
     <svg
@@ -111,31 +115,6 @@ function NetworkSVG({
       viewBox="0 0 600 500"
     >
       <defs>
-        {useFilters && (
-          <>
-            <filter id={`${prefix}-glow`} x="-100%" y="-100%" width="400%" height="400%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <filter id={`${prefix}-node-glow`}>
-              <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <filter id={`${prefix}-soft-glow`}>
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </>
-        )}
         <radialGradient id={`${prefix}-node-grad`}>
           <stop offset="0%" stopColor="rgba(96, 165, 250, 0.5)" />
           <stop offset="40%" stopColor="rgba(96, 165, 250, 0.2)" />
@@ -150,15 +129,18 @@ function NetworkSVG({
         </radialGradient>
       </defs>
 
-      {/* Connection lines with dash animation */}
+      {/* Connection lines with dash animation (only curated active lines animated on landing page) */}
       {connections.map((conn, i) => {
-        // In simplified mode, animate only every other line to halve animation count
-        if (simplified && i % 2 !== 0) return null;
+        // In simplified mode or subpage: reduce line count to halve draw calls
+        if ((simplified || !isLanding) && i % 2 !== 0) return null;
         const from = nodes[conn.from];
         const to = nodes[conn.to];
         const dist = Math.sqrt((to.cx - from.cx) ** 2 + (to.cy - from.cy) ** 2);
-        const opacity = dist > 200 ? 0.15 : dist > 120 ? 0.25 : 0.35;
+        const opacity = !isLanding
+          ? (dist > 200 ? 0.08 : dist > 120 ? 0.12 : 0.18)
+          : (dist > 200 ? 0.15 : dist > 120 ? 0.25 : 0.35);
         const width = dist > 200 ? 0.8 : dist > 120 ? 1.2 : 1.5;
+        const isAnimated = isLanding && activeAnimatedLines.has(i);
 
         return (
           <line
@@ -169,17 +151,22 @@ function NetworkSVG({
             strokeWidth={width}
             opacity={opacity}
             strokeDasharray="4 4"
-            {...(useFilters && { filter: `url(#${prefix}-soft-glow)` })}
-            style={{
-              animation: `nn-line-flow ${3 + (i % 4)}s linear infinite`,
-              animationDelay: `${(i * 0.7) % 5}s`,
-              willChange: 'stroke-dashoffset',
-            }}
+            style={
+              isAnimated
+                ? {
+                    animation: `nn-line-flow ${3 + (i % 4)}s linear infinite`,
+                    animationDelay: `${(i * 0.7) % 5}s`,
+                    willChange: 'stroke-dashoffset',
+                  }
+                : {
+                    animation: 'none',
+                  }
+            }
           />
         );
       })}
 
-      {/* Traveling particles along connections - desktop + non-simplified only */}
+      {/* Traveling particles along connections - landing desktop + non-simplified only */}
       {showParticles && particleLines.map((lineIdx) => {
         if (lineIdx >= connections.length) return null;
         const conn = connections[lineIdx];
@@ -189,32 +176,37 @@ function NetworkSVG({
         const duration = 2 + dist / 80;
 
         return (
-          <circle
+          <g
             key={`${prefix}-particle-${lineIdx}`}
-            r="2.5"
-            fill="rgba(130, 210, 255, 0.9)"
-            filter={`url(#${prefix}-soft-glow)`}
+            className="nn-particle"
             style={{
               offsetPath: `path("M${from.cx},${from.cy} L${to.cx},${to.cy}")`,
               animation: `nn-particle-travel ${duration}s ease-in-out infinite`,
               animationDelay: `${(lineIdx * 1.3) % 8}s`,
               willChange: 'offset-distance, opacity',
             }}
-          />
+          >
+            {/* Soft halo circle (hardware rasterized) */}
+            <circle r="5" fill="rgba(96, 165, 250, 0.35)" />
+            {/* Crisp glowing core */}
+            <circle r="2.2" fill="rgba(190, 230, 255, 0.95)" />
+          </g>
         );
       })}
 
-      {/* Node glow backgrounds */}
-      {nodes.map((node, i) => (
-        <circle
-          key={`${prefix}-glow-${i}`}
-          cx={node.cx} cy={node.cy}
-          r={node.glowR}
-          fill={node.r >= 7 ? `url(#${prefix}-node-grad-bright)` : `url(#${prefix}-node-grad)`}
-          opacity={node.r >= 7 ? 0.6 : 0.4}
-          {...(useFilters && { filter: `url(#${prefix}-node-glow)` })}
-        />
-      ))}
+      {/* Node glow backgrounds (zero-cost radial gradients) */}
+      {nodes.map((node, i) => {
+        if (!isLanding && i % 2 !== 0) return null;
+        return (
+          <circle
+            key={`${prefix}-glow-${i}`}
+            cx={node.cx} cy={node.cy}
+            r={!isLanding ? node.glowR * 0.7 : node.glowR}
+            fill={node.r >= 7 ? `url(#${prefix}-node-grad-bright)` : `url(#${prefix}-node-grad)`}
+            opacity={!isLanding ? 0.2 : (node.r >= 7 ? 0.6 : 0.4)}
+          />
+        );
+      })}
 
       {/* Foreground nodes */}
       {nodes.map((node, i) => (
@@ -223,7 +215,7 @@ function NetworkSVG({
           cx={node.cx} cy={node.cy}
           r={node.r}
           fill={node.r >= 7 ? 'rgba(130, 200, 255, 1)' : node.r >= 6 ? 'rgba(96, 165, 250, 1)' : 'rgba(80, 150, 240, 0.9)'}
-          {...(useFilters && { filter: `url(#${prefix}-glow)` })}
+          opacity={!isLanding ? 0.35 : 1}
         />
       ))}
     </svg>
@@ -231,13 +223,20 @@ function NetworkSVG({
 }
 
 export default function NeuralNetworkBackground() {
+  const pathname = usePathname();
+  const isLanding = pathname === '/';
   const [simplified, setSimplified] = useState(false);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const lowEnd = typeof navigator !== 'undefined' && navigator.hardwareConcurrency <= 4;
-    setSimplified(prefersReduced || lowEnd);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const checkMotion = () => {
+      const lowEnd = typeof navigator !== 'undefined' && (navigator.hardwareConcurrency ?? 8) <= 4;
+      setSimplified(mediaQuery.matches || lowEnd);
+    };
+    checkMotion();
+    mediaQuery.addEventListener?.('change', checkMotion);
+    return () => mediaQuery.removeEventListener?.('change', checkMotion);
   }, []);
 
   // Stop burning paint/animation budget while the tab isn't visible.
@@ -250,9 +249,37 @@ export default function NeuralNetworkBackground() {
 
   return (
     <div
-      className={`nn-bg fixed inset-0 pointer-events-none overflow-hidden -z-10${paused ? ' nn-bg--paused' : ''}`}
+      aria-hidden="true"
+      className={`nn-bg fixed inset-0 pointer-events-none overflow-hidden -z-20 select-none${paused ? ' nn-bg--paused' : ''}`}
     >
-      <style>{`.nn-bg--paused *, .nn-bg--paused { animation-play-state: paused !important; }`}</style>
+      <style>{`
+        .nn-bg--paused *, .nn-bg--paused {
+          animation-play-state: paused !important;
+        }
+
+        /* Disable SVG filters on mobile devices (max-width: 768px) */
+        @media (max-width: 768px) {
+          .nn-bg svg,
+          .nn-bg svg *,
+          .nn-bg [filter] {
+            filter: none !important;
+          }
+        }
+
+        /* Disable animations and SVG filters when prefers-reduced-motion is active */
+        @media (prefers-reduced-motion: reduce) {
+          .nn-bg,
+          .nn-bg * {
+            animation: none !important;
+            transition: none !important;
+          }
+          .nn-bg svg,
+          .nn-bg svg *,
+          .nn-bg [filter] {
+            filter: none !important;
+          }
+        }
+      `}</style>
       {/* Desktop: left + right networks */}
       <NetworkSVG
         side="left"
@@ -261,6 +288,7 @@ export default function NeuralNetworkBackground() {
         particleLines={leftParticleLines}
         className="hidden md:block left-0 -translate-x-[15%] top-1/2 -translate-y-1/2 w-[750px] h-[550px] lg:w-[850px] lg:h-[600px]"
         simplified={simplified}
+        isLanding={isLanding}
       />
       <NetworkSVG
         side="right"
@@ -269,24 +297,29 @@ export default function NeuralNetworkBackground() {
         particleLines={rightParticleLines}
         className="hidden md:block right-0 translate-x-[15%] top-1/2 -translate-y-1/2 w-[750px] h-[550px] lg:w-[850px] lg:h-[600px]"
         simplified={simplified}
+        isLanding={isLanding}
       />
 
-      {/* Mobile: single centered network, no filters or particles */}
-      <NetworkSVG
-        side="center"
-        nodes={leftNodes}
-        connections={leftConnections}
-        particleLines={leftParticleLines}
-        className="block md:hidden left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] max-w-full h-[420px]"
-        mobile
-      />
+      {/* Mobile: single centered network, landing only, no filters or particles */}
+      {isLanding && (
+        <NetworkSVG
+          side="center"
+          nodes={leftNodes}
+          connections={leftConnections}
+          particleLines={leftParticleLines}
+          className="block md:hidden left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] max-w-full h-[420px]"
+          mobile
+          isLanding={isLanding}
+        />
+      )}
 
-      {/* Center Glow Background */}
+      {/* Center Glow Background (zero-cost radial gradient) */}
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] opacity-15 md:opacity-20"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] opacity-15 md:opacity-20 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(96, 165, 250, 0.4) 0%, rgba(59, 130, 246, 0.2) 35%, transparent 65%)',
-          filter: simplified ? 'blur(40px)' : 'blur(80px)',
+          background: isLanding
+            ? 'radial-gradient(circle, rgba(96, 165, 250, 0.4) 0%, rgba(59, 130, 246, 0.2) 30%, rgba(37, 99, 235, 0.05) 50%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(96, 165, 250, 0.15) 0%, rgba(59, 130, 246, 0.05) 45%, transparent 70%)',
         }}
       />
     </div>

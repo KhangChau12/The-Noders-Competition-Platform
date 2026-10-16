@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
+import { getVietnamNextResetTime } from '@/lib/utils/timezone';
 
 export default function DailyResetCountdown() {
   const [timeUntilReset, setTimeUntilReset] = useState('');
@@ -9,11 +10,9 @@ export default function DailyResetCountdown() {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      const nextReset = getVietnamNextResetTime(now);
 
-      const diff = tomorrow.getTime() - now.getTime();
+      const diff = Math.max(0, nextReset.getTime() - now.getTime());
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);

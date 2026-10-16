@@ -4,6 +4,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 
 // Auth/role data must be fresh on every request.
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 /**
  * Admin shell. Performs the auth + role check once for the whole /admin/* area

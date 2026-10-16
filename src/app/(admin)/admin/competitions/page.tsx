@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatCard } from '@/components/admin/StatCard';
 import { getCompetitionPhase, type CompetitionPhase } from '@/lib/utils/competition';

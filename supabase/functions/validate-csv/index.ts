@@ -225,16 +225,19 @@ serve(async (req) => {
 
 // Helper function to parse CSV
 function parseCSV(text: string): Array<{ id: string; value: string }> {
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   const lines = text.trim().split('\n')
   const headers = lines[0].split(',').map((h) => h.trim())
 
   const data: Array<{ id: string; value: string }> = []
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map((v) => v.trim())
+    const line = lines[i].trim()
+    if (!line) continue
+    const values = line.split(',').map((v) => v.trim())
     data.push({
-      id: values[0],
-      value: values[1],
+      id: values[0] ? values[0].trim() : '',
+      value: values[1] ? values[1].trim() : '',
     })
   }
 
@@ -246,11 +249,20 @@ function validateCSV(
   submission: Array<{ id: string; value: string }>,
   answer: Array<{ id: string; value: string }>
 ): { valid: boolean; errors: string[] } {
+  const MAX_ERRORS = 20
   const errors: string[] = []
+  let totalErrors = 0
+
+  const addError = (msg: string) => {
+    totalErrors++
+    if (errors.length < MAX_ERRORS) {
+      errors.push(msg)
+    }
+  }
 
   // Check row count
   if (submission.length !== answer.length) {
-    errors.push(`Row count mismatch: expected ${answer.length}, got ${submission.length}`)
+    addError(`Row count mismatch: expected ${answer.length}, got ${submission.length}`)
   }
 
   // Build ID sets
@@ -260,25 +272,30 @@ function validateCSV(
   // Check for missing IDs
   for (const id of answerIds) {
     if (!submissionIds.has(id)) {
-      errors.push(`Missing ID: ${id}`)
+      addError(`Missing ID: ${id}`)
     }
   }
 
   // Check for duplicate IDs
   if (submissionIds.size !== submission.length) {
-    errors.push('Duplicate IDs found')
+    addError('Duplicate IDs found')
   }
 
   // Check for empty values
   for (const row of submission) {
     if (!row.id || !row.value) {
-      errors.push('CSV contains empty values')
+      addError('CSV contains empty values')
       break
     }
   }
 
+  if (totalErrors > MAX_ERRORS) {
+    const remaining = totalErrors - MAX_ERRORS
+    errors.push(`...và còn ${remaining} lỗi khác`)
+  }
+
   return {
-    valid: errors.length === 0,
+    valid: totalErrors === 0,
     errors,
   }
 }
