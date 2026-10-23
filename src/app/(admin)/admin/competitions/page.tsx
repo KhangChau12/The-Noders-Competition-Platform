@@ -1,269 +1,132 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { PageBand, BandFacts } from '@/components/ui/PageBand';
+import { buttonClasses } from '@/components/ui/Button';
+import DeleteCompetitionButton from './DeleteCompetitionButton';
+import { getCompetitionSummaries, splitTitle, type CompetitionSummary } from '@/lib/data/competitions';
+import { getNextDeadline } from '@/lib/utils/competition';
+import { PHASE_UI } from '@/lib/ui/phase';
+import { metricShortName } from '@/lib/constants';
+import { vnRange, shortCountdown } from '@/lib/ui/dates';
+import { cn } from '@/lib/utils/cn';
 
+// Auth-dependent data must be fresh on every request.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
-import { StatCard } from '@/components/admin/StatCard';
-import { getCompetitionPhase, type CompetitionPhase } from '@/lib/utils/competition';
-import Link from 'next/link';
-import DeleteCompetitionButton from './DeleteCompetitionButton';
-import {
-  Trophy,
-  Users,
-  Target,
-  Calendar,
-  Plus,
-  Edit2,
-  Eye,
-} from 'lucide-react';
+
+export const metadata = { title: 'Competitions – Admin' };
 
 export default async function AdminCompetitionsPage() {
+  // Auth + role are enforced by the admin layout.
   const supabase = await createClient();
+  const [list, { data: regs }, { data: keys }] = await Promise.all([
+    getCompetitionSummaries(supabase),
+    supabase.from('registrations').select('competition_id, status') as unknown as Promise<{ data: { competition_id: string; status: string }[] | null }>,
+    supabase.from('test_datasets').select('competition_id, phase') as unknown as Promise<{ data: { competition_id: string; phase: string }[] | null }>,
+  ]);
 
-  // Auth + role already enforced by the admin layout.
+  const pendingOf = (id: string) => (regs ?? []).filter((r) => r.competition_id === id && r.status === 'pending').length;
+  const keysOf = (id: string) => (keys ?? []).filter((k) => k.competition_id === id).map((k) => k.phase);
 
-  // Fetch all competitions with stats
-  const { data: competitions } = (await supabase
-    .from('competitions')
-    .select(
-      'id, title, description, participation_type, competition_type, scoring_metric, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, created_at'
-    )
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })) as { data: any };
-
-  // Fetch registration counts for each competition
-  const { data: registrationsData } = (await supabase
-    .from('registrations')
-    .select('competition_id, status, team_id')) as { data: any };
-
-  // Fetch participant counts from view (includes team members)
-  const { data: participantCountsData } = (await supabase
-    .from('competition_participant_counts')
-    .select('competition_id, participant_count')) as { data: any };
-
-  // Fetch submission counts for each competition
-  const { data: submissionsData } = (await supabase
-    .from('submissions')
-    .select('competition_id')) as { data: any };
-
-  // Build participant counts map
-  const participantCountsMap: Record<string, number> = {};
-  participantCountsData?.forEach((pc: any) => {
-    participantCountsMap[pc.competition_id] = pc.participant_count;
-  });
-
-  // Process registration counts (for pending/approved teams count)
-  const registrationCounts: Record<string, { approved: number; pending: number; total: number; participants: number }> = {};
-  registrationsData?.forEach((reg: any) => {
-    if (!registrationCounts[reg.competition_id]) {
-      registrationCounts[reg.competition_id] = { approved: 0, pending: 0, total: 0, participants: 0 };
-    }
-    registrationCounts[reg.competition_id].total++;
-    if (reg.status === 'approved') {
-      registrationCounts[reg.competition_id].approved++;
-    } else if (reg.status === 'pending') {
-      registrationCounts[reg.competition_id].pending++;
-    }
-  });
-
-  // Add participant counts from view
-  Object.keys(registrationCounts).forEach((compId) => {
-    registrationCounts[compId].participants = participantCountsMap[compId] || 0;
-  });
-
-  const submissionCounts: Record<string, number> = {};
-  submissionsData?.forEach((sub: any) => {
-    submissionCounts[sub.competition_id] = (submissionCounts[sub.competition_id] || 0) + 1;
-  });
-
-  // Current phase for each competition — canonical util (computed once with a shared `now`)
-  const now = new Date();
-
-  const getPhaseVariant = (phase: string) => {
-    switch (phase) {
-      case 'upcoming':
-        return 'secondary';
-      case 'registration':
-        return 'registration';
-      case 'public_test':
-        return 'public';
-      case 'private_test':
-        return 'private';
-      case 'ended':
-        return 'ended';
-      default:
-        return 'outline';
-    }
-  };
-
-  const competitionsWithStats = competitions?.map((comp: any) => ({
-    ...comp,
-    phase: getCompetitionPhase(comp, now) as CompetitionPhase,
-    registrationCount: registrationCounts[comp.id] || { approved: 0, pending: 0, total: 0, participants: participantCountsMap[comp.id] || 0 },
-    submissionCount: submissionCounts[comp.id] || 0,
-  }));
-
-  const activeCount = competitionsWithStats?.filter((c: any) => c.phase === 'public_test' || c.phase === 'private_test').length || 0;
-  const registeringCount = competitionsWithStats?.filter((c: any) => c.phase === 'registration').length || 0;
-  const totalSubmissions = Object.values(submissionCounts).reduce((a: number, b: number) => a + b, 0);
+  const groups: { title: string; items: CompetitionSummary[] }[] = [
+    { title: 'Open now', items: list.filter((c) => c.phase === 'registration' || c.phase === 'public_test' || c.phase === 'private_test') },
+    { title: 'Coming up', items: list.filter((c) => c.phase === 'upcoming') },
+    { title: 'Ended', items: list.filter((c) => c.phase === 'ended') },
+  ];
 
   return (
     <>
-      <AdminPageHeader
+      <PageBand
+        eyebrow="Admin"
         title="Competitions"
-        description="View and manage all competitions on the platform"
-        action={
-          <Link href="/admin/competitions/create">
-            <Button variant="primary">
-              <Plus className="w-5 h-5 mr-2" />
-              Create New
-            </Button>
+        description="Create contests, upload answer keys and follow how each one is doing."
+        aside={
+          <Link href="/admin/competitions/create" className={buttonClasses({ variant: 'primary', size: 'lg', className: 'w-full lg:w-auto' })}>
+            New competition
           </Link>
         }
-      />
+      >
+        <BandFacts
+          facts={[
+            { value: list.length, label: 'Competitions' },
+            { value: groups[0].items.length, label: 'Open now', color: 'text-blue' },
+            { value: list.reduce((n, c) => n + c.participants, 0), label: 'Participants, all contests' },
+            { value: list.reduce((n, c) => n + c.submissions, 0), label: 'Submissions' },
+          ]}
+        />
+      </PageBand>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
-        <StatCard Icon={Trophy} value={competitions?.length || 0} label="Total" sub="Competitions" accent="text-primary-blue/15" />
-        <StatCard Icon={Target} value={activeCount} label="Active" sub="Running now" accent="text-success/15" />
-        <StatCard Icon={Users} value={registeringCount} label="Registering" sub="Open for entry" accent="text-warning/15" />
-        <StatCard Icon={Calendar} value={totalSubmissions} label="Submissions" sub="All time" accent="text-accent-cyan/15" />
-      </div>
-
-      {/* Competitions List */}
-      <Card className="hover:translate-y-0 hover:border-border-default overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
-            <h2 className="text-base sm:text-xl font-bold">
-              All Competitions
-            </h2>
-          </div>
-
-          {competitionsWithStats && competitionsWithStats.length > 0 ? (
-            <div className="divide-y divide-border-default">
-              {competitionsWithStats.map((competition: any) => (
-                <div key={competition.id} className="p-4 sm:p-6 hover:bg-bg-elevated/50 transition-colors">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6">
-                    <div className="flex-1 min-w-0">
-                      {/* Title & Badges */}
-                      <div className="flex items-center gap-2 mb-2.5 sm:mb-3 flex-wrap">
-                        <h3 className="text-base sm:text-lg lg:text-xl font-bold break-words">{competition.title}</h3>
-                        <Badge variant={getPhaseVariant(competition.phase)}>
-                          {competition.phase.replace('_', ' ')}
-                        </Badge>
-                        <Badge variant="tech">{competition.participation_type}</Badge>
-                        {competition.competition_type === '4-phase' && (
-                          <Badge variant="outline">4-Phase</Badge>
-                        )}
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-text-secondary text-sm mb-3 sm:mb-4 line-clamp-2">
-                        {competition.description}
-                      </p>
-
-                      {/* Stats */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 sm:gap-x-6 text-xs sm:text-sm">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Users className="w-4 h-4 text-text-tertiary shrink-0" />
-                          <span className="text-text-secondary">
-                            <strong className="text-text-primary">
-                              {competition.registrationCount.participants}
-                            </strong>{' '}
-                            participants
-                            {competition.participation_type === 'team' && (
-                              <span className="text-text-tertiary ml-1">
-                                ({competition.registrationCount.approved} teams)
-                              </span>
-                            )}
+      <div className="shell flex flex-col gap-14 pb-24 pt-12 sm:pt-14">
+        {list.length === 0 && (
+          <p className="rounded-2xl bg-bg-elevated px-6 py-5 text-text-tertiary">
+            No competitions yet.{' '}
+            <Link href="/admin/competitions/create" className="link">
+              Create the first one
+            </Link>
+            .
+          </p>
+        )}
+        {groups
+          .filter((g) => g.items.length > 0)
+          .map((g) => (
+            <section key={g.title} aria-label={g.title}>
+              <h2 className="h-section mb-5">
+                {g.title} <span className="font-mono text-lg font-normal text-text-muted">{g.items.length}</span>
+              </h2>
+              <ul className="flex flex-col gap-3">
+                {g.items.map((c) => {
+                  const ui = PHASE_UI[c.phase];
+                  const at = getNextDeadline(c, c.phase);
+                  const pending = pendingOf(c.id);
+                  const k = keysOf(c.id);
+                  const missing = [!k.includes('public') && 'public', c.competition_type === '4-phase' && !k.includes('private') && 'private'].filter(Boolean) as string[];
+                  return (
+                    <li key={c.id} className="flex flex-col gap-4 rounded-[18px] bg-bg-surface p-5 sm:p-6 lg:flex-row lg:items-center lg:gap-8">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <span className={cn('inline-flex items-center gap-1.5 font-semibold', ui.text)}>
+                            <span className={cn('h-2 w-2 rounded-full', ui.fill)} aria-hidden />
+                            {ui.label}
+                            {at && c.phase !== 'ended' ? <span className="font-normal text-text-muted"> · {shortCountdown(at)} left</span> : null}
                           </span>
-                          {competition.registrationCount.pending > 0 && (
-                            <Badge variant="yellow" className="ml-1">
-                              {competition.registrationCount.pending} pending
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Target className="w-4 h-4 text-text-tertiary shrink-0" />
-                          <span className="text-text-secondary">
-                            <strong className="text-text-primary">
-                              {competition.submissionCount}
-                            </strong>{' '}
-                            submissions
+                          <span className="text-text-muted">
+                            {c.competition_type} · {c.participation_type} · {metricShortName(c.scoring_metric)}
                           </span>
                         </div>
-
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Trophy className="w-4 h-4 text-text-tertiary shrink-0" />
-                          <span className="text-text-secondary">{competition.scoring_metric}</span>
-                        </div>
-
-                        <div className="hidden sm:flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-text-tertiary shrink-0" />
-                          <span className="text-text-secondary">
-                            Created {new Date(competition.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
+                        <Link href={`/admin/competitions/${c.id}/edit`} className="block truncate text-lg font-bold text-text-primary hover:underline">
+                          {splitTitle(c.title).code ? `${splitTitle(c.title).code}: ${splitTitle(c.title).name}` : c.title}
+                        </Link>
+                        <p className="mt-1 text-sm text-text-tertiary">{vnRange(c.registration_start, c.private_test_end ?? c.public_test_end)}</p>
+                        {c.phase !== 'ended' && missing.length > 0 && <p className="mt-2 text-sm text-amber">Missing {missing.join(' and ')} answer key</p>}
                       </div>
-
-                      {/* Timeline — wraps cleanly on mobile */}
-                      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-tertiary">
-                        <span>
-                          Reg: {new Date(competition.registration_start).toLocaleDateString()} – {new Date(competition.registration_end).toLocaleDateString()}
-                        </span>
-                        <span className="hidden sm:inline text-text-disabled">|</span>
-                        <span>Public ends: {new Date(competition.public_test_end).toLocaleDateString()}</span>
-                        {competition.private_test_end && (
-                          <>
-                            <span className="hidden sm:inline text-text-disabled">|</span>
-                            <span>Private ends: {new Date(competition.private_test_end).toLocaleDateString()}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions — full-width buttons on mobile, stacked column on desktop */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-2 shrink-0 lg:w-44">
-                      <Link href={`/admin/competitions/${competition.id}/edit`} className="contents">
-                        <Button variant="outline" size="sm" className="w-full">
-                          <Edit2 className="w-4 h-4 mr-2" />
+                      <dl className="grid grid-cols-3 gap-2 lg:w-[300px] lg:shrink-0">
+                        {[
+                          ['Participants', c.participants, ''],
+                          ['Submissions', c.submissions, ''],
+                          ['Pending', pending, pending > 0 ? 'text-amber' : ''],
+                        ].map(([l, v, col]) => (
+                          <div key={l as string} className="rounded-xl bg-bg-elevated px-3 py-2.5">
+                            <dt className="text-[13px] text-text-muted">{l}</dt>
+                            <dd className={cn('font-mono text-lg', col as string)}>{v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div className="flex flex-wrap items-center gap-2 lg:w-[220px] lg:shrink-0 lg:justify-end">
+                        <Link href={`/admin/competitions/${c.id}/edit`} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
                           Edit
-                        </Button>
-                      </Link>
-                      <Link href={`/competitions/${competition.id}`} className="contents">
-                        <Button variant="outline" size="sm" className="w-full">
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
-                        </Button>
-                      </Link>
-                      <div className="col-span-2 sm:col-span-1">
-                        <DeleteCompetitionButton
-                          competitionId={competition.id}
-                          competitionTitle={competition.title}
-                        />
+                        </Link>
+                        <Link href={`/competitions/${c.id}`} className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+                          View ↗
+                        </Link>
+                        <DeleteCompetitionButton competitionId={c.id} competitionTitle={c.title} />
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-12 text-center text-text-tertiary">
-              <Trophy className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">No competitions yet</p>
-              <p className="text-sm mb-6">Create your first competition to get started</p>
-              <Link href="/admin/competitions/create">
-                <Button variant="primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Competition
-                </Button>
-              </Link>
-            </div>
-          )}
-        </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+      </div>
     </>
   );
 }

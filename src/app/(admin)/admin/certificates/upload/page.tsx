@@ -1,74 +1,45 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
+import { PageBand } from '@/components/ui/PageBand';
 import UploadCertificateForm from './UploadCertificateForm';
-import { ArrowLeft, Award } from 'lucide-react';
 
-interface Props {
-  searchParams: { competition?: string };
-}
-
+// Auth-dependent data must be fresh on every request.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function UploadCertificatePage({ searchParams }: Props) {
+export const metadata = { title: 'Upload certificate – Admin' };
+
+export default async function UploadCertificatePage({ searchParams }: { searchParams: { competition?: string } }) {
   const supabase = await createClient();
-
   // Admin role enforced by the admin layout. We still need the user id for the upload.
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  // Fetch all competitions
-  const { data: competitions } = await supabase
-    .from('competitions')
-    .select('id, title')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  // Fetch existing prefixes
-  const { data: prefixes } = await supabase
-    .from('certificate_prefixes')
-    .select('competition_id, prefix');
+  const [{ data: competitions }, { data: prefixes }] = (await Promise.all([
+    supabase.from('competitions').select('id, title').is('deleted_at', null).order('created_at', { ascending: false }),
+    supabase.from('certificate_prefixes').select('competition_id, prefix'),
+  ])) as [{ data: { id: string; title: string }[] | null }, { data: { competition_id: string; prefix: string }[] | null }];
 
   const prefixMap: Record<string, string> = {};
-  prefixes?.forEach((p: any) => {
-    prefixMap[p.competition_id] = p.prefix;
-  });
-
-  // Pre-selected competition from query param
-  const selectedCompetitionId = searchParams.competition || null;
+  (prefixes ?? []).forEach((p) => (prefixMap[p.competition_id] = p.prefix));
 
   return (
-    <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/admin/certificates"
-            className="inline-flex items-center gap-2 text-text-tertiary hover:text-text-secondary mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Certificates
-          </Link>
-
-          <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-1.5 gradient-text leading-tight">
-            Upload Certificate
-          </h1>
-          <p className="text-sm sm:text-base text-text-secondary">
-            Upload a PDF or image certificate and get a verification code
-          </p>
+    <>
+      <PageBand narrow crumbs={[{ label: 'Certificates', href: '/admin/certificates' }, { label: 'Upload' }]} title="Upload a certificate" description="Each certificate receives a code that can be checked at /verify." />
+      <div className="shell-narrow pb-24 pt-10 sm:pt-12">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+          <div className="min-w-0 flex-1">
+            <UploadCertificateForm competitions={competitions ?? []} prefixMap={prefixMap} selectedCompetitionId={searchParams.competition ?? null} userId={user.id} />
+          </div>
+          <aside className="flex w-full flex-col gap-2.5 rounded-[18px] bg-violet-bg p-6 text-[15px] text-text-secondary lg:w-[300px] lg:shrink-0">
+            <span className="text-[13px] font-semibold text-violet">Before you upload</span>
+            <p>Print the code on the design before uploading so the file matches the record.</p>
+            <p>Generate a suffix, add the full code to the design, export, then upload.</p>
+          </aside>
         </div>
-
-        <Card className="hover:translate-y-0 hover:border-border-default p-5 sm:p-6">
-          <UploadCertificateForm
-            competitions={competitions || []}
-            prefixMap={prefixMap}
-            selectedCompetitionId={selectedCompetitionId}
-            userId={user.id}
-          />
-        </Card>
-    </div>
+      </div>
+    </>
   );
 }

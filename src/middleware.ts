@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Helper to preserve cookies across redirects
+  // Helper to preserve refreshed session cookies across redirects
   function redirectWithCookies(url: string | URL): NextResponse {
     const redirectResponse = NextResponse.redirect(url);
     response.cookies.getAll().forEach((cookie) => {
@@ -69,6 +69,8 @@ export async function middleware(request: NextRequest) {
     // Redirect to auth callback with code
     const callbackUrl = new URL('/auth/callback', request.url);
     callbackUrl.searchParams.set('code', code);
+    // Keep where the link pointed (e.g. /auth/reset-password) so the callback lands there.
+    if (request.nextUrl.pathname !== '/') callbackUrl.searchParams.set('next', request.nextUrl.pathname);
     return redirectWithCookies(callbackUrl);
   }
 

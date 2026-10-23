@@ -1,11 +1,5 @@
-import { AdminHeaderSkeleton, StatGridSkeleton, AdminListCardSkeleton } from '@/components/admin/AdminSkeletons';
+import { PageLoading } from '@/components/ui/PageLoading';
 
-export default function AdminPracticeLoading() {
-  return (
-    <>
-      <AdminHeaderSkeleton actions={2} />
-      <StatGridSkeleton count={3} />
-      <AdminListCardSkeleton rows={5} title="13rem" />
-    </>
-  );
+export default function Loading() {
+  return <PageLoading aside facts={3} body="list" />;
 }

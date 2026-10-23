@@ -1,58 +1,65 @@
-import type { Metadata } from 'next';
-import { Nunito, Shrikhand } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Be_Vietnam_Pro, JetBrains_Mono, Shrikhand } from 'next/font/google';
 import HeaderWithAuth from '@/components/layout/HeaderWithAuth';
 import Footer from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
-import NeuralNetworkBackground from '@/components/ui/NeuralNetworkBackground';
-import ContentPageOverlay from '@/components/ui/ContentPageOverlay';
+import MotionProvider from '@/components/ui/MotionProvider';
 import './globals.css';
 
-// Primary font - Nunito (body text, UI, headings)
-const nunito = Nunito({
-  subsets: ['latin'],
-  weight: ['300', '400', '600', '700', '800'],
-  variable: '--font-nunito',
+// Body and UI text — same family as thenodersptnk.com, with Vietnamese glyphs
+const sans = Be_Vietnam_Pro({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
-// Display font - Shrikhand (hero titles, brand name)
-const shrikhand = Shrikhand({
+// Numbers, scores, codes
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+// The wordmark only
+const brand = Shrikhand({
   weight: '400',
   subsets: ['latin'],
-  variable: '--font-shrikhand',
+  variable: '--font-brand',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
   title: 'The Noders Competition Platform',
-  description: 'Official AI & ML competition platform by The Noders Community - Compete in challenges, test your skills, and climb the leaderboard',
-  keywords: ['AI', 'competition', 'machine learning', 'data science', 'The Noders Community'],
+  description:
+    'The competition platform of The Noders, a student-led tech community at PTNK. Compete in AI contests, practise on open problems, and verify certificates.',
+  keywords: ['AI', 'competition', 'machine learning', 'data science', 'The Noders', 'PTNK'],
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0D0F14',
 };
 
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${nunito.variable} ${shrikhand.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${brand.variable}`}>
       <body className="font-sans bg-bg-primary text-text-primary antialiased flex flex-col min-h-screen">
-        {/* Neural Network Background - Global */}
-        <NeuralNetworkBackground />
-        {/* Dims the network on all pages except landing so text stays readable */}
-        <ContentPageOverlay />
-
-        {/* Skip to main content for accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-gradient-brand focus:text-white focus:px-6 focus:py-3 focus:rounded-xl focus:font-semibold focus:shadow-lg focus:shadow-primary-blue/50 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-bg-primary"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-text-primary focus:px-5 focus:py-3 focus:font-semibold focus:text-bg-primary"
         >
           Skip to main content
         </a>
+        <MotionProvider />
         <ToastProvider>
           <HeaderWithAuth />
-          <main id="main-content" className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
           <Footer />
         </ToastProvider>
       </body>

@@ -1,84 +1,53 @@
 import { createClient } from '@/lib/supabase/server';
-import Header from './Header';
-import { redirect } from 'next/navigation';
-
-async function logout() {
-  'use server';
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect('/login');
-}
+import Header, { type HeaderUser } from './Header';
 
 export default async function HeaderWithAuth() {
   const supabase = await createClient();
-
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  let user = null;
+  if (!authUser) return <Header user={null} invitations={0} adminPending={0} />;
 
-  if (authUser) {
-    // Fetch full user profile
-    const { data: profile, error } = (await supabase
-      .from('users')
-      .select('id, email, full_name, avatar_url, role')
-      .eq('id', authUser.id)
-      .single()) as { data: any; error: any };
+  const { data: profile, error } = (await supabase
+    .from('users')
+    .select('id, email, full_name, avatar_url, role')
+    .eq('id', authUser.id)
+    .maybeSingle()) as {
+    data: { id: string; email: string; full_name: string | null; avatar_url: string | null; role: string } | null;
+    error: unknown;
+  };
 
-    if (profile) {
-      user = {
-        id: profile.id,
-        email: profile.email,
-        full_name: profile.full_name || undefined,
-        avatar_url: profile.avatar_url || undefined,
-        role: profile.role as 'user' | 'admin',
-      };
-    } else if (error) {
-      // Fallback: Profile doesn't exist in DB yet, create user object from auth data
-      // This can happen if the user was created before the trigger was set up
-      console.error('User profile not found in database:', error);
-
-      // Try to insert the user into the database
-      // @ts-ignore - Supabase types need regeneration
-      const { error: insertError } = await (supabase.from('users') as any).insert({
-        id: authUser.id,
-        email: authUser.email!,
-        role: 'user',
-        full_name: authUser.user_metadata?.full_name || null,
-        avatar_url: authUser.user_metadata?.avatar_url || null,
-      });
-
-      if (!insertError) {
-        // Successfully created, now fetch again
-        const { data: newProfile } = (await supabase
-          .from('users')
-          .select('id, email, full_name, avatar_url, role')
-          .eq('id', authUser.id)
-          .single()) as { data: any };
-
-        if (newProfile) {
-          user = {
-            id: newProfile.id,
-            email: newProfile.email,
-            full_name: newProfile.full_name || undefined,
-            avatar_url: newProfile.avatar_url || undefined,
-            role: newProfile.role as 'user' | 'admin',
-          };
-        }
-      } else {
-        // If insert also failed, use auth data as fallback
-        console.error('Failed to create user profile:', insertError);
-        user = {
-          id: authUser.id,
-          email: authUser.email!,
-          full_name: authUser.user_metadata?.full_name || undefined,
-          avatar_url: authUser.user_metadata?.avatar_url || undefined,
-          role: 'user' as 'user' | 'admin',
-        };
-      }
-    }
+  if (!profile && !error) {
+    // Profile row missing (user created before the trigger existed): create it once.
+    await (supabase.from('users') as any).insert({
+      id: authUser.id,
+      email: authUser.email!,
+      role: 'user',
+      full_name: authUser.user_metadata?.full_name || null,
+      avatar_url: authUser.user_metadata?.avatar_url || null,
+    });
   }
 
-  return <Header user={user} />;
+  const user: HeaderUser = {
+    id: authUser.id,
+    email: profile?.email ?? authUser.email ?? '',
+    full_name: profile?.full_name ?? authUser.user_metadata?.full_name ?? undefined,
+    avatar_url: profile?.avatar_url ?? undefined,
+    role: profile?.role === 'admin' ? 'admin' : 'user',
+  };
+
+  // Things waiting for this person: drive the amber dot and the admin badge.
+  const [{ count: invitations }, adminRes] = await Promise.all([
+    supabase
+      .from('team_invitations')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', authUser.id)
+      .eq('status', 'pending'),
+    user.role === 'admin'
+      ? supabase.from('registrations').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+      : Promise.resolve({ count: 0 }),
+  ]);
+
+  return <Header user={user} invitations={invitations ?? 0} adminPending={adminRes.count ?? 0} />;
 }

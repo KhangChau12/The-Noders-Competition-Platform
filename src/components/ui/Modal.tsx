@@ -48,14 +48,14 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur p-4"
+      className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
-        className={`bg-bg-surface border border-border-default rounded-2xl shadow-xl ${sizeClasses[size]} w-full max-h-[90vh] flex flex-col`}
+        className={`bg-bg-surface rounded-t-2xl sm:rounded-2xl shadow-pop ${sizeClasses[size]} w-full max-h-[90vh] flex flex-col animate-sheet-up sm:animate-pop-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

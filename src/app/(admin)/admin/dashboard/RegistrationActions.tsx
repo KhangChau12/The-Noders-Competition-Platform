@@ -1,71 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
 import { approveRegistration, rejectRegistration } from '../actions';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { buttonClasses } from '@/components/ui/Button';
+import { cn } from '@/lib/utils/cn';
 
-interface RegistrationActionsProps {
-  registrationId: string;
-}
-
-export default function RegistrationActions({
-  registrationId,
-}: RegistrationActionsProps) {
-  const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
+/** Approve / Reject one registration. After a decision the row is greyed out until the page refreshes. */
+export default function RegistrationActions({ registrationId }: { registrationId: string }) {
+  const [busy, setBusy] = useState<'approve' | 'reject' | null>(null);
+  const [done, setDone] = useState<'approved' | 'rejected' | null>(null);
   const [error, setError] = useState('');
 
-  const handleApprove = async () => {
-    setIsApproving(true);
+  async function decide(kind: 'approve' | 'reject') {
+    setBusy(kind);
     setError('');
-    const result = await approveRegistration(registrationId);
-    if ('error' in result && result.error) {
-      setError(result.error);
-      setIsApproving(false);
-    }
-    // On success the page revalidates and this row disappears — keep loading state.
-  };
+    const res = kind === 'approve' ? await approveRegistration(registrationId) : await rejectRegistration(registrationId);
+    setBusy(null);
+    if ('error' in res && res.error) return setError(res.error);
+    setDone(kind === 'approve' ? 'approved' : 'rejected');
+  }
 
-  const handleReject = async () => {
-    setIsRejecting(true);
-    setError('');
-    const result = await rejectRegistration(registrationId);
-    if ('error' in result && result.error) {
-      setError(result.error);
-      setIsRejecting(false);
-    }
-  };
-
-  const busy = isApproving || isRejecting;
+  if (done) {
+    return <span className={cn('text-sm font-semibold', done === 'approved' ? 'text-teal' : 'text-text-tertiary')}>{done === 'approved' ? 'Approved' : 'Rejected'}</span>;
+  }
 
   return (
-    <div className="flex flex-col items-stretch sm:items-end gap-1.5">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="success"
-          size="sm"
-          onClick={handleApprove}
-          disabled={busy}
-          loading={isApproving}
-          className="flex-1 sm:flex-none"
-        >
-          <CheckCircle2 className="w-4 h-4 mr-1.5" />
-          Approve
-        </Button>
-        <Button
-          variant="danger"
-          size="sm"
-          onClick={handleReject}
-          disabled={busy}
-          loading={isRejecting}
-          className="flex-1 sm:flex-none"
-        >
-          <XCircle className="w-4 h-4 mr-1.5" />
-          Reject
-        </Button>
-      </div>
-      {error && <span className="text-xs text-error">{error}</span>}
-    </div>
+    <span className="flex flex-col gap-1.5 sm:items-end">
+      <span className="flex gap-2">
+        <button type="button" disabled={!!busy} onClick={() => decide('approve')} className={buttonClasses({ variant: 'accent', tone: 'teal', size: 'sm', className: 'flex-1 sm:flex-none' })}>
+          {busy === 'approve' ? 'Approving…' : 'Approve'}
+        </button>
+        <button type="button" disabled={!!busy} onClick={() => decide('reject')} className={buttonClasses({ variant: 'outline', size: 'sm', className: 'flex-1 sm:flex-none' })}>
+          {busy === 'reject' ? 'Rejecting…' : 'Reject'}
+        </button>
+      </span>
+      {error && <span className="text-sm text-amber">{error}</span>}
+    </span>
   );
 }

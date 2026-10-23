@@ -1,3 +1,4 @@
+import { Children } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils/cn';
@@ -5,110 +6,85 @@ import { cn } from '@/lib/utils/cn';
 interface MarkdownProps {
   children: string;
   className?: string;
+  /** Text colour class for section numbers and list markers (e.g. a phase or domain colour). */
+  accent?: string;
 }
 
-// Does the text actually use Markdown syntax? A heading, a fenced block, a
-// table, a real bullet/number list (marker followed by a space at line start),
-// a link, or bold/italic. Prose that just happens to contain "1." mid-sentence
-// or a stray "-" is NOT markdown and reads better as pre-wrapped plain text.
-function looksLikeMarkdown(src: string): boolean {
-  return (
-    /^#{1,6}\s/m.test(src) ||
-    /```/.test(src) ||
-    /^\s*\|.*\|\s*$/m.test(src) ||
-    /^\s*[-*+]\s+\S/m.test(src) ||
-    /^\s*\d+\.\s+\S.*\n\s*\d+\.\s+/m.test(src) ||
-    /\[[^\]]+\]\([^)]+\)/.test(src) ||
-    /\*\*[^*]+\*\*/.test(src)
-  );
-}
+/*
+ * Typography for problem statements — one scale for every contest and practice page.
+ *
+ *   Section (##)       22px / bold / primary, number in mono accent, rule above
+ *   Sub-section (###)  18px / semibold / primary
+ *   Label (####)       13px / semibold / uppercase / tertiary
+ *   Body               16px (15px on phones) / 1.75 / secondary, max 72ch
+ *   Bold               semibold / primary — used for labels and key terms
+ *   Italic             italic / secondary — used for notes and citations
+ *   Code               mono 13px on raised chip
+ */
+const BODY = 'text-[0.9375rem] leading-[1.75] text-text-secondary sm:text-base';
 
-// Dark-theme prose, pinned to the redesign type scale:
-// headings → title role, paragraphs/lists → body, code → mono on bg-elevated.
-const COMPONENTS: Components = {
-  h1: ({ children }) => (
-    <h3 className="text-lg font-extrabold text-text-primary mt-[18px] first:mt-0 mb-[7px]">{children}</h3>
-  ),
-  h2: ({ children }) => (
-    <h3 className="text-lg font-extrabold text-text-primary mt-[18px] first:mt-0 mb-[7px]">{children}</h3>
-  ),
-  h3: ({ children }) => (
-    <h4 className="text-lg font-extrabold text-text-primary mt-[18px] first:mt-0 mb-[7px]">{children}</h4>
-  ),
-  h4: ({ children }) => (
-    <h5 className="text-sm font-bold uppercase tracking-[0.06em] text-text-tertiary mt-[18px] first:mt-0 mb-[7px]">
-      {children}
-    </h5>
-  ),
-  p: ({ children }) => (
-    <p className="text-sm text-text-secondary leading-[1.65] mb-2">{children}</p>
-  ),
-  ul: ({ children }) => <ul className="list-disc pl-[1.1rem] mb-3 space-y-1 marker:text-text-disabled">{children}</ul>,
-  ol: ({ children }) => <ol className="list-decimal pl-[1.4rem] mb-3 space-y-1 marker:text-text-tertiary marker:font-mono">{children}</ol>,
-  li: ({ children }) => <li className="text-sm text-text-secondary leading-[1.6] pl-1">{children}</li>,
-  a: ({ children, href }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary-blue underline">
-      {children}
-    </a>
-  ),
-  strong: ({ children }) => <strong className="font-bold text-text-primary">{children}</strong>,
-  code: ({ children, className: cls }) => {
-    // fenced block → has a language- className; inline → doesn't
-    const isBlock = /language-/.test(cls ?? '');
-    if (isBlock) {
-      return <code className="font-mono text-[0.8125rem] text-text-secondary">{children}</code>;
-    }
-    return (
-      <code className="font-mono text-[0.8125rem] bg-bg-elevated px-1.5 py-px rounded text-[#22D3EE]">
-        {children}
-      </code>
-    );
-  },
-  pre: ({ children }) => (
-    <pre className="bg-bg-elevated rounded-lg p-3 overflow-x-auto mb-2 text-sm">{children}</pre>
-  ),
-  blockquote: ({ children }) => (
-    <blockquote className="border-l-2 border-border-subtle pl-3 text-text-tertiary italic mb-2">
-      {children}
-    </blockquote>
-  ),
-  table: ({ children }) => (
-    <div className="overflow-x-auto mb-2">
-      <table className="border-collapse text-sm">{children}</table>
-    </div>
-  ),
-  th: ({ children }) => (
-    <th className="border border-border-default px-[11px] py-[5px] bg-bg-elevated text-text-tertiary text-xs font-semibold uppercase tracking-[0.06em] text-left">
-      {children}
-    </th>
-  ),
-  td: ({ children }) => (
-    <td className="border border-border-default px-[11px] py-[5px] text-text-secondary">{children}</td>
-  ),
-  hr: () => <hr className="border-border-default my-4" />,
-};
-
-export function Markdown({ children, className }: MarkdownProps) {
-  const text = children?.trim() ?? '';
-
-  // Prose that isn't really Markdown: keep the author's line breaks, don't let
-  // the parser fold loose "1." / "-" lines into deeply-indented list items.
-  if (!looksLikeMarkdown(text)) {
-    return (
-      <div
-        className={cn(
-          'text-sm text-text-secondary leading-[1.65] whitespace-pre-wrap break-words',
-          className
-        )}
-      >
-        {text}
-      </div>
-    );
+/** "1. Problem Overview" → [number, title] so the number can be styled apart. */
+function splitNumber(children: React.ReactNode): [string | null, React.ReactNode] {
+  const arr = Children.toArray(children);
+  const first = arr[0];
+  if (typeof first === 'string') {
+    const m = first.match(/^(\d{1,2})\.\s+([\s\S]*)$/);
+    if (m) return [m[1].padStart(2, '0'), [m[2], ...arr.slice(1)]];
   }
+  return [null, children];
+}
 
+function components(accent: string): Components {
+  const Section = ({ children }: { children?: React.ReactNode }) => {
+    const [num, rest] = splitNumber(children);
+    return (
+      <h3 className="mb-4 mt-10 flex items-baseline gap-3 border-t border-border-default pt-8 text-[1.25rem] font-bold leading-snug text-text-primary first:mt-0 first:border-t-0 first:pt-0 sm:text-[1.375rem]">
+        {num && <span className={cn('font-mono text-base font-medium', accent)}>{num}</span>}
+        <span>{rest}</span>
+      </h3>
+    );
+  };
+  return {
+    h1: Section,
+    h2: Section,
+    h3: ({ children }) => <h4 className="mb-3 mt-7 text-[1.0625rem] font-semibold leading-snug text-text-primary first:mt-0 sm:text-lg">{children}</h4>,
+    h4: ({ children }) => <h5 className="mb-2.5 mt-6 text-[0.8125rem] font-semibold uppercase tracking-[0.06em] text-text-tertiary first:mt-0">{children}</h5>,
+    h5: ({ children }) => <h5 className="mb-2.5 mt-6 text-[0.8125rem] font-semibold uppercase tracking-[0.06em] text-text-tertiary first:mt-0">{children}</h5>,
+    h6: ({ children }) => <h5 className="mb-2.5 mt-6 text-[0.8125rem] font-semibold uppercase tracking-[0.06em] text-text-tertiary first:mt-0">{children}</h5>,
+    p: ({ children }) => <p className={cn(BODY, 'mb-4 max-w-[72ch] last:mb-0')}>{children}</p>,
+    ul: ({ children }) => <ul className={cn('mb-5 max-w-[72ch] list-disc space-y-2.5 pl-5 last:mb-0', accent.replace('text-', 'marker:text-'))}>{children}</ul>,
+    ol: ({ children }) => <ol className="mb-5 max-w-[72ch] list-decimal space-y-2.5 pl-6 last:mb-0 marker:font-mono marker:text-sm marker:text-text-muted">{children}</ol>,
+    li: ({ children }) => <li className={cn(BODY, 'pl-1.5 [&>p]:mb-0')}>{children}</li>,
+    a: ({ children, href }) => (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="break-all text-blue underline underline-offset-2 hover:text-blue-soft">
+        {children}
+      </a>
+    ),
+    strong: ({ children }) => <strong className="font-semibold text-text-primary">{children}</strong>,
+    em: ({ children }) => <em className="italic text-text-secondary">{children}</em>,
+    code: ({ children, className: cls }) => {
+      const isBlock = /language-/.test(cls ?? '') || (typeof children === 'string' && children.includes('\n'));
+      if (isBlock) return <code className="font-mono text-[0.8125rem] leading-relaxed text-text-secondary">{children}</code>;
+      return <code className="whitespace-nowrap rounded-md bg-bg-raised px-1.5 py-0.5 font-mono text-[0.8125rem] text-text-primary">{children}</code>;
+    },
+    pre: ({ children }) => <pre className="mb-5 overflow-x-auto rounded-xl bg-bg-primary p-4 last:mb-0">{children}</pre>,
+    blockquote: ({ children }) => <blockquote className="mb-5 max-w-[72ch] rounded-xl border-l-[3px] border-border-subtle bg-bg-elevated px-5 py-3.5 last:mb-0 [&_p]:text-text-tertiary">{children}</blockquote>,
+    table: ({ children }) => (
+      <div className="mb-5 overflow-x-auto rounded-xl bg-bg-elevated last:mb-0">
+        <table className="w-full border-collapse text-[0.9375rem]">{children}</table>
+      </div>
+    ),
+    th: ({ children }) => <th className="border-b border-border-default px-4 py-3 text-left text-[0.8125rem] font-semibold text-text-tertiary">{children}</th>,
+    td: ({ children }) => <td className="border-t border-border-default px-4 py-3 align-top text-text-secondary first:font-semibold first:text-text-primary">{children}</td>,
+    hr: () => <hr className="my-8 border-border-default" />,
+  };
+}
+
+export function Markdown({ children, className, accent = 'text-blue' }: MarkdownProps) {
+  const text = (children ?? '').replace(/\r\n?/g, '\n').trim();
   return (
     <div className={cn('break-words', className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={COMPONENTS}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components(accent)}>
         {text}
       </ReactMarkdown>
     </div>

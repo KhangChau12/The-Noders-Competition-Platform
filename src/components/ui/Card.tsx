@@ -1,36 +1,44 @@
 import { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 
+export type CardTone = 'surface' | 'neutral' | 'violet' | 'blue' | 'amber' | 'teal';
+
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  /** Kept for legacy callers; all variants share one flat style now. */
   variant?: 'default' | 'hover' | 'interactive' | 'elevated';
   padding?: 'sm' | 'md' | 'lg' | 'none';
+  /** Tinted ground. `surface` is the plain dark card. */
+  tone?: CardTone;
 }
 
-// Unified Card — variant set, hover behaviour and sub-components kept in sync
-// with the Community site's Card. `padding` defaults to `none` here because
-// existing Competition markup passes padding via className (e.g. `p-5 sm:p-6`).
+export const CARD_TONE: Record<CardTone, string> = {
+  surface: 'bg-bg-surface',
+  neutral: 'bg-bg-elevated',
+  violet: 'bg-violet-bg',
+  blue: 'bg-blue-bg',
+  amber: 'bg-amber-bg',
+  teal: 'bg-teal-bg',
+};
+
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'default', padding = 'none', children, ...props }, ref) => {
-    const baseStyles = 'bg-bg-surface border border-border-default rounded-xl transition-all duration-300';
-
-    const variants = {
-      default: 'hover:border-primary-blue hover:-translate-y-1',
-      hover: 'hover:border-primary-blue hover:-translate-y-1',
-      interactive: 'hover:border-primary-blue hover:-translate-y-1 hover:shadow-lg hover:shadow-primary-blue/10 cursor-pointer',
-      elevated: 'bg-bg-elevated shadow-xl hover:-translate-y-1',
-    };
-
+  ({ className, variant = 'default', padding = 'none', tone = 'surface', children, ...props }, ref) => {
     const paddings = {
       none: '',
       sm: 'p-4',
-      md: 'p-6',
-      lg: 'p-8',
+      md: 'p-5 sm:p-6',
+      lg: 'p-6 sm:p-8',
     };
 
     return (
       <div
         ref={ref}
-        className={cn(baseStyles, variants[variant], paddings[padding], className)}
+        className={cn(
+          'rounded-2xl',
+          CARD_TONE[tone],
+          variant === 'interactive' && 'lift cursor-pointer',
+          paddings[padding],
+          className
+        )}
         {...props}
       >
         {children}
@@ -42,28 +50,23 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = 'Card';
 
 function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-4 flex flex-col space-y-1.5', className)} {...props} />;
+  return <div className={cn('mb-4 flex flex-col gap-1', className)} {...props} />;
 }
 
 function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return (
-    <h3
-      className={cn('text-lg font-semibold leading-none tracking-tight text-text-primary', className)}
-      {...props}
-    />
-  );
+  return <h3 className={cn('text-lg font-bold leading-snug text-text-primary', className)} {...props} />;
 }
 
 function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-sm text-text-secondary', className)} {...props} />;
+  return <p className={cn('text-sm text-text-tertiary', className)} {...props} />;
 }
 
 function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('pt-0', className)} {...props} />;
+  return <div className={cn(className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex items-center pt-6', className)} {...props} />;
+  return <div className={cn('flex items-center pt-5', className)} {...props} />;
 }
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };

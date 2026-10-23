@@ -1,243 +1,172 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, Crown, Calendar, Mail } from 'lucide-react';
-import TeamManagement from './TeamManagement';
+import { createClient } from '@/lib/supabase/server';
+import { PageBand } from '@/components/ui/PageBand';
+import { Avatar } from '@/components/ui/Avatar';
+import { InviteCard, CancelInvite, RemoveMember, TeamDetailsForm, DeleteTeamCard } from './TeamManagement';
+import { getCompetitionPhase } from '@/lib/utils/competition';
+import { splitTitle } from '@/lib/data/competitions';
+import { PHASE_UI } from '@/lib/ui/phase';
+import { vnDate, timeAgo } from '@/lib/ui/dates';
+import { cn } from '@/lib/utils/cn';
+
+const one = (v: any) => (Array.isArray(v) ? v[0] ?? null : v ?? null);
+const nameOf = (u: any) => u?.full_name || u?.email?.split('@')[0] || 'Member';
 
 export default async function TeamDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?redirect=/teams/${params.id}`);
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const [{ data: team }, { data: members }, { data: invites }, { data: regs }] = (await Promise.all([
+    supabase.from('teams').select('id, name, description, leader_id, created_at').eq('id', params.id).maybeSingle(),
+    supabase.from('team_members').select('user_id, joined_at, users(full_name, email, bio)').eq('team_id', params.id).order('joined_at', { ascending: true }),
+    supabase.from('team_invitations').select('id, invited_at, users!team_invitations_user_id_fkey(full_name, email)').eq('team_id', params.id).eq('status', 'pending').order('invited_at', { ascending: false }),
+    supabase
+      .from('registrations')
+      .select('id, status, competition_id, competitions(title, deleted_at, max_team_size, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end)')
+      .eq('team_id', params.id),
+  ])) as [{ data: any }, { data: any[] | null }, { data: any[] | null }, { data: any[] | null }];
 
-  // Team, members, and pending invitations all key off the team id from the URL
-  // and don't depend on one another — fetch them concurrently.
-  const [{ data: team }, { data: members }, { data: pendingInvites }] = (await Promise.all([
-    supabase
-      .from('teams')
-      .select(`
-        id, name, description, leader_id, created_at,
-        leader:users!teams_leader_id_fkey (id, full_name, email)
-      `)
-      .eq('id', params.id)
-      .single(),
-    supabase
-      .from('team_members')
-      .select(`
-        id, user_id, joined_at,
-        users (id, full_name, email)
-      `)
-      .eq('team_id', params.id)
-      .order('joined_at', { ascending: true }),
-    supabase
-      .from('team_invitations')
-      .select(`id, invited_at, users (id, full_name, email)`)
-      .eq('team_id', params.id)
-      .eq('status', 'pending')
-      .order('invited_at', { ascending: false }),
-  ])) as [{ data: any }, { data: any }, { data: any }];
-
-  if (!team) redirect('/teams');
+  if (!team) notFound();
 
   const isLeader = team.leader_id === user.id;
-  const isMember = members?.some((m: any) => m.user_id === user.id);
+  const isMember = (members ?? []).some((m) => m.user_id === user.id);
+  const sorted = [...(members ?? [])].sort((a, b) => (a.user_id === team.leader_id ? -1 : b.user_id === team.leader_id ? 1 : 0));
+  const leaderName = nameOf(one(sorted.find((m) => m.user_id === team.leader_id)?.users));
 
-  // Sort: leader row always first
-  const sortedMembers = [...(members ?? [])].sort((a: any, b: any) => {
-    if (a.user_id === team.leader_id) return -1;
-    if (b.user_id === team.leader_id) return 1;
-    return 0;
-  });
+  const now = new Date();
+  const contests = (regs ?? [])
+    .map((r) => ({ ...r, c: one(r.competitions) }))
+    .filter((r) => r.c && !r.c.deleted_at)
+    .map((r) => ({ id: r.competition_id as string, status: r.status as string, title: r.c.title as string, max: r.c.max_team_size as number | null, phase: getCompetitionPhase(r.c, now) }));
+  const activeRegs = contests.filter((c) => c.status === 'approved' || c.status === 'pending');
+  const sizeCap = activeRegs.map((c) => c.max).filter((m): m is number => !!m);
+  const full = sizeCap.length > 0 && sorted.length >= Math.min(...sizeCap);
+
+  const role = isLeader
+    ? { bg: 'bg-blue-strong', soft: 'text-blue-soft', label: 'You lead this team', text: 'You register it for contests, invite and remove members, and edit its details.' }
+    : isMember
+      ? { bg: 'bg-teal-strong', soft: 'text-teal-soft', label: 'You’re a member', text: `You can submit for the team in its contests. ${leaderName} handles registration and members.` }
+      : { bg: 'bg-violet-strong', soft: 'text-violet-soft', label: 'You’re not in this team', text: `To join, ask ${leaderName} to invite ${user.email ?? 'your email'}.` };
 
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
-      <div className="max-w-3xl mx-auto">
-
-        {/* Back */}
-        <Link
-          href="/teams"
-          className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Teams
-        </Link>
-
-        {/* ── Team Hero ── */}
-        <Card className="relative overflow-hidden p-5 sm:p-7 mb-6">
-          <Users
-            className="absolute -top-6 -right-6 h-32 w-32 text-primary-blue/[0.07] rotate-[12deg] pointer-events-none select-none"
-            aria-hidden
-          />
-          <div className="relative">
-            <div className="flex flex-wrap items-center gap-2.5 mb-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">{team.name}</h1>
-              {isLeader && (
-                <Badge variant="yellow" className="flex items-center gap-1">
-                  <Crown className="w-3 h-3" />
-                  Leader
-                </Badge>
-              )}
-              {isMember && !isLeader && (
-                <Badge variant="secondary">Member</Badge>
-              )}
-            </div>
-
-            <p className="text-text-secondary text-sm mb-4 leading-relaxed">
-              {team.description || <span className="text-text-tertiary italic">No description</span>}
+    <>
+      <PageBand
+        crumbs={[{ label: 'Teams', href: '/teams' }, { label: team.name }]}
+        title={team.name}
+        description={
+          <>
+            {team.description && <p className="mb-2">{team.description}</p>}
+            <p className="text-[15px] text-[#9FB1D6]">
+              {sorted.length} member{sorted.length === 1 ? '' : 's'} · led by {leaderName} · since {vnDate(team.created_at)}
             </p>
-
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-text-tertiary">
-              <span className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" />
-                {sortedMembers.length} member{sortedMembers.length !== 1 ? 's' : ''}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Crown className="w-3.5 h-3.5 text-warning" />
-                Led by <span className="text-text-secondary ml-1">{team.leader.full_name || team.leader.email}</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                Created {new Date(team.created_at).toLocaleDateString()}
-              </span>
-            </div>
+          </>
+        }
+        aside={
+          <div className={cn('flex flex-col gap-2 rounded-2xl p-5 text-white shadow-lift sm:p-6', role.bg)}>
+            <span className={cn('text-[13px] font-semibold', role.soft)}>Your role</span>
+            <span className="text-xl font-bold">{role.label}</span>
+            <span className={cn('text-[15px]', role.soft)}>{role.text}</span>
           </div>
-        </Card>
+        }
+      />
 
-        {/* ── Members ── */}
-        <Card className="p-5 sm:p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-base">
-              Members
-              <span className="ml-2 font-mono text-sm text-text-tertiary font-normal">
-                {sortedMembers.length}
-              </span>
-            </h2>
-          </div>
+      <div className="shell pb-24 pt-12 sm:pb-28 sm:pt-14">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
+          <div className="flex min-w-0 flex-1 flex-col gap-10">
+            <section data-reveal aria-labelledby="members">
+              <h2 id="members" className="h-section mb-5">
+                Members <span className="font-mono text-lg font-normal text-text-muted">{sorted.length}</span>
+              </h2>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {sorted.map((m) => {
+                  const u = one(m.users);
+                  const name = nameOf(u);
+                  const lead = m.user_id === team.leader_id;
+                  return (
+                    <li key={m.user_id} className={cn('flex flex-col gap-3 rounded-2xl p-5', lead ? 'bg-amber-bg' : 'bg-bg-surface')}>
+                      <span className="flex items-center gap-3.5">
+                        <Avatar name={name} size={44} colorful />
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold">
+                            {name}
+                            {m.user_id === user.id && <span className="font-normal text-text-muted"> (you)</span>}
+                          </span>
+                          <span className={cn('block text-sm', lead ? 'text-amber' : 'text-text-muted')}>{lead ? 'Leader' : `Joined ${vnDate(m.joined_at)}`}</span>
+                        </span>
+                      </span>
+                      {u?.bio && <p className="line-clamp-2 text-sm text-text-tertiary">{u.bio}</p>}
+                      {(isLeader || isMember) && u?.email && <span className="truncate font-mono text-[13px] text-text-muted">{u.email}</span>}
+                      {isLeader && !lead && <RemoveMember teamId={team.id} userId={m.user_id} name={name} />}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
 
-          <div className="space-y-1">
-            {sortedMembers.map((member: any) => (
-              <MemberRow
-                key={member.id}
-                member={member}
-                isLeader={member.user_id === team.leader_id}
-                isCurrentUser={member.user_id === user.id}
-              />
-            ))}
-          </div>
-
-          {/* Pending invitations — visible to leader only */}
-          {isLeader && pendingInvites && pendingInvites.length > 0 && (
-            <div className="mt-5 pt-5 border-t border-border-default">
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">
-                Pending Invitations ({pendingInvites.length})
-              </p>
-              <div className="space-y-1">
-                {pendingInvites.map((invite: any) => (
-                  <div
-                    key={invite.id}
-                    className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-warning/5 border border-warning/15"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar name={invite.users.full_name || invite.users.email} size="sm" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">
-                          {invite.users.full_name || 'No name'}
-                        </p>
-                        <p className="text-xs text-text-tertiary truncate flex items-center gap-1">
-                          <Mail className="w-3 h-3 shrink-0" />
-                          {invite.users.email}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="warning" className="shrink-0">Invited</Badge>
+            {isLeader && (
+              <section data-reveal aria-label="Invitations" className="flex flex-col gap-4">
+                <InviteCard teamId={team.id} full={full} />
+                {(invites ?? []).length > 0 && (
+                  <div className="rounded-[18px] bg-amber-bg p-6">
+                    <h3 className="mb-3 text-[13px] font-semibold text-amber">Waiting for an answer · {(invites ?? []).length}</h3>
+                    <ul className="flex flex-col">
+                      {(invites ?? []).map((i) => {
+                        const u = one(i.users);
+                        return (
+                          <li key={i.id} className="flex items-center gap-3.5 border-t border-white/[0.06] py-3 first:border-t-0 first:pt-0 last:pb-0">
+                            <Avatar name={nameOf(u)} size={36} colorful />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-semibold">{nameOf(u)}</span>
+                              <span className="block truncate text-sm text-amber-muted">
+                                {u?.email} · {timeAgo(i.invited_at)}
+                              </span>
+                            </span>
+                            <CancelInvite invitationId={i.id} />
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* ── Leader Management Panel ── */}
-        {isLeader && (
-          <TeamManagement
-            team={team}
-            members={members ?? []}
-            pendingInvites={pendingInvites ?? []}
-            isLeader={isLeader}
-          />
-        )}
-
-        {/* ── Non-member CTA ── */}
-        {!isMember && !isLeader && (
-          <Card className="p-5 sm:p-6 text-center">
-            <Users className="w-8 h-8 mx-auto mb-3 text-text-tertiary opacity-40" />
-            <h3 className="font-semibold mb-1">Not a member</h3>
-            <p className="text-sm text-text-secondary mb-2">
-              Ask the team leader to invite you using your email:
-            </p>
-            <p className="text-sm font-mono text-accent-cyan">{user.email}</p>
-          </Card>
-        )}
-
-      </div>
-    </div>
-  );
-}
-
-// ── Avatar helper ────────────────────────────────────────────────────────────
-function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
-  const initial = name?.[0]?.toUpperCase() ?? '?';
-  const sizeClass = size === 'sm' ? 'w-8 h-8 text-sm' : 'w-9 h-9 text-sm';
-  return (
-    <div className={`${sizeClass} bg-gradient-brand rounded-full flex items-center justify-center shrink-0 font-bold text-white`}>
-      {initial}
-    </div>
-  );
-}
-
-// ── Member row ───────────────────────────────────────────────────────────────
-function MemberRow({
-  member,
-  isLeader,
-  isCurrentUser,
-}: {
-  member: any;
-  isLeader: boolean;
-  isCurrentUser: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-bg-elevated/60 transition-colors">
-      <div className="flex items-center gap-3 min-w-0">
-        <Avatar name={member.users.full_name || member.users.email} />
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-text-primary truncate">
-              {member.users.full_name || 'Anonymous'}
-            </p>
-            {isCurrentUser && (
-              <span className="text-xs text-text-tertiary">(you)</span>
+                )}
+              </section>
             )}
           </div>
-          <p className="text-xs text-text-tertiary truncate flex items-center gap-1">
-            <Mail className="w-3 h-3 shrink-0" />
-            {member.users.email}
-          </p>
+
+          <aside className="flex w-full flex-col gap-4 lg:w-[380px] lg:shrink-0">
+            <div className="flex flex-col gap-3 rounded-[18px] bg-violet-bg p-6">
+              <h2 className="h-card">Contests</h2>
+              {contests.length === 0 ? (
+                <p className="text-[15px] text-violet-muted">
+                  Not registered for any contest yet.{' '}
+                  {isLeader && (
+                    <Link href="/competitions" className="font-semibold text-violet hover:underline">
+                      Find a team contest →
+                    </Link>
+                  )}
+                </p>
+              ) : (
+                <ul className="flex flex-col">
+                  {contests.map((c) => (
+                    <li key={c.id} className="border-t border-white/[0.06] first:border-t-0">
+                      <Link href={`/competitions/${c.id}`} className="flex items-center gap-3 py-3 text-text-primary hover:text-white">
+                        <span className={cn('h-2 w-2 shrink-0 rounded-full', PHASE_UI[c.phase].fill)} aria-hidden />
+                        <span className="min-w-0 flex-1 truncate font-semibold">{splitTitle(c.title).code ?? c.title}</span>
+                        <span className="shrink-0 text-sm text-violet-muted">{c.status === 'approved' ? PHASE_UI[c.phase].label : c.status === 'pending' ? 'Pending' : 'Not approved'}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {isLeader && <TeamDetailsForm teamId={team.id} name={team.name} description={team.description} />}
+            {isLeader && <DeleteTeamCard teamId={team.id} teamName={team.name} blocked={activeRegs.length > 0} />}
+          </aside>
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {isLeader ? (
-          <Badge variant="yellow" className="flex items-center gap-1">
-            <Crown className="w-2.5 h-2.5" />
-            Leader
-          </Badge>
-        ) : (
-          <span className="text-xs text-text-tertiary font-mono">
-            Joined {new Date(member.joined_at).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-    </div>
+    </>
   );
 }

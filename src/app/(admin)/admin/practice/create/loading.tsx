@@ -1,5 +1,5 @@
-import { AdminFormSkeleton } from '@/components/admin/AdminSkeletons';
+import { PageLoading } from '@/components/ui/PageLoading';
 
-export default function CreatePracticeLoading() {
-  return <AdminFormSkeleton sections={2} />;
+export default function Loading() {
+  return <PageLoading body="split" />;
 }

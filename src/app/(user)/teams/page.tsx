@@ -1,209 +1,159 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { Users, Crown, Plus, ArrowLeft, ArrowRight } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { PageBand } from '@/components/ui/PageBand';
+import { Avatar } from '@/components/ui/Avatar';
+import InvitationActions from '@/components/teams/InvitationActions';
+import CreateTeamCard from '@/components/teams/CreateTeamCard';
+import AllTeams, { type TeamRow } from './AllTeams';
+import { getMyTeams, getMyInvitations, getMyRegistrations } from '@/lib/data/user';
+import { splitTitle } from '@/lib/data/competitions';
+import { PHASE_UI } from '@/lib/ui/phase';
+import { timeAgo } from '@/lib/ui/dates';
+import { cn } from '@/lib/utils/cn';
+
+export const metadata = { title: 'Teams – The Noders Platform' };
+
+const TINTS = ['bg-amber-bg', 'bg-violet-bg', 'bg-teal-bg', 'bg-blue-bg'];
 
 export default async function TeamsPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login?redirect=/teams');
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  // User's memberships
-  const { data: memberships } = (await supabase
-    .from('team_members')
-    .select('team_id')
-    .eq('user_id', user.id)) as { data: any };
-
-  const myTeamIds = new Set<string>((memberships ?? []).map((m: any) => m.team_id));
-
-  // All teams
-  const { data: allTeams } = (await supabase
-    .from('teams')
-    .select('id, name, description, leader_id, created_at')
-    .order('created_at', { ascending: false })) as { data: any };
-
-  const teamIds = (allTeams ?? []).map((t: any) => t.id);
-  const memberCounts: Record<string, number> = {};
-
-  if (teamIds.length > 0) {
-    const { data: counts } = (await supabase
-      .from('team_members')
-      .select('team_id')
-      .in('team_id', teamIds)) as { data: any };
-    (counts ?? []).forEach((row: any) => {
-      memberCounts[row.team_id] = (memberCounts[row.team_id] || 0) + 1;
-    });
-  }
-
-  // Leader names
-  const leaderIds = [...new Set<string>((allTeams ?? []).map((t: any) => t.leader_id))];
-  const leaderNames: Record<string, string> = {};
-  if (leaderIds.length > 0) {
-    const { data: leaders } = (await supabase
-      .from('users')
-      .select('id, full_name, email')
-      .in('id', leaderIds)) as { data: any };
-    (leaders ?? []).forEach((l: any) => {
-      leaderNames[l.id] = l.full_name || l.email;
-    });
-  }
-
-  const myTeams = (allTeams ?? []).filter((t: any) => myTeamIds.has(t.id));
-  const otherTeams = (allTeams ?? []).filter((t: any) => !myTeamIds.has(t.id));
-
-  return (
-    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10">
-      <div className="max-w-5xl mx-auto">
-
-        {/* Back */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Dashboard
-        </Link>
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-brand text-3xl sm:text-4xl gradient-text leading-tight mb-1">Teams</h1>
-            <p className="text-sm text-text-secondary">
-              {myTeams.length > 0
-                ? `You're in ${myTeams.length} team${myTeams.length !== 1 ? 's' : ''}.`
-                : 'Create a team or join one to compete together.'}
-            </p>
-          </div>
-          <Link href="/teams/create">
-            <Button variant="primary" size="sm" className="gap-2 shrink-0">
-              <Plus className="w-4 h-4" />
-              Create Team
-            </Button>
-          </Link>
-        </div>
-
-        {/* My Teams */}
-        {myTeams.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-tertiary mb-3 flex items-center gap-2">
-              <Users className="w-3.5 h-3.5" />
-              My Teams
-            </h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {myTeams.map((team: any) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  memberCount={memberCounts[team.id] ?? 0}
-                  leaderName={leaderNames[team.leader_id]}
-                  isLeader={team.leader_id === user.id}
-                  isMine
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Other Teams */}
-        <section>
-          {myTeams.length > 0 && (
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-tertiary mb-3">
-              Other Teams
-            </h2>
-          )}
-
-          {otherTeams.length > 0 ? (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {otherTeams.map((team: any) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  memberCount={memberCounts[team.id] ?? 0}
-                  leaderName={leaderNames[team.leader_id]}
-                  isLeader={false}
-                  isMine={false}
-                />
-              ))}
-            </div>
-          ) : myTeams.length === 0 ? (
-            <Card className="p-10 text-center">
-              <Users className="w-10 h-10 mx-auto mb-3 text-text-tertiary opacity-30" />
-              <h3 className="font-bold text-text-primary mb-1">No teams yet</h3>
-              <p className="text-sm text-text-secondary mb-5">
-                Be the first to create a team and start competing together.
-              </p>
-              <Link href="/teams/create">
-                <Button variant="primary" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Create the first team
-                </Button>
-              </Link>
-            </Card>
-          ) : (
-            <Card className="p-6 text-center">
-              <p className="text-sm text-text-tertiary">No other teams to display.</p>
-            </Card>
-          )}
-        </section>
-
-      </div>
-    </div>
+  const [mine, invitations, { data: allTeams }] = await Promise.all([
+    getMyTeams(supabase, user.id),
+    getMyInvitations(supabase, user.id),
+    supabase.from('teams').select('id, name, description, leader_id, leader:users!teams_leader_id_fkey(full_name, email)').order('created_at', { ascending: false }) as unknown as Promise<{ data: any[] | null }>,
+  ]);
+  const regs = await getMyRegistrations(
+    supabase,
+    user.id,
+    mine.map((t) => t.id)
   );
-}
 
-function TeamCard({
-  team,
-  memberCount,
-  leaderName,
-  isLeader,
-  isMine,
-}: {
-  team: any;
-  memberCount: number;
-  leaderName?: string;
-  isLeader: boolean;
-  isMine: boolean;
-}) {
+  const ids = (allTeams ?? []).map((t) => t.id);
+  const { data: memberRows } = ids.length ? await supabase.from('team_members').select('team_id').in('team_id', ids) : { data: [] };
+  const count: Record<string, number> = {};
+  ((memberRows ?? []) as { team_id: string }[]).forEach((r) => (count[r.team_id] = (count[r.team_id] ?? 0) + 1));
+
+  const mineIds = new Set(mine.map((t) => t.id));
+  const one = (v: any) => (Array.isArray(v) ? v[0] : v);
+  const rows: TeamRow[] = (allTeams ?? []).map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    leader: one(t.leader)?.full_name || one(t.leader)?.email?.split('@')[0] || 'Unknown',
+    members: count[t.id] ?? 0,
+    mine: mineIds.has(t.id),
+  }));
+
+  const regsOf = (teamId: string) => regs.filter((r) => r.teamId === teamId && r.phase !== 'ended');
+
   return (
-    <Link href={`/teams/${team.id}`} className="group block">
-      <Card className={`p-4 h-full hover:border-primary-blue/40 transition-all ${isMine ? 'ring-1 ring-inset ring-primary-blue/10' : ''}`}>
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="font-bold text-text-primary group-hover:text-primary-blue transition-colors truncate leading-snug">
-            {team.name}
-          </h3>
-          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-            {isLeader && (
-              <Badge variant="yellow" className="flex items-center gap-1 text-xs">
-                <Crown className="w-2.5 h-2.5" />
-                Leader
-              </Badge>
-            )}
-            <ArrowRight className="w-3.5 h-3.5 text-text-tertiary group-hover:text-primary-blue group-hover:translate-x-0.5 transition-all" />
-          </div>
-        </div>
+    <>
+      <PageBand
+        eyebrow="Your account"
+        title="Teams"
+        description="The leader registers the team; every member can submit, sharing one daily limit."
+        aside={
+          invitations.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {invitations.map((i) => (
+                <div key={i.id} className="flex flex-col gap-2 rounded-2xl bg-amber-strong p-5 text-white shadow-lift sm:p-6">
+                  <span className="text-[13px] font-semibold text-amber-soft">Invitation · {timeAgo(i.invitedAt)}</span>
+                  <span className="text-lg font-bold leading-snug">
+                    {i.inviter} invited you to {i.teamName}
+                  </span>
+                  <span className="text-sm text-amber-soft">
+                    {i.memberCount} member{i.memberCount === 1 ? '' : 's'} now
+                  </span>
+                  <div className="mt-1.5">
+                    <InvitationActions invitationId={i.id} teamName={i.teamName} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5 rounded-2xl bg-navy-deep p-5 sm:p-6">
+              <span className="text-sm text-navy-text">Invitations</span>
+              <span className="text-lg font-semibold">None right now</span>
+              <span className="text-sm text-navy-text">When a leader invites your email, it shows up here and on your dashboard.</span>
+            </div>
+          )
+        }
+      />
 
-        {team.description ? (
-          <p className="text-sm text-text-secondary mb-3 line-clamp-2 leading-relaxed">
-            {team.description}
-          </p>
-        ) : (
-          <p className="text-sm text-text-tertiary italic mb-3">No description</p>
-        )}
-
-        <div className="flex items-center gap-3 text-xs text-text-tertiary font-mono">
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {memberCount} member{memberCount !== 1 ? 's' : ''}
-          </span>
-          {leaderName && (
-            <span className="truncate">Led by <span className="text-text-secondary">{leaderName}</span></span>
+      <section data-reveal aria-labelledby="yours" className="shell pt-12 sm:pt-14">
+        <h2 id="yours" className="h-section mb-5">
+          Your teams
+        </h2>
+        <div data-reveal-group className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {mine.map((t, idx) => {
+            const active = regsOf(t.id);
+            return (
+              <Link key={t.id} href={`/teams/${t.id}`} className={cn('lift flex flex-col gap-4 rounded-[18px] p-6 text-text-primary', TINTS[idx % TINTS.length])}>
+                <span className="flex items-start justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate text-xl font-bold">{t.name}</span>
+                    <span className="text-sm text-text-tertiary">{t.isLeader ? 'You lead this team' : 'You’re a member'}</span>
+                  </span>
+                  <span className="shrink-0 font-mono text-sm text-text-tertiary">
+                    {t.members.length}
+                    <span className="sr-only"> members</span>
+                  </span>
+                </span>
+                <span className="flex -space-x-2" aria-label={t.members.map((m) => m.name).join(', ')}>
+                  {t.members.slice(0, 6).map((m) => (
+                    <Avatar key={m.userId} name={m.name} size={34} colorful className="ring-2 ring-bg-primary" />
+                  ))}
+                  {t.members.length > 6 && <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-full bg-bg-raised text-xs ring-2 ring-bg-primary">+{t.members.length - 6}</span>}
+                </span>
+                <span className="mt-auto text-sm text-text-secondary">
+                  {active.length > 0 ? (
+                    active.map((r) => (
+                      <span key={r.competitionId} className="mr-3 inline-flex items-center gap-1.5">
+                        <span className={cn('h-2 w-2 rounded-full', PHASE_UI[r.phase].fill)} aria-hidden />
+                        {splitTitle(r.title).code ?? r.title}
+                        <span className="text-text-muted">· {r.status === 'approved' ? PHASE_UI[r.phase].label : r.status === 'pending' ? 'pending' : 'not approved'}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-text-muted">Not in a contest right now</span>
+                  )}
+                </span>
+              </Link>
+            );
+          })}
+          <CreateTeamCard className={mine.length === 0 ? 'md:col-span-2 lg:col-span-1' : undefined} />
+          {mine.length === 0 && (
+            <div className="flex flex-col gap-3 rounded-[18px] bg-bg-surface p-6 text-[15px] text-text-secondary md:col-span-2 lg:col-span-2">
+              <span className="text-[13px] font-semibold text-text-tertiary">How teams work</span>
+              <ol className="flex flex-col gap-2">
+                {['Create a team, or accept an invitation from a leader.', 'The leader registers the team for a team contest.', 'After approval, any member can submit. The daily limit is shared.'].map((s, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="font-mono text-[13px] text-amber">{String(i + 1).padStart(2, '0')}</span>
+                    {s}
+                  </li>
+                ))}
+              </ol>
+              <span className="text-sm text-text-muted">One person can be in several teams, but only one team per contest.</span>
+            </div>
           )}
         </div>
-      </Card>
-    </Link>
+      </section>
+
+      <section data-reveal aria-labelledby="all" className="shell pb-24 pt-16 sm:pb-28 sm:pt-20">
+        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h2 id="all" className="h-section">
+            All teams
+          </h2>
+          <span className="text-sm text-text-muted">{rows.length} on the platform. To join one, ask its leader for an invitation.</span>
+        </div>
+        <AllTeams teams={rows} />
+      </section>
+    </>
   );
 }

@@ -1,288 +1,244 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
+import { PageBand } from '@/components/ui/PageBand';
+import { Countdown } from '@/components/ui/Countdown';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import SubmitForm from './SubmitForm';
-import DailyResetCountdown from './DailyResetCountdown';
-import { SCORING_METRIC_INFO } from '@/lib/constants';
-import { getVietnamTodayStart } from '@/lib/utils/timezone';
-import {
-  ArrowLeft,
-  Calendar,
-  Target,
-  Trophy,
-  Upload,
-  FileText,
-} from 'lucide-react';
+import { SCORING_METRIC_INFO, metricShortName } from '@/lib/constants';
+import { getCompetitionPhase } from '@/lib/utils/competition';
+import { metricDecimals } from '@/lib/leaderboard';
+import { splitTitle } from '@/lib/data/competitions';
+import { vnDayStart, vnNextDayStart, vnDateTime, shortCountdown } from '@/lib/ui/dates';
+import { validationSummary } from '@/lib/ui/validation';
+import { cn } from '@/lib/utils/cn';
 
-interface SubmitPageProps {
-  params: {
-    id: string;
-  };
-}
-
+// Auth-dependent data must be fresh on every request.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function SubmitPage({ params }: SubmitPageProps) {
+interface Props {
+  params: { id: string };
+}
+
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const supabase = await createClient();
+  const { data } = (await supabase.from('competitions').select('title').eq('id', params.id).maybeSingle()) as { data: { title: string; description?: string | null } | null };
+  return {
+    title: data ? `Submit · ${data.title} – The Noders Platform` : 'The Noders Platform',
+  };
+}
+
+export default async function SubmitPage({ params }: Props) {
   const { id } = params;
   const supabase = await createClient();
-
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(`/competitions/${id}`);
-  }
+  if (!user) redirect(`/login?redirect=/competitions/${id}/submit`);
 
-  // Fetch competition details
   const { data: competition } = (await supabase
     .from('competitions')
     .select(
-      'id, title, description, problem_statement, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb, min_team_size, max_team_size, scoring_metric, dataset_url, created_by, created_at, updated_at'
+      'id, title, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb, scoring_metric'
     )
     .eq('id', id)
     .is('deleted_at', null)
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
+  if (!competition) redirect('/competitions');
 
-  if (!competition) {
-    redirect('/competitions');
-  }
+  const isTeam = competition.participation_type === 'team';
 
-  // Check registration status (individual or team)
-  let registration: any = null;
-  let registeredTeamId: string | null = null;
-
-  if (competition.participation_type === 'individual') {
-    // Individual registration
-    const { data: individualReg } = (await supabase
-      .from('registrations')
-      .select('id, competition_id, user_id, team_id, status, registered_at')
-      .eq('user_id', user.id)
-      .eq('competition_id', id)
-      .single()) as { data: any };
-    registration = individualReg;
-  } else {
-    // Team registration - find team where user is a member and team is registered
-    const { data: teamMemberships } = (await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user.id)) as { data: any };
-
-    if (teamMemberships && teamMemberships.length > 0) {
-      const teamIds = teamMemberships.map((m: any) => m.team_id);
-
-      // Single query to find approved registration for any of user's teams
-      const { data: teamReg } = (await supabase
+  // Approved registration for the viewer (or one of their teams).
+  let teamId: string | null = null;
+  let teamName: string | null = null;
+  if (isTeam) {
+    const { data: memberships } = await supabase.from('team_members').select('team_id').eq('user_id', user.id);
+    const ids = ((memberships ?? []) as { team_id: string }[]).map((m) => m.team_id);
+    if (ids.length) {
+      const { data: reg } = (await supabase
         .from('registrations')
-        .select('id, competition_id, user_id, team_id, status, registered_at')
+        .select('team_id, teams(name)')
         .eq('competition_id', id)
-        .in('team_id', teamIds)
+        .in('team_id', ids)
         .eq('status', 'approved')
         .limit(1)
-        .single()) as { data: any };
-
-      if (teamReg) {
-        registration = teamReg;
-        registeredTeamId = teamReg.team_id;
+        .maybeSingle()) as { data: any };
+      if (reg) {
+        teamId = reg.team_id;
+        teamName = (Array.isArray(reg.teams) ? reg.teams[0] : reg.teams)?.name ?? null;
       }
     }
+    if (!teamId) redirect(`/competitions/${id}`);
+  } else {
+    const { data: reg } = await supabase.from('registrations').select('status').eq('competition_id', id).eq('user_id', user.id).maybeSingle();
+    if ((reg as { status: string } | null)?.status !== 'approved') redirect(`/competitions/${id}`);
   }
 
-  if (!registration || registration.status !== 'approved') {
-    redirect(`/competitions/${id}`);
-  }
-
-  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
-  const isHigherBetter = metricInfo?.higher_is_better !== false;
-
-  const todayStart = getVietnamTodayStart();
-
-  // Entity column for the current registration (individual vs team).
-  const entityCol = competition.participation_type === 'individual' ? 'user_id' : 'team_id';
-  const entityVal = competition.participation_type === 'individual' ? user.id : registeredTeamId;
-
-  // The quota only needs counts (indexed, no row transfer). The table still
-  // shows every submission, but with an explicit narrow column list — dropping
-  // the large `validation_errors` JSON and other unused columns. All three run
-  // concurrently.
-  const [
-    { data: allSubmissions },
-    { count: totalValidCount },
-    { count: dailyValidCount },
-  ] = await Promise.all([
+  const col = isTeam ? 'team_id' : 'user_id';
+  const val = isTeam ? (teamId as string) : user.id;
+  const [{ data: history }, { count: total }, { count: today }] = await Promise.all([
     supabase
       .from('submissions')
-      .select('id, score, phase, validation_status, is_best_score, submitted_at')
+      .select('id, file_name, phase, score, validation_status, validation_errors, is_best_score, submitted_at, submitter:users!submissions_submitted_by_fkey(full_name)')
       .eq('competition_id', id)
-      .eq(entityCol, entityVal as string)
-      .order('submitted_at', { ascending: false }),
-    supabase
-      .from('submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('competition_id', id)
-      .eq(entityCol, entityVal as string)
-      .in('validation_status', ['valid', 'pending']),
-    supabase
-      .from('submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('competition_id', id)
-      .eq(entityCol, entityVal as string)
-      .in('validation_status', ['valid', 'pending'])
-      .gte('submitted_at', todayStart.toISOString()),
+      .eq(col, val)
+      .order('submitted_at', { ascending: false })
+      .limit(50),
+    supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id).eq(col, val).in('validation_status', ['valid', 'pending']),
+    supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id).eq(col, val).in('validation_status', ['valid', 'pending']).gte('submitted_at', vnDayStart().toISOString()),
   ]);
 
-  // Sort the visible rows by score based on competition metric (nulls last).
-  const sortedSubmissions = [...(allSubmissions || [])].sort((a: any, b: any) => {
-    if (a.score === null && b.score === null) return 0;
-    if (a.score === null) return 1;
-    if (b.score === null) return -1;
-    return isHigherBetter ? b.score - a.score : a.score - b.score;
-  });
+  const phase = getCompetitionPhase(competition);
+  const running = phase === 'public_test' || phase === 'private_test';
+  const dailyLimit = competition.daily_submission_limit ?? 5;
+  const totalLimit = competition.total_submission_limit ?? 0;
+  const leftToday = Math.max(0, dailyLimit - (today ?? 0));
+  const leftTotal = totalLimit ? Math.max(0, totalLimit - (total ?? 0)) : null;
+  const tone = phase === 'private_test' ? 'amber' : 'blue';
+  const metricInfo = SCORING_METRIC_INFO[competition.scoring_metric as keyof typeof SCORING_METRIC_INFO];
+  const dec = metricDecimals(competition.scoring_metric);
+  const { code, name } = splitTitle(competition.title);
+  const reset = vnNextDayStart();
 
-  const submissionCount = {
-    daily: dailyValidCount || 0,
-    total: totalValidCount || 0,
-  };
+  const blockedReason = !running
+    ? phase === 'ended'
+      ? 'This contest has ended. Submissions are closed.'
+      : 'Submissions open when the public test starts.'
+    : leftTotal === 0
+      ? 'Your total submission limit for this contest is used up.'
+      : leftToday === 0
+        ? `No submissions left today. The limit resets in ${shortCountdown(reset) ?? 'a moment'} (midnight, Vietnam time).`
+        : null;
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href={`/competitions/${id}`}
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-primary-blue transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Competition
-          </Link>
-          <h1 className="font-brand text-3xl sm:text-4xl md:text-5xl mb-2 gradient-text leading-tight">
-            Submit Solution
-          </h1>
-          <p className="text-text-secondary">{competition.title}</p>
+    <>
+      <PageBand
+        crumbs={[{ label: 'Competitions', href: '/competitions' }, { label: code ?? name, href: `/competitions/${id}` }, { label: 'Submit' }]}
+        title="Submit predictions"
+      >
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="band-tile">
+            <div className="text-sm text-navy-text">Left today</div>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <span className="font-mono text-2xl sm:text-[1.75rem]">
+                {leftToday}
+                <span className="text-[#7F93BA]"> / {dailyLimit}</span>
+              </span>
+              {dailyLimit <= 12 && (
+                <span aria-hidden className="flex flex-wrap gap-1">
+                  {Array.from({ length: dailyLimit }).map((_, i) => (
+                    <span key={i} className={cn('h-2.5 w-2.5 rounded-full', i < leftToday ? (tone === 'amber' ? 'bg-amber' : 'bg-blue') : 'bg-white/20')} />
+                  ))}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="band-tile">
+            <div className="text-sm text-navy-text">Resets in</div>
+            <Countdown target={reset.toISOString()} initial={shortCountdown(reset) ?? undefined} className="mt-1 block text-2xl sm:text-[1.75rem]" />
+          </div>
+          <div className="band-tile">
+            <div className="text-sm text-navy-text">Left for the contest</div>
+            <div className="mt-1 font-mono text-2xl text-blue-soft sm:text-[1.75rem]">
+              {leftTotal === null ? '∞' : leftTotal.toLocaleString('en-US')}
+              {leftTotal !== null && <span className="text-[#7F93BA]"> / {totalLimit.toLocaleString('en-US')}</span>}
+            </div>
+          </div>
+          <div className="rounded-xl bg-violet-strong px-5 py-4">
+            <div className="text-sm text-violet-soft">{isTeam ? 'Submitting for' : 'Submitting as'}</div>
+            <div className="mt-0.5 truncate text-lg font-bold">{isTeam ? teamName : 'Yourself'}</div>
+            {isTeam && <div className="text-[13px] text-violet-soft">Limits are shared by the team</div>}
+          </div>
         </div>
+      </PageBand>
 
-        {/* Submission Quota */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
-          <Card className="p-6 border-l-4 border-primary-blue">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Daily Submissions</div>
-              <Calendar className="w-5 h-5 text-primary-blue" />
+      <section data-reveal className="shell pt-12 sm:pt-14">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            <SubmitForm
+              competitionId={id}
+              teamId={teamId}
+              maxMb={competition.max_file_size_mb ?? 10}
+              leftToday={leftToday}
+              blockedReason={blockedReason}
+              tone={tone}
+              metricName={metricInfo?.name ?? metricShortName(competition.scoring_metric)}
+              decimals={dec}
+            />
+          </div>
+          <aside className="flex w-full flex-col gap-4 lg:w-[340px] lg:shrink-0">
+            <div className="flex flex-col gap-3 rounded-[18px] bg-amber-bg p-6">
+              <span className="text-[13px] font-semibold text-amber">What the file needs</span>
+              <ul className="flex flex-col gap-2 text-[15px]">
+                <li className="rounded-xl bg-white/[0.05] px-3.5 py-2.5">
+                  Header row: <span className="font-mono text-amber-soft">id,prediction</span>
+                </li>
+                <li className="rounded-xl bg-white/[0.05] px-3.5 py-2.5">One row per test id, none missing, no duplicates</li>
+                <li className="rounded-xl bg-white/[0.05] px-3.5 py-2.5">.csv only, up to {competition.max_file_size_mb ?? 10} MB</li>
+              </ul>
+              <Link href={`/competitions/${id}#problem`} className="text-sm font-semibold text-amber hover:underline">
+                Re-read the problem →
+              </Link>
             </div>
-            <div className="text-3xl font-bold">
-              {submissionCount.daily} / {competition.daily_submission_limit ?? 15}
+            <div className="rounded-[18px] bg-bg-elevated p-6 text-[15px] text-text-secondary">
+              Rejected files don&apos;t count toward your limit. Only {isTeam ? "your team's" : 'your'} best valid score shows on the leaderboard.
             </div>
-            <div className="text-xs text-text-tertiary mt-1">
-              {Math.max(0, (competition.daily_submission_limit ?? 15) - submissionCount.daily)} remaining today
-            </div>
-            <DailyResetCountdown />
-          </Card>
-
-          <Card className="p-6 border-l-4 border-accent-cyan">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-text-tertiary text-sm">Total Submissions</div>
-              <Target className="w-5 h-5 text-accent-cyan" />
-            </div>
-            <div className="text-3xl font-bold">{submissionCount.total}</div>
-            <div className="text-xs text-text-tertiary mt-1">Total submissions made</div>
-          </Card>
+          </aside>
         </div>
+      </section>
 
-        {/* Submit Form */}
-        <SubmitForm
-          competitionId={id}
-          competition={competition}
-          submissionCount={submissionCount}
-          teamId={registeredTeamId}
-        />
-
-        {/* Recent Submissions */}
-        <Card className="p-5 sm:p-8 mt-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-6">
-            My Submissions
-          </h2>
-
-          {sortedSubmissions && sortedSubmissions.length > 0 ? (
+      <section data-reveal className="shell pb-24 pt-16 sm:pb-28 sm:pt-20">
+        <h2 className="h-section mb-5">{isTeam ? 'Team submissions' : 'My submissions'}</h2>
+        {(history ?? []).length === 0 ? (
+          <p className="rounded-2xl bg-bg-elevated px-6 py-5 text-text-tertiary">Nothing yet. Your first upload will show here.</p>
+        ) : (
+          <div className="overflow-hidden rounded-2xl bg-bg-surface">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-border-default">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Rank</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">
-                      Score {isHigherBetter ? '↑' : '↓'}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Phase</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                    <th className="hidden sm:table-cell px-4 py-3 text-left text-sm font-semibold">
-                      Submitted At
-                    </th>
+              <table className="w-full min-w-[640px] border-collapse text-[15px]">
+                <thead>
+                  <tr className="text-left text-[13px] text-text-muted">
+                    <th scope="col" className="py-3.5 pl-4 font-medium sm:pl-6">When</th>
+                    {isTeam && <th scope="col" className="px-3 py-3.5 font-medium">By</th>}
+                    <th scope="col" className="px-3 py-3.5 font-medium">File</th>
+                    <th scope="col" className="px-3 py-3.5 font-medium">Status</th>
+                    <th scope="col" className="py-3.5 pl-3 pr-4 text-right font-medium sm:pr-6">{metricShortName(competition.scoring_metric)}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-default">
-                  {sortedSubmissions.map((submission: any, index: number) => (
-                    <tr
-                      key={submission.id}
-                      className={`hover:bg-bg-elevated/50 ${submission.is_best_score ? 'bg-success/5' : ''}`}
-                    >
-                      <td className="px-4 py-3">
-                        <span className={`font-semibold ${index === 0 && submission.score !== null ? 'text-warning' : ''}`}>
-                          {submission.score !== null ? `#${index + 1}` : '-'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`font-mono font-medium ${index === 0 && submission.score !== null ? 'text-warning' : ''}`}>
-                          {submission.score?.toFixed(metricInfo?.decimals || 4) || 'Pending'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={submission.phase === 'public' ? 'blue' : 'purple'}
-                        >
-                          {submission.phase === 'public' ? 'Public' : 'Private'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          {submission.is_best_score && (
-                            <Badge variant="success">Best Score</Badge>
+                <tbody>
+                  {(history as any[]).map((s) => {
+                    const err = s.validation_status === 'invalid' ? validationSummary(s.validation_errors) : null;
+                    const by = Array.isArray(s.submitter) ? s.submitter[0] : s.submitter;
+                    return (
+                      <tr key={s.id} className="border-t border-border-default align-top">
+                        <td className="whitespace-nowrap py-3 pl-4 font-mono text-[13px] text-text-muted sm:pl-6">{vnDateTime(s.submitted_at)}</td>
+                        {isTeam && <td className="px-3 py-3">{by?.full_name ?? '—'}</td>}
+                        <td className="max-w-[240px] px-3 py-3">
+                          <span className="block truncate font-mono text-[13px] text-text-tertiary">{s.file_name}</span>
+                          {err && <span className="mt-1 block text-[13px] text-amber">{err}</span>}
+                        </td>
+                        <td className="px-3 py-3">
+                          {s.validation_status === 'valid' ? (
+                            <Badge variant="teal">{s.is_best_score ? 'Valid · best' : 'Valid'}</Badge>
+                          ) : s.validation_status === 'invalid' ? (
+                            <Badge variant="amber">Rejected</Badge>
+                          ) : (
+                            <Badge variant="blue">Scoring…</Badge>
                           )}
-                          <Badge
-                            variant={
-                              submission.validation_status === 'valid' ? 'green' :
-                              submission.validation_status === 'invalid' ? 'red' : 'yellow'
-                            }
-                          >
-                            {submission.validation_status}
-                          </Badge>
-                        </div>
-                      </td>
-                      <td className="hidden sm:table-cell px-4 py-3 text-sm text-text-secondary">
-                        {new Date(submission.submitted_at).toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                    </tr>
-                  ))}
+                          {competition.competition_type === '4-phase' && (
+                            <span className={cn('ml-2 text-[13px]', s.phase === 'private' ? 'text-amber' : 'text-blue')}>{s.phase}</span>
+                          )}
+                        </td>
+                        <td className="py-3 pl-3 pr-4 text-right font-mono sm:pr-6">{s.score !== null ? Number(s.score).toFixed(dec) : '—'}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-          ) : (
-            <div className="text-center py-12 text-text-tertiary">
-              <Target className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">No submissions yet</p>
-              <p className="text-sm">Upload your first solution to get started</p>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
+          </div>
+        )}
+      </section>
+    </>
   );
 }

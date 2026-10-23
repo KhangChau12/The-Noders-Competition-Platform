@@ -1,9 +1,8 @@
 import { cn } from '@/lib/utils/cn';
 
-export type StatTone = 'default' | 'blue' | 'cyan' | 'warn';
+export type StatTone = 'default' | 'blue' | 'cyan' | 'warn' | 'violet' | 'teal' | 'amber';
 
 export interface StatItem {
-  /** Uppercase label shown under the value (label role). */
   label: string;
   /** The value — a string, or a node when it needs a trailing unit span. */
   value: React.ReactNode;
@@ -12,51 +11,53 @@ export interface StatItem {
 
 interface StatRunProps {
   items: StatItem[];
-  /** `sm` drops only the number to text-[0.9375rem]; the label never changes size. */
   size?: 'default' | 'sm';
+  /** `tiles` puts each stat in a small rounded tile (use on tinted cards). */
+  layout?: 'run' | 'tiles';
   className?: string;
 }
 
 const TONE_CLASS: Record<StatTone, string> = {
   default: 'text-text-primary',
-  blue: 'text-[#60A5FA]',
-  cyan: 'text-[#22D3EE]',
-  warn: 'text-[#FBBF24]',
+  blue: 'text-blue',
+  cyan: 'text-teal',
+  teal: 'text-teal',
+  warn: 'text-amber',
+  amber: 'text-amber',
+  violet: 'text-violet',
 };
 
-/**
- * A baseline-aligned row of numbers with a small label tucked under each.
- * Replaces the old boxed stat-tile grids — no border, no background;
- * the gap between items does the dividing.
- *
- * Trailing units go inside `value`:
- *   { label: 'Your quota', value: <>3<span className="text-xs font-normal text-text-disabled"> / 5 today</span></> }
- */
-export function StatRun({ items, size = 'default', className }: StatRunProps) {
+/** A row of numbers with a small label under each. */
+export function StatRun({ items, size = 'default', layout = 'run', className }: StatRunProps) {
+  if (layout === 'tiles') {
+    return (
+      <dl className={cn('grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(130px,1fr))]', className)}>
+        {items.map((item, i) => (
+          <div key={i} className="flex flex-col-reverse gap-0.5 rounded-xl bg-black/25 px-4 py-3">
+            <dt className="text-[13px] text-text-muted">{item.label}</dt>
+            <dd className={cn('font-mono text-lg leading-tight tabular', TONE_CLASS[item.tone ?? 'default'])}>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
   return (
-    <div
-      className={cn(
-        'flex flex-wrap items-end',
-        size === 'sm' ? 'gap-y-[18px] gap-x-7' : 'gap-y-6 gap-x-9',
-        className
-      )}
-    >
+    <dl className={cn('flex flex-wrap items-end', size === 'sm' ? 'gap-x-7 gap-y-4' : 'gap-x-9 gap-y-5', className)}>
       {items.map((item, i) => (
         <div key={i} className="flex flex-col-reverse gap-1">
-          <span
+          <dt className="text-[0.8125rem] text-text-muted">{item.label}</dt>
+          <dd
             className={cn(
-              'font-mono font-bold tabular-nums leading-none',
-              size === 'sm' ? 'text-[0.9375rem]' : 'text-[1.375rem]',
+              'font-mono leading-none tabular',
+              size === 'sm' ? 'text-base' : 'text-[1.375rem]',
               TONE_CLASS[item.tone ?? 'default']
             )}
           >
             {item.value}
-          </span>
-          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-text-tertiary">
-            {item.label}
-          </span>
+          </dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }

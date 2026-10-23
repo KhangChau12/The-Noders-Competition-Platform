@@ -1,215 +1,122 @@
-import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import {
-  ShieldCheck,
-  ShieldX,
-  Award,
-  Calendar,
-  User,
-  Trophy,
-  Download,
-  ArrowLeft,
-} from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { PageBand } from '@/components/ui/PageBand';
+import { buttonClasses } from '@/components/ui/Button';
+import VerifyForm from '../VerifyForm';
+import { vnDate } from '@/lib/ui/dates';
 
 interface Props {
   params: { code: string };
 }
 
+export async function generateMetadata({ params }: Props) {
+  return { title: `Certificate ${decodeURIComponent(params.code).toUpperCase()} – The Noders Platform`, robots: { index: false } };
+}
+
 export default async function VerifyResultPage({ params }: Props) {
-  const { code } = params;
+  const code = decodeURIComponent(params.code).trim().toUpperCase();
   const supabase = await createClient();
 
-  // Fetch certificate by verification code
-  const { data: certificate } = await supabase
+  const { data: cert } = (await supabase
     .from('certificates')
-    .select(`
-      *,
-      competitions (
-        id,
-        title
-      )
-    `)
-    .eq('verification_code', code.toUpperCase())
-    .single() as { data: any };
+    .select('recipient_name, verification_code, file_path, file_type, issued_at, competitions(id, title)')
+    .eq('verification_code', code)
+    .maybeSingle()) as { data: any };
 
-  // Get file URL if certificate exists
-  let fileUrl: string | null = null;
-  if (certificate) {
-    const { data } = supabase.storage
-      .from('certificates')
-      .getPublicUrl(certificate.file_path);
-    fileUrl = data.publicUrl;
-  }
-
-  // Certificate not found
-  if (!certificate) {
+  if (!cert) {
     return (
-      <div className="min-h-screen px-4 py-16 flex items-center justify-center">
-        <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-error/20 flex items-center justify-center">
-            <ShieldX className="w-10 h-10 text-error" />
+      <>
+        <PageBand narrow crumbs={[{ label: 'Verify', href: '/verify' }, { label: code }]} title="Certificate not found" description="Check the code character by character; O/0 and I/1 are easily confused." />
+        <section data-reveal className="shell-narrow pb-24 pt-12 sm:pb-28 sm:pt-14">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+            <div className="min-w-0 flex-1 rounded-[20px] bg-amber-bg p-6 sm:p-8">
+              <p className="mb-5 text-[15px] text-amber-soft">
+                You searched for <span className="break-all font-mono text-white">{code}</span>
+              </p>
+              <VerifyForm initial={code} />
+            </div>
+            <aside className="w-full rounded-[20px] bg-bg-surface p-6 text-[15px] text-text-secondary lg:w-[340px] lg:shrink-0">
+              Still not found? The certificate may not have been issued through this platform. Contact the organisers at{' '}
+              <a href="mailto:phuckhangtdn@gmail.com" className="link break-all">
+                phuckhangtdn@gmail.com
+              </a>
+              .
+            </aside>
           </div>
-          <h1 className="text-2xl font-bold mb-3 text-error">
-            Certificate Not Found
-          </h1>
-          <p className="text-text-secondary mb-6">
-            No certificate was found with the verification code:
-          </p>
-          <code className="block text-lg sm:text-xl font-mono text-text-tertiary mb-8 p-4 bg-bg-elevated rounded-lg break-all">
-            {code.toUpperCase()}
-          </code>
-          <p className="text-sm text-text-tertiary mb-6">
-            Please check the code and try again. Make sure you've entered it correctly,
-            including any dashes.
-          </p>
-          <Link href="/verify">
-            <Button variant="primary">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Try Again
-            </Button>
-          </Link>
-        </div>
-      </div>
+        </section>
+      </>
     );
   }
 
-  const isImage = ['png', 'jpg', 'jpeg'].includes(certificate.file_type);
-  const isPdf = certificate.file_type === 'pdf';
+  const fileUrl = supabase.storage.from('certificates').getPublicUrl(cert.file_path).data.publicUrl;
+  const comp = Array.isArray(cert.competitions) ? cert.competitions[0] : cert.competitions;
+  const isPdf = cert.file_type === 'pdf';
+  const download = `${cert.verification_code}.${cert.file_type}`;
 
-  // Certificate found - show details with embedded preview
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Success Header */}
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
-            <ShieldCheck className="w-8 h-8 text-success" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2 text-success">
-            Certificate Verified
-          </h1>
-          <p className="text-text-secondary text-sm">
-            This certificate is authentic and was issued by The Noders Community
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Certificate Preview - Main Area */}
-          <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
-              <div className="p-4 border-b border-border-default bg-bg-elevated flex items-center justify-between">
-                <span className="text-sm font-medium text-text-secondary">Certificate Preview</span>
-                <a
-                  href={fileUrl || '#'}
-                  download={`${certificate.verification_code}.${certificate.file_type}`}
-                >
-                  <Button variant="primary" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                </a>
-              </div>
-
-              {/* Embedded Preview */}
-              <div className="bg-bg-elevated">
-                {isPdf && fileUrl && (
-                  <iframe
-                    src={`${fileUrl}#toolbar=0&navpanes=0`}
-                    className="w-full border-0 h-[60vh] min-h-[360px] sm:h-[600px]"
-                    title="Certificate PDF"
-                  />
+    <>
+      <PageBand
+        crumbs={[{ label: 'Verify', href: '/verify' }, { label: cert.verification_code }]}
+        eyebrow={<span className="text-teal">✓ Verified</span>}
+        title={cert.recipient_name}
+        description="This certificate was issued by The Noders PTNK through this platform."
+        aside={
+          <dl className="flex flex-col gap-3 rounded-2xl bg-teal-strong p-5 text-white shadow-lift sm:p-6">
+            <div>
+              <dt className="text-[13px] text-teal-soft">Contest</dt>
+              <dd className="text-lg font-bold leading-snug">
+                {comp ? (
+                  <Link href={`/competitions/${comp.id}`} className="hover:underline">
+                    {comp.title}
+                  </Link>
+                ) : (
+                  'Unknown contest'
                 )}
-                {isImage && fileUrl && (
-                  <div className="p-3 sm:p-4 flex items-center justify-center min-h-[260px] sm:min-h-[400px]">
-                    <img
-                      src={fileUrl}
-                      alt={`Certificate for ${certificate.recipient_name}`}
-                      className="max-w-full max-h-[600px] object-contain rounded-lg shadow-lg"
-                    />
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          {/* Certificate Details - Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Verification Status */}
-            <Card className="p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Award className="w-6 h-6 text-warning" />
-                <div>
-                  <Badge variant="success" className="mb-1">Verified</Badge>
-                  <div className="font-mono text-sm text-accent-cyan">
-                    {certificate.verification_code}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Details */}
-            <Card className="p-4 space-y-4">
-              <div className="flex items-start gap-3">
-                <User className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                <div>
-                  <div className="text-xs text-text-tertiary">Recipient</div>
-                  <div className="font-semibold">{certificate.recipient_name}</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Trophy className="w-4 h-4 text-primary-blue mt-0.5 shrink-0" />
-                <div>
-                  <div className="text-xs text-text-tertiary">Competition</div>
-                  <div className="font-medium text-sm">
-                    {certificate.competitions?.title || 'Unknown Competition'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Calendar className="w-4 h-4 text-accent-cyan mt-0.5 shrink-0" />
-                <div>
-                  <div className="text-xs text-text-tertiary">Issue Date</div>
-                  <div className="font-medium text-sm">
-                    {new Date(certificate.issued_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Download Button for mobile */}
-            <a
-              href={fileUrl || '#'}
-              download={`${certificate.verification_code}.${certificate.file_type}`}
-              className="block lg:hidden"
-            >
-              <Button variant="primary" size="lg" className="w-full">
-                <Download className="w-5 h-5 mr-2" />
-                Download Certificate
-              </Button>
-            </a>
-
-            {/* Back Link */}
-            <div className="pt-2">
-              <Link
-                href="/verify"
-                className="inline-flex items-center gap-2 text-sm text-text-tertiary hover:text-text-secondary"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Verify another certificate
-              </Link>
+              </dd>
             </div>
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <dt className="text-[13px] text-teal-soft">Issued</dt>
+                <dd>{vnDate(cert.issued_at)}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-[13px] text-teal-soft">Code</dt>
+                <dd className="break-all font-mono text-sm">{cert.verification_code}</dd>
+              </div>
+            </div>
+          </dl>
+        }
+      />
+
+      <section data-reveal className="shell pb-24 pt-12 sm:pb-28 sm:pt-14">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="h-section">The certificate</h2>
+          <span className="flex flex-wrap gap-2.5">
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: 'outline', size: 'sm' })}>
+              Open ↗
+            </a>
+            <a href={fileUrl} download={download} className={buttonClasses({ variant: 'primary', size: 'sm' })}>
+              Download
+            </a>
+          </span>
         </div>
-      </div>
-    </div>
+        <div className="overflow-hidden rounded-[20px] bg-bg-surface">
+          {isPdf ? (
+            <iframe src={`${fileUrl}#toolbar=0&navpanes=0`} title={`Certificate for ${cert.recipient_name}`} className="h-[70vh] min-h-[420px] w-full border-0 sm:h-[720px]" />
+          ) : (
+            <div className="flex items-center justify-center p-3 sm:p-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={fileUrl} alt={`Certificate for ${cert.recipient_name}`} className="max-h-[720px] w-auto max-w-full rounded-lg object-contain" />
+            </div>
+          )}
+        </div>
+        {isPdf && <p className="mt-3 text-sm text-text-muted">If the preview doesn’t load on your phone, use Open or Download.</p>}
+        <p className="mt-8">
+          <Link href="/verify" className="link text-sm">
+            Verify another certificate
+          </Link>
+        </p>
+      </section>
+    </>
   );
 }

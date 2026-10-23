@@ -1,27 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
-import CreatePracticeProblemForm from './CreatePracticeProblemForm';
+import { PageBand } from '@/components/ui/PageBand';
+import PracticeEditor, { EMPTY_PRACTICE } from '@/components/admin/PracticeEditor';
+import { createPracticeProblem } from './actions';
 
-export const metadata = { title: 'Create Practice Problem' };
+export const metadata = { title: 'New practice problem – Admin' };
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function CreatePracticeProblemPage() {
-  const supabase = await createClient();
-
   // Auth + admin role enforced by the admin layout.
-  const { data: tags } = await supabase.from('practice_tags').select('*').order('name');
+  const supabase = await createClient();
+  const { data: tags } = (await supabase.from('practice_tags').select('id, name, slug').order('name')) as { data: { id: string; name: string; slug: string }[] | null };
 
   return (
-    <div className="max-w-4xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="font-brand text-2xl sm:text-3xl lg:text-4xl mb-1.5 gradient-text leading-tight">
-            Create Practice Problem
-          </h1>
-          <p className="text-sm sm:text-base text-text-secondary">Set up a permanent practice problem for participants</p>
-        </div>
-
-        <CreatePracticeProblemForm tags={tags ?? []} />
-    </div>
+    <>
+      <PageBand crumbs={[{ label: 'Practice', href: '/admin/practice' }, { label: 'New' }]} title="New practice problem" description="Practice problems never close. Have the answer key CSV ready." />
+      <div className="shell pb-24 pt-10 sm:pt-12">
+        <PracticeEditor mode="create" initial={EMPTY_PRACTICE} tags={tags ?? []} initialTagIds={[]} save={createPracticeProblem} />
+      </div>
+    </>
   );
 }

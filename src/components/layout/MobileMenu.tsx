@@ -1,218 +1,150 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Trophy, BookOpen, Users, LayoutDashboard, User, Shield, LogOut, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Avatar } from '@/components/ui/Avatar';
+import { cn } from '@/lib/utils/cn';
+import { isActivePath, type HeaderUser, type NavItem } from './Header';
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: {
-    id: string;
-    email: string;
-    full_name?: string;
-    role: 'user' | 'admin';
-  } | null;
-  navLinks: Array<{ href: string; label: string; external?: boolean }>;
-  onLogout?: () => void;
+  user: HeaderUser | null;
+  nav: NavItem[];
+  inAdmin: boolean;
+  invitations: number;
+  onLogout: () => Promise<void> | void;
 }
 
-const NAV_ICON_MAP: Record<string, React.ReactNode> = {
-  Competitions: <Trophy className="w-5 h-5" />,
-  Practice: <BookOpen className="w-5 h-5" />,
-  'Our Community': <Users className="w-5 h-5" />,
+// Colour per main section — the same meaning colours used across the site.
+const TONE: Record<string, { bg: string; text: string }> = {
+  '/competitions': { bg: 'bg-violet-bg', text: 'text-violet' },
+  '/practice': { bg: 'bg-teal-bg', text: 'text-teal' },
+  '/teams': { bg: 'bg-amber-bg', text: 'text-amber' },
 };
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, user, navLinks, onLogout }) => {
-  const pathname = usePathname();
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+export default function MobileMenu({ isOpen, onClose, user, nav, inAdmin, invitations, onLogout }: MobileMenuProps) {
+  const pathname = usePathname() ?? '/';
 
   useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setIsAnimating(true));
-      });
-      document.body.style.overflow = 'hidden';
-    } else {
-      setIsAnimating(false);
-      const timeout = setTimeout(() => setIsVisible(false), 300);
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => {
       document.body.style.overflow = '';
-      return () => clearTimeout(timeout);
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen, onClose]);
 
-  const isActive = (path: string) =>
-    path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(path);
+  if (!isOpen) return null;
 
-  if (!isVisible) return null;
-
-  const initials = user
-    ? (user.full_name?.[0] || user.email[0]).toUpperCase()
-    : null;
+  const displayName = user?.full_name || user?.email?.split('@')[0] || 'You';
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
-          isAnimating ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
+    <div role="dialog" aria-modal="true" aria-label="Menu" className="fixed inset-0 z-50 flex animate-fade-up flex-col overflow-y-auto bg-bg-primary lg:hidden">
+      <div className="shell flex min-h-[64px] items-center justify-between border-b border-border-default">
+        <Link href={inAdmin ? '/admin/dashboard' : '/'} onClick={onClose} className="flex items-baseline gap-2.5 text-text-primary">
+          <span className="font-brand text-[21px] leading-none">The Noders</span>
+          <span className={cn('text-[13px] font-semibold', inAdmin ? 'text-amber-soft' : 'text-blue')}>{inAdmin ? 'Admin' : 'Platform'}</span>
+        </Link>
+        <button type="button" onClick={onClose} aria-label="Close menu" className="-mr-2.5 inline-flex h-11 w-11 items-center justify-center text-text-primary">
+          <X className="h-6 w-6" aria-hidden />
+        </button>
+      </div>
 
-      {/* Side panel */}
-      <div
-        className={`absolute top-0 right-0 h-full w-[300px] max-w-[90vw] bg-bg-primary flex flex-col transition-transform duration-300 ease-out border-l border-border-default/60 ${
-          isAnimating ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-border-default/60 shrink-0">
-          <span className="font-brand text-base text-text-primary">
-            The Noders <span className="text-primary-blue">Platform</span>
-          </span>
-          <button
-            onClick={onClose}
-            aria-label="Close menu"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-surface transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto">
-
-          {/* User card */}
-          {user ? (
-            <div className="px-4 pt-5 pb-4">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-surface border border-border-default/40">
-                <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold text-sm shrink-0">
-                  {initials}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm text-text-primary truncate">
-                    {user.full_name || user.email.split('@')[0]}
-                  </p>
-                  <p className="text-xs text-text-tertiary truncate">{user.email}</p>
-                </div>
-                {user.role === 'admin' && (
-                  <span className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded-full">
-                    Admin
-                  </span>
+      <div className="shell flex flex-1 flex-col gap-4 py-4">
+        <nav aria-label={inAdmin ? 'Admin' : 'Main'} className="flex flex-col gap-2">
+          {nav.map((item, i) => {
+            const tone = TONE[item.href];
+            const active = isActivePath(pathname, item.href);
+            const badge = item.href === '/teams' && invitations > 0 ? `${invitations} invitation${invitations > 1 ? 's' : ''}` : item.badge ? `${item.badge} pending` : null;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                aria-current={active ? 'page' : undefined}
+                style={{ animationDelay: `${60 + i * 50}ms` }}
+                className={cn(
+                  'flex min-h-[56px] animate-fade-up items-center justify-between rounded-2xl px-4 text-lg font-semibold text-text-primary transition-transform active:scale-[0.98]',
+                  tone ? tone.bg : 'bg-bg-surface',
+                  active && 'ring-1 ring-inset ring-white/20'
                 )}
+              >
+                {item.label}
+                {badge && <span className={cn('text-[13px] font-semibold', tone ? tone.text : 'text-violet')}>{badge}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {user ? (
+          <div className="rounded-2xl bg-bg-surface p-2">
+            <div className="flex items-center gap-3 px-2.5 pb-2.5 pt-1.5">
+              <Avatar name={displayName} src={user.avatar_url} size={40} />
+              <div className="min-w-0 leading-tight">
+                <div className="truncate font-semibold">{displayName}</div>
+                <div className="truncate text-[13px] text-text-muted">{user.email}</div>
               </div>
             </div>
-          ) : (
-            <div className="px-4 pt-5 pb-2" />
-          )}
+            <SheetLink href="/dashboard" onClick={onClose}>Dashboard</SheetLink>
+            <SheetLink href="/profile" onClick={onClose}>Profile</SheetLink>
+            {user.role === 'admin' && (
+              <SheetLink href={inAdmin ? '/dashboard' : '/admin/dashboard'} onClick={onClose}>
+                {inAdmin ? 'Back to my dashboard' : 'Admin panel'}
+              </SheetLink>
+            )}
+            <SheetLink href="/verify" onClick={onClose}>Verify certificate</SheetLink>
+            <SheetLink href="https://thenodersptnk.com" external onClick={onClose}>thenodersptnk.com ↗</SheetLink>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-bg-surface p-2">
+            <SheetLink href="/verify" onClick={onClose}>Verify certificate</SheetLink>
+            <SheetLink href="/guide" onClick={onClose}>How it works</SheetLink>
+            <SheetLink href="https://thenodersptnk.com" external onClick={onClose}>thenodersptnk.com ↗</SheetLink>
+          </div>
+        )}
 
-          {/* Main nav */}
-          <nav className="px-3 pb-2" aria-label="Mobile navigation">
-            <p className="px-3 mb-2 text-[10px] font-bold text-text-disabled uppercase tracking-[0.18em]">
-              Navigate
-            </p>
-            {navLinks.map((link) => {
-              const active = !link.external && isActive(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={onClose}
-                  {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  className={`flex items-center gap-3 px-3 py-3 mb-0.5 rounded-xl text-sm font-medium transition-colors ${
-                    active
-                      ? 'text-primary-blue bg-primary-blue/10'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-surface'
-                  }`}
-                >
-                  <span className={active ? 'text-primary-blue' : 'text-text-tertiary'}>
-                    {NAV_ICON_MAP[link.label] ?? null}
-                  </span>
-                  {link.label}
-                  {active && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-blue" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Account nav (logged-in only) */}
-          {user && (
-            <nav className="px-3 pt-3 border-t border-border-default/40" aria-label="Account navigation">
-              <p className="px-3 mb-2 text-[10px] font-bold text-text-disabled uppercase tracking-[0.18em]">
-                Account
-              </p>
-              <Link
-                href="/dashboard"
-                onClick={onClose}
-                className="flex items-center gap-3 px-3 py-3 mb-0.5 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-surface transition-colors"
-              >
-                <LayoutDashboard className="w-5 h-5 text-text-tertiary" />
-                Dashboard
-              </Link>
-              <Link
-                href="/profile"
-                onClick={onClose}
-                className="flex items-center gap-3 px-3 py-3 mb-0.5 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-surface transition-colors"
-              >
-                <User className="w-5 h-5 text-text-tertiary" />
-                Profile
-              </Link>
-              {user.role === 'admin' && (
-                <Link
-                  href="/admin/dashboard"
-                  onClick={onClose}
-                  className="flex items-center gap-3 px-3 py-3 mb-0.5 rounded-xl text-sm font-medium text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
-                >
-                  <Shield className="w-5 h-5" />
-                  Admin Panel
-                </Link>
-              )}
-            </nav>
-          )}
-        </div>
-
-        {/* Bottom CTA */}
-        <div
-          className="px-4 py-4 border-t border-border-default/60 shrink-0"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-        >
+        <div className="mt-auto flex flex-col gap-2.5 pt-2">
           {user ? (
             <button
-              onClick={() => { onClose(); onLogout?.(); }}
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-semibold text-error border border-error/30 bg-error/5 hover:bg-error/10 transition-colors"
+              type="button"
+              onClick={async () => {
+                onClose();
+                await onLogout();
+              }}
+              className="min-h-[48px] rounded-lg border border-border-subtle font-semibold text-text-tertiary"
             >
-              <LogOut className="w-4 h-4" />
-              Sign Out
+              Sign out
             </button>
           ) : (
-            <div className="space-y-2.5">
-              <Link
-                href="/login"
-                onClick={onClose}
-                className="block w-full px-4 py-3 text-center text-sm rounded-xl font-semibold text-text-primary bg-bg-surface border border-border-default hover:bg-bg-elevated transition-colors"
-              >
-                Log In
+            <>
+              <Link href="/signup" onClick={onClose} className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-text-primary font-semibold text-bg-primary">
+                Create account
               </Link>
-              <Link
-                href="/signup"
-                onClick={onClose}
-                className="block w-full px-4 py-3 text-center text-sm rounded-xl font-semibold text-white bg-gradient-brand shadow-lg shadow-primary-blue/20"
-              >
-                Sign Up Free
+              <Link href="/login" onClick={onClose} className="inline-flex min-h-[48px] items-center justify-center rounded-lg border border-border-subtle font-semibold text-text-primary">
+                Sign in
               </Link>
-            </div>
+            </>
           )}
         </div>
       </div>
     </div>
   );
-};
+}
 
-export default MobileMenu;
+function SheetLink({ href, children, onClick, external }: { href: string; children: React.ReactNode; onClick: () => void; external?: boolean }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="flex min-h-[46px] items-center rounded-lg px-2.5 text-[15px] text-text-secondary hover:bg-white/[0.05] hover:text-white"
+    >
+      {children}
+    </Link>
+  );
+}

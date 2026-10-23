@@ -1,4 +1,6 @@
 import React from 'react';
+import { cn } from '@/lib/utils/cn';
+import { FIELD_CLASS } from './Input';
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -7,37 +9,24 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, helperText, className = '', ...props }, ref) => {
+  ({ label, error, helperText, className, id, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-semibold mb-2 text-text-primary">
+          <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-text-primary">
             {label}
-            {props.required && <span className="text-error ml-1">*</span>}
+            {props.required && <span className="ml-1 text-error">*</span>}
           </label>
         )}
         <textarea
           ref={ref}
-          className={`
-            w-full px-4 py-3 rounded-lg
-            bg-bg-surface border border-border-default
-            text-text-primary placeholder:text-text-disabled
-            focus:outline-none focus:ring-2 focus:ring-border-focus focus:border-transparent
-            hover:border-border-focus
-            transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed
-            resize-y min-h-[100px]
-            ${error ? 'border-error focus:ring-error' : ''}
-            ${className}
-          `}
+          id={id}
+          className={cn(FIELD_CLASS, 'min-h-[100px] resize-y py-3', error ? 'border-error' : 'border-border-subtle', className)}
+          aria-invalid={error ? true : undefined}
           {...props}
         />
-        {error && (
-          <p className="mt-2 text-sm text-error">{error}</p>
-        )}
-        {helperText && !error && (
-          <p className="mt-2 text-sm text-text-tertiary">{helperText}</p>
-        )}
+        {error && <p className="mt-1.5 text-sm text-error">{error}</p>}
+        {helperText && !error && <p className="mt-1.5 text-sm text-text-muted">{helperText}</p>}
       </div>
     );
   }

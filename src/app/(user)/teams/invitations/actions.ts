@@ -29,7 +29,7 @@ export async function inviteUserToTeam(teamId: string, email: string) {
     .from('users')
     .select('id, email')
     .eq('email', email.toLowerCase().trim())
-    .single()) as { data: any };
+    .maybeSingle()) as { data: any };
 
   if (!targetUser) {
     return { error: 'User with this email not found' };
@@ -83,6 +83,7 @@ export async function inviteUserToTeam(teamId: string, email: string) {
 
   revalidatePath(`/teams/${teamId}`);
   revalidatePath('/dashboard');
+  revalidatePath('/teams');
   return { success: true, message: `Invitation sent to ${targetUser.email}` };
 }
 
@@ -155,6 +156,7 @@ export async function acceptTeamInvitation(invitationId: string) {
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/teams');
   revalidatePath(`/teams/${invitation.team_id}`);
   return { success: true, message: `You joined ${invitation.teams.name}!`, teamId: invitation.team_id };
 }
@@ -186,6 +188,7 @@ export async function rejectTeamInvitation(invitationId: string) {
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/teams');
   return { success: true, message: 'Invitation declined' };
 }
 
@@ -225,6 +228,7 @@ export async function cancelTeamInvitation(invitationId: string) {
   }
 
   revalidatePath('/dashboard');
+  revalidatePath('/teams');
   revalidatePath(`/teams/${invitation.team_id}`);
   return { success: true, message: 'Invitation cancelled' };
 }

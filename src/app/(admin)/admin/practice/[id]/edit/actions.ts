@@ -81,7 +81,7 @@ export async function updatePracticeProblem(id: string, formData: FormData) {
       .from('practice_test_datasets')
       .select('id')
       .eq('problem_id', id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       await db(supabase)

@@ -1,42 +1,35 @@
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { ChevronLeft } from 'lucide-react';
+import { PageBand } from '@/components/ui/PageBand';
 import TagManager from './TagManager';
 
-export const metadata = { title: 'Manage Practice Tags' };
+export const metadata = { title: 'Practice tags – Admin' };
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function PracticeTagsPage() {
-  const supabase = await createClient();
-
   // Auth + admin role enforced by the admin layout.
-  const { data: tags } = await (supabase as any)
-    .from('practice_tags')
-    .select('*')
-    .order('name');
+  const supabase = await createClient();
+  const [{ data: tags }, { data: uses }] = (await Promise.all([
+    supabase.from('practice_tags').select('id, name, slug').order('name'),
+    supabase.from('practice_problem_tags').select('tag_id'),
+  ])) as [{ data: { id: string; name: string; slug: string }[] | null }, { data: { tag_id: string }[] | null }];
+
+  const list = (tags ?? []).map((t) => ({ ...t, uses: (uses ?? []).filter((u) => u.tag_id === t.id).length }));
 
   return (
-    <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <Link href="/admin/practice">
-            <Button variant="outline" size="sm">
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Back to Practice Problems
-            </Button>
-          </Link>
+    <>
+      <PageBand
+        narrow
+        crumbs={[{ label: 'Practice', href: '/admin/practice' }, { label: 'Tags' }]}
+        title="Tags"
+        description="Tags group problems. Names containing NLP, CV/vision or tabular also set the domain colour."
+      />
+      <div className="shell-narrow pb-24 pt-10 sm:pt-12">
+        <div className="max-w-[760px]">
+          <TagManager tags={list} />
         </div>
-
-        <div className="mb-8">
-          <h1 className="font-brand text-3xl sm:text-4xl gradient-text mb-2 leading-tight">Manage Tags</h1>
-          <p className="text-text-secondary">
-            Create and manage tags used to categorize practice problems.
-          </p>
-        </div>
-
-        <TagManager tags={tags ?? []} />
-    </div>
+      </div>
+    </>
   );
 }

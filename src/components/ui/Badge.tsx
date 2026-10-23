@@ -6,54 +6,63 @@ type BadgeVariant =
   | 'success' | 'warning' | 'error' | 'danger'
   | 'blue' | 'purple' | 'green' | 'red' | 'yellow' | 'cyan' | 'gray'
   | 'outline' | 'tech'
-  | 'registration' | 'public' | 'private' | 'ended';
+  | 'registration' | 'public' | 'private' | 'ended'
+  | 'violet' | 'amber' | 'teal';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
   size?: 'sm' | 'md';
+  /** Show a coloured dot before the label (phase/status chips). */
+  dot?: boolean;
 }
 
-// Unified Badge — superset of both products' variants, identical styling to the
-// Community site's Badge. Default style is NOT uppercase/mono (only `tech` is)
-// so status/phase labels read naturally.
+const VIOLET = 'bg-violet-bg text-violet';
+const BLUE = 'bg-blue-bg text-blue';
+const AMBER = 'bg-amber-bg text-amber';
+const TEAL = 'bg-teal-bg text-teal';
+const GRAY = 'bg-bg-raised text-text-tertiary';
+
+const VARIANTS: Record<BadgeVariant, string> = {
+  default: GRAY,
+  primary: BLUE,
+  secondary: GRAY,
+  success: TEAL,
+  warning: AMBER,
+  error: 'bg-[#2A1714] text-error',
+  danger: 'bg-[#2A1714] text-error',
+  blue: BLUE,
+  purple: VIOLET,
+  violet: VIOLET,
+  green: TEAL,
+  teal: TEAL,
+  red: 'bg-[#2A1714] text-error',
+  yellow: AMBER,
+  amber: AMBER,
+  cyan: TEAL,
+  gray: GRAY,
+  outline: 'border border-border-subtle text-text-tertiary',
+  tech: 'bg-bg-raised text-text-secondary font-mono',
+  registration: VIOLET,
+  public: BLUE,
+  private: AMBER,
+  ended: GRAY,
+};
+
+// Small rounded-rectangle chip. Colour carries meaning (see tailwind.config.ts).
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant = 'blue', size = 'sm', children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-border-focus focus:ring-offset-2';
-
-    const variants: Record<BadgeVariant, string> = {
-      default: 'bg-bg-elevated text-text-primary',
-      primary: 'bg-primary-blue text-white',
-      secondary: 'bg-bg-elevated/50 text-text-secondary border border-border-default',
-      success: 'bg-success/20 text-success border border-success/30',
-      warning: 'bg-warning/20 text-warning border border-warning/30',
-      error: 'bg-error/20 text-error border border-error/30',
-      danger: 'bg-error/20 text-error border border-error/30',
-      blue: 'bg-phase-public/20 text-phase-public border border-phase-public/30',
-      purple: 'bg-phase-registration/20 text-phase-registration border border-phase-registration/30',
-      green: 'bg-success/20 text-success border border-success/30',
-      red: 'bg-error/20 text-error border border-error/30',
-      yellow: 'bg-warning/20 text-warning border border-warning/30',
-      cyan: 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30',
-      gray: 'bg-phase-ended/20 text-text-tertiary border border-phase-ended/30',
-      outline: 'bg-transparent border border-border-default text-text-secondary',
-      tech: 'bg-primary-blue/15 text-accent-cyan font-mono uppercase tracking-wide border border-primary-blue/30',
-      registration: 'bg-phase-registration/20 text-[#A78BFA] border border-phase-registration/30',
-      public: 'bg-phase-public/20 text-[#60A5FA] border border-phase-public/30',
-      private: 'bg-accent-cyan/20 text-[#22D3EE] border border-accent-cyan/30',
-      ended: 'bg-phase-ended/20 text-text-tertiary border border-phase-ended/30',
-    };
-
+  ({ className, variant = 'blue', size = 'sm', dot, children, ...props }, ref) => {
     const sizes = {
-      sm: 'px-2.5 py-0.5 text-xs rounded-full',
-      md: 'px-3 py-1 text-sm rounded-full',
+      sm: 'px-2.5 py-0.5 text-xs',
+      md: 'px-3 py-1 text-[0.8125rem]',
     };
 
     return (
       <span
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn('inline-flex items-center gap-1.5 rounded-md font-semibold', VARIANTS[variant], sizes[size], className)}
         {...props}
       >
+        {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />}
         {children}
       </span>
     );

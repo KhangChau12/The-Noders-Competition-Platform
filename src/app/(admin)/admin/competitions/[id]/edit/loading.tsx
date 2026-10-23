@@ -1,5 +1,5 @@
-import { AdminFormSkeleton } from '@/components/admin/AdminSkeletons';
+import { PageLoading } from '@/components/ui/PageLoading';
 
-export default function EditCompetitionLoading() {
-  return <AdminFormSkeleton sections={3} />;
+export default function Loading() {
+  return <PageLoading body="split" />;
 }

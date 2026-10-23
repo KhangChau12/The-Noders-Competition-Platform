@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { vnDayStart } from '@/lib/ui/dates';
 
 const db = (client: any) => client as any;
 
@@ -15,7 +16,7 @@ export async function submitPracticeSolution(problemId: string, formData: FormDa
   // Get practice problem details
   const { data: problem, error: probError } = await db(supabase)
     .from('practice_problems')
-    .select('*')
+    .select('id, daily_submission_limit, total_submission_limit, max_file_size_mb')
     .eq('id', problemId)
     .is('deleted_at', null)
     .single();
@@ -23,8 +24,8 @@ export async function submitPracticeSolution(problemId: string, formData: FormDa
   if (probError || !problem) return { error: 'Practice problem not found' };
 
   // Check daily submission limit
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  // Resets at midnight Vietnam time, whatever timezone the server runs in.
+  const todayStart = vnDayStart();
 
   const { count: dailyCount } = await db(supabase)
     .from('practice_submissions')

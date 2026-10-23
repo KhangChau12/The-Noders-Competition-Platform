@@ -1,164 +1,129 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Trash2, Plus, Pencil, Check, X, Tag } from 'lucide-react';
 import { createTag, updateTag, deleteTag } from './actions';
-import type { PracticeTag } from '@/types/database.types';
+import { buttonClasses } from '@/components/ui/Button';
+import { field, FormMessage } from '@/components/admin/FormBits';
+import { domainFromTags, DOMAIN_UI } from '@/lib/ui/phase';
+import { cn } from '@/lib/utils/cn';
 
-interface Props {
-  tags: PracticeTag[];
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  uses: number;
 }
 
-export default function TagManager({ tags }: Props) {
-  const [isPending, startTransition] = useTransition();
+export default function TagManager({ tags }: { tags: Tag[] }) {
+  const [pending, start] = useTransition();
   const [newName, setNewName] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName.trim()) return;
-    setError(null);
-    const fd = new FormData();
-    fd.set('name', newName);
-    startTransition(async () => {
-      const result = await createTag(fd);
-      if (result?.error) {
-        setError(result.error as string);
-      } else {
-        setNewName('');
-      }
+  const run = (fn: () => Promise<{ error?: string | null } | undefined>, after?: () => void) => {
+    setError('');
+    start(async () => {
+      const r = await fn();
+      if (r?.error) return setError(r.error);
+      after?.();
     });
-  }
-
-  function handleUpdate(id: string) {
-    if (!editingName.trim()) return;
-    setError(null);
-    const fd = new FormData();
-    fd.set('name', editingName);
-    startTransition(async () => {
-      const result = await updateTag(id, fd);
-      if (result?.error) {
-        setError(result.error as string);
-      } else {
-        setEditingId(null);
-      }
-    });
-  }
-
-  function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete tag "${name}"? This will remove it from all practice problems.`)) return;
-    setError(null);
-    startTransition(async () => {
-      const result = await deleteTag(id);
-      if (result?.error) setError(result.error as string);
-    });
-  }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Create new tag */}
-      <Card className="p-5 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">
-          Add New Tag
-        </h2>
-        <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-3">
-          <Input
-            placeholder="e.g. CV/Classification"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            className="flex-1"
-            disabled={isPending}
-          />
-          <Button type="submit" variant="primary" disabled={isPending || !newName.trim()} className="w-full sm:w-auto shrink-0">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Tag
-          </Button>
-        </form>
-        {error && <p className="text-error text-sm mt-2">{error}</p>}
-      </Card>
+    <div className="flex flex-col gap-5">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!newName.trim()) return;
+          const fd = new FormData();
+          fd.set('name', newName);
+          run(() => createTag(fd), () => setNewName(''));
+        }}
+        className="flex flex-col gap-2.5 rounded-[18px] bg-teal-bg p-5 sm:flex-row sm:items-end sm:p-6"
+      >
+        <label className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <span className="text-sm font-semibold">New tag</span>
+          <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. NLP, Computer vision, Tabular" className={field} />
+        </label>
+        <button type="submit" disabled={pending || !newName.trim()} className={buttonClasses({ variant: 'accent', tone: 'teal', className: 'min-h-[48px]' })}>
+          Add tag
+        </button>
+      </form>
 
-      {/* Existing tags */}
-      <Card className="overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-border-default bg-bg-elevated">
-          <h2 className="text-lg font-semibold">
-            All Tags ({tags.length})
-          </h2>
-        </div>
+      <FormMessage error={error} />
 
-        {tags.length === 0 ? (
-          <div className="p-12 text-center text-text-tertiary">
-            <Tag className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>No tags yet. Create one above.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-border-default">
-            {tags.map((tag) => (
-              <div key={tag.id} className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 hover:bg-bg-elevated/50">
-                {editingId === tag.id ? (
-                  <div className="flex items-center gap-3 flex-1 mr-4">
-                    <Input
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1"
-                      disabled={isPending}
-                      autoFocus
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdate(tag.id)}
-                      disabled={isPending || !editingName.trim()}
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingId(null)}
-                      disabled={isPending}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+      {tags.length === 0 ? (
+        <p className="rounded-2xl bg-bg-elevated px-6 py-5 text-text-tertiary">No tags yet.</p>
+      ) : (
+        <ul className="overflow-hidden rounded-[18px] bg-bg-surface">
+          {tags.map((t) => {
+            const d = DOMAIN_UI[domainFromTags([t])];
+            return (
+              <li key={t.id} className="flex flex-col gap-3 border-t border-border-default px-5 py-4 first:border-t-0 sm:flex-row sm:items-center sm:gap-5 sm:px-6">
+                {editing === t.id ? (
+                  <input value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus aria-label="Tag name" className={cn(field, 'sm:flex-1')} />
                 ) : (
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <Badge variant="tech" className="shrink-0">{tag.name}</Badge>
-                    <span className="text-xs text-text-tertiary font-mono truncate">{tag.slug}</span>
-                  </div>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{t.name}</span>
+                    <span className="block text-sm text-text-muted">
+                      <span className="font-mono">{t.slug}</span> · {t.uses} problem{t.uses === 1 ? '' : 's'} · <span className={d.text}>{d.label}</span>
+                    </span>
+                  </span>
                 )}
-
-                {editingId !== tag.id && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => { setEditingId(tag.id); setEditingName(tag.name); setError(null); }}
-                      disabled={isPending}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(tag.id, tag.name)}
-                      disabled={isPending}
-                      className="text-error hover:border-error"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+                <span className="flex flex-wrap items-center gap-2">
+                  {editing === t.id ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={pending || !editName.trim()}
+                        onClick={() => {
+                          const fd = new FormData();
+                          fd.set('name', editName);
+                          run(() => updateTag(t.id, fd), () => setEditing(null));
+                        }}
+                        className={buttonClasses({ variant: 'secondary', size: 'sm' })}
+                      >
+                        Save
+                      </button>
+                      <button type="button" onClick={() => setEditing(null)} className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : confirmId === t.id ? (
+                    <>
+                      <span className="text-sm text-text-tertiary">{t.uses ? `Remove from ${t.uses} problem${t.uses === 1 ? '' : 's'}?` : 'Delete?'}</span>
+                      <button type="button" disabled={pending} onClick={() => run(() => deleteTag(t.id), () => setConfirmId(null))} className={buttonClasses({ variant: 'danger', size: 'sm' })}>
+                        Delete
+                      </button>
+                      <button type="button" onClick={() => setConfirmId(null)} className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+                        Keep
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditing(t.id);
+                          setEditName(t.name);
+                        }}
+                        className={buttonClasses({ variant: 'ghost', size: 'sm' })}
+                      >
+                        Rename
+                      </button>
+                      <button type="button" onClick={() => setConfirmId(t.id)} className="min-h-[40px] rounded-lg px-3 text-sm font-semibold text-error hover:bg-error/10">
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

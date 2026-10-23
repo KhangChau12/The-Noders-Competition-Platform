@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/dashboard';
+  const nextParam = requestUrl.searchParams.get('next');
+  // Only same-site paths; an explicit `next` (e.g. the password reset form) wins over the role default.
+  const explicitNext = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null;
+  const next = explicitNext ?? '/dashboard';
 
   if (code) {
     const supabase = await createClient();
@@ -30,10 +33,10 @@ export async function GET(request: NextRequest) {
           .from('users')
           .select('role')
           .eq('id', data.session.user.id)
-          .single()) as { data: { role: string } | null };
+          .maybeSingle()) as { data: { role: string } | null };
 
         // Redirect based on role
-        if (userProfile?.role === 'admin') {
+        if (!explicitNext && userProfile?.role === 'admin') {
           return NextResponse.redirect(new URL('/admin/dashboard', requestUrl.origin));
         }
 

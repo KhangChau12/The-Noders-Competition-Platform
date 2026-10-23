@@ -1,5 +1,5 @@
-import { DashboardSkeleton } from '@/components/admin/AdminSkeletons';
+import { PageLoading } from '@/components/ui/PageLoading';
 
-export default function AdminDashboardLoading() {
-  return <DashboardSkeleton />;
+export default function Loading() {
+  return <PageLoading aside facts={4} body="split" />;
 }

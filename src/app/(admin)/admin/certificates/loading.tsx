@@ -1,10 +1,5 @@
-import { AdminHeaderSkeleton, CertificatesByCompetitionSkeleton } from '@/components/admin/AdminSkeletons';
+import { PageLoading } from '@/components/ui/PageLoading';
 
-export default function AdminCertificatesLoading() {
-  return (
-    <>
-      <AdminHeaderSkeleton actions={1} />
-      <CertificatesByCompetitionSkeleton rows={5} />
-    </>
-  );
+export default function Loading() {
+  return <PageLoading aside facts={3} body="grid" />;
 }

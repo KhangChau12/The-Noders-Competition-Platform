@@ -1,415 +1,201 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { useRef, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import {
-  Upload,
-  FileText,
-  Image,
-  CheckCircle2,
-  Copy,
-  AlertCircle,
-  Loader2,
-  X,
-} from 'lucide-react';
-
-interface Competition {
-  id: string;
-  title: string;
-}
+import { buttonClasses } from '@/components/ui/Button';
+import { Field, FormMessage, field } from '@/components/admin/FormBits';
+import { cn } from '@/lib/utils/cn';
 
 interface Props {
-  competitions: Competition[];
+  competitions: { id: string; title: string }[];
   prefixMap: Record<string, string>;
   selectedCompetitionId: string | null;
   userId: string;
 }
 
-// Generate random alphanumeric code
-function generateCode(length: number = 4): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed ambiguous chars (0,O,1,I)
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+// No 0/O/1/I so codes read back unambiguously.
+function generateCode(length = 4): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < length; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  return s;
 }
 
-export default function UploadCertificateForm({
-  competitions,
-  prefixMap,
-  selectedCompetitionId,
-  userId,
-}: Props) {
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const VALID_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+
+/** One certificate at a time: file + recipient → verification code. */
+export default function UploadCertificateForm({ competitions, prefixMap: initialPrefixes, selectedCompetitionId, userId }: Props) {
+  const [prefixMap, setPrefixMap] = useState(initialPrefixes);
+  const fileRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
   const [competitionId, setCompetitionId] = useState(selectedCompetitionId || '');
-  const [prefix, setPrefix] = useState(selectedCompetitionId ? (prefixMap[selectedCompetitionId] || '') : '');
+  const [prefix, setPrefix] = useState(selectedCompetitionId ? initialPrefixes[selectedCompetitionId] || '' : '');
   const [suffix, setSuffix] = useState(generateCode(4));
-  const [recipientName, setRecipientName] = useState('');
+  const [recipient, setRecipient] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ code: string; url: string } | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState<{ code: string; name: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Update prefix when competition changes
-  const handleCompetitionChange = (compId: string) => {
-    setCompetitionId(compId);
-    if (prefixMap[compId]) {
-      setPrefix(prefixMap[compId]);
-    }
-  };
+  const prefixLocked = !!(competitionId && prefixMap[competitionId]);
+  const code = prefix && suffix ? `${prefix}-${suffix}` : '';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Validate file type
-      const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
-      if (!validTypes.includes(selectedFile.type)) {
-        setError('Please select a PDF or image file (PNG, JPG)');
-        return;
-      }
-      // Validate file size (max 10MB)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB');
-        return;
-      }
-      setFile(selectedFile);
-      setError(null);
-    }
-  };
+  function pickCompetition(id: string) {
+    setCompetitionId(id);
+    setPrefix(prefixMap[id] ?? '');
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function pickFile(f: File | undefined) {
+    if (!f) return;
+    if (!VALID_TYPES.includes(f.type)) return setError('Choose a PDF, PNG or JPG file.');
+    if (f.size > 10 * 1024 * 1024) return setError('The file must be under 10 MB.');
+    setError('');
+    setFile(f);
+  }
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-
-    // Validate inputs
-    if (!competitionId || !prefix || !suffix || !recipientName || !file) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setUploading(true);
-
+    setError('');
+    if (!competitionId || !prefix || !suffix || !recipient.trim() || !file) return setError('Fill in every field.');
+    setBusy(true);
     try {
-      // Generate verification code
-      const code = `${prefix}-${suffix}`;
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+      const filePath = `${competitionId}/${code}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('certificates').upload(filePath, file);
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
-      // Get file extension
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
-      const fileType = fileExt === 'pdf' ? 'pdf' : fileExt;
-
-      // Upload file to storage
-      const filePath = `${competitionId}/${code}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('certificates')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      // Save prefix if it's new
       if (!prefixMap[competitionId]) {
-        await supabase
-          .from('certificate_prefixes')
-          .upsert({
-            competition_id: competitionId,
-            prefix: prefix,
-          } as any);
+        await supabase.from('certificate_prefixes').upsert({ competition_id: competitionId, prefix } as any);
+        setPrefixMap((m) => ({ ...m, [competitionId]: prefix }));
       }
 
-      // Create certificate record
-      const { error: dbError } = await supabase
-        .from('certificates')
-        .insert({
-          verification_code: code,
-          competition_id: competitionId,
-          recipient_name: recipientName,
-          file_path: filePath,
-          file_type: fileType,
-          issued_by: userId,
-        } as any);
-
+      const { error: dbError } = await supabase.from('certificates').insert({
+        verification_code: code,
+        competition_id: competitionId,
+        recipient_name: recipient.trim(),
+        file_path: filePath,
+        file_type: ext,
+        issued_by: userId,
+      } as any);
       if (dbError) {
-        // Clean up uploaded file
         await supabase.storage.from('certificates').remove([filePath]);
-        throw new Error(`Database error: ${dbError.message}`);
+        throw new Error(dbError.code === '23505' ? 'That code is already used. Generate a new suffix.' : `Database error: ${dbError.message}`);
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('certificates')
-        .getPublicUrl(filePath);
-
-      setSuccess({
-        code,
-        url: urlData.publicUrl,
-      });
-
-      // Reset form for next upload
-      setRecipientName('');
+      setDone({ code, name: recipient.trim() });
+      setRecipient('');
       setSuffix(generateCode(4));
       setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileRef.current) fileRef.current.value = '';
     } catch (err: any) {
       setError(err.message || 'Failed to upload certificate');
     } finally {
-      setUploading(false);
+      setBusy(false);
     }
-  };
+  }
 
-  const copyCode = async () => {
-    if (success?.code) {
-      await navigator.clipboard.writeText(success.code);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
-    }
-  };
-
-  const handleUploadAnother = () => {
-    setSuccess(null);
-    setCopiedCode(false);
-  };
-
-  // Success state
-  if (success) {
+  if (done) {
     return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
-          <CheckCircle2 className="w-8 h-8 text-success" />
+      <div className="flex flex-col gap-5 rounded-[18px] bg-teal-bg p-6 sm:p-8">
+        <div>
+          <p className="text-[13px] font-semibold text-teal">Certificate issued</p>
+          <p className="mt-1 text-xl font-bold">{done.name}</p>
         </div>
-        <h3 className="text-xl font-bold mb-2">Certificate Uploaded!</h3>
-        <p className="text-text-secondary mb-6">
-          Share this verification code with the recipient
-        </p>
-
-        <div className="bg-bg-elevated border border-border-default rounded-lg p-4 mb-6">
-          <div className="text-sm text-text-tertiary mb-2">Verification Code</div>
-          <div className="flex items-center justify-center gap-3">
-            <code className="text-2xl font-mono font-bold text-accent-cyan">
-              {success.code}
-            </code>
-            <button
-              onClick={copyCode}
-              className="p-2 hover:bg-bg-elevated rounded-lg transition-colors"
-              title="Copy code"
-            >
-              {copiedCode ? (
-                <CheckCircle2 className="w-5 h-5 text-success" />
-              ) : (
-                <Copy className="w-5 h-5 text-text-tertiary" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="text-sm text-text-tertiary mb-6">
-          Verify link: <code className="text-accent-cyan">/verify/{success.code}</code>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 sm:justify-center">
-          <Button variant="outline" onClick={handleUploadAnother} className="w-full sm:w-auto">
-            Upload Another
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => router.push(`/admin/certificates/${competitionId}`)}
-            className="w-full sm:w-auto"
+        <div className="flex flex-col gap-2 rounded-xl bg-black/25 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <code className="break-all font-mono text-2xl text-teal">{done.code}</code>
+          <button
+            type="button"
+            onClick={async () => {
+              await navigator.clipboard.writeText(done.code);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className={buttonClasses({ variant: 'secondary', size: 'sm', className: 'self-start sm:self-auto' })}
           >
-            View All Certificates
-          </Button>
+            {copied ? 'Copied' : 'Copy code'}
+          </button>
+        </div>
+        <p className="text-[15px] text-teal-soft">Anyone can check it at /verify/{done.code}.</p>
+        <div className="flex flex-wrap gap-2.5">
+          <button type="button" onClick={() => setDone(null)} className={buttonClasses({ variant: 'accent', tone: 'teal' })}>
+            Upload another
+          </button>
+          <Link href={`/admin/certificates/${competitionId}`} className={buttonClasses({ variant: 'outline' })}>
+            See all for this contest
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Competition Select */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Competition</label>
-        <select
-          value={competitionId}
-          onChange={(e) => handleCompetitionChange(e.target.value)}
-          className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:border-primary-blue"
-          required
-        >
-          <option value="">Select a competition</option>
-          {competitions.map((comp) => (
-            <option key={comp.id} value={comp.id}>
-              {comp.title}
+    <form onSubmit={onSubmit} className="flex flex-col gap-5 rounded-[18px] bg-bg-surface p-5 sm:p-7">
+      <Field label="Competition" htmlFor="competition" required>
+        <select id="competition" value={competitionId} onChange={(e) => pickCompetition(e.target.value)} required className={field}>
+          <option value="">Choose a competition</option>
+          {competitions.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
             </option>
           ))}
         </select>
-      </div>
+      </Field>
 
-      {/* Prefix Input */}
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Certificate Prefix
-          <span className="text-text-tertiary font-normal ml-2">
-            (e.g., PAIC-2026, NAIC-2025)
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px]">
+        <Field label="Code prefix" htmlFor="prefix" required hint={prefixLocked ? 'Set for this contest. Every certificate uses it.' : 'Saved for this contest after the first upload.'}>
+          <input id="prefix" value={prefix} onChange={(e) => setPrefix(e.target.value.toUpperCase())} disabled={prefixLocked} placeholder="PAIC-2026" maxLength={20} className={cn(field, 'font-mono uppercase')} />
+        </Field>
+        <Field label="Suffix" htmlFor="suffix" required>
+          <span className="flex gap-2">
+            <input id="suffix" value={suffix} onChange={(e) => setSuffix(e.target.value.toUpperCase())} maxLength={10} className={cn(field, 'min-w-0 font-mono uppercase')} />
+            <button type="button" onClick={() => setSuffix(generateCode(4))} aria-label="Generate a new suffix" className={buttonClasses({ variant: 'secondary', className: 'min-h-[48px] px-3.5' })}>
+              ↻
+            </button>
           </span>
-        </label>
-        <input
-          type="text"
-          value={prefix}
-          onChange={(e) => setPrefix(e.target.value.toUpperCase())}
-          placeholder="PAIC-2026"
-          className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:border-primary-blue font-mono uppercase"
-          maxLength={20}
-          required
-        />
-        {prefixMap[competitionId] && (
-          <p className="text-xs text-text-tertiary mt-1">
-            Using saved prefix for this competition
-          </p>
-        )}
+        </Field>
       </div>
+      {code && (
+        <p className="rounded-xl bg-bg-elevated px-4 py-3 text-[15px] text-text-tertiary">
+          Code: <span className="break-all font-mono text-teal">{code}</span>
+        </p>
+      )}
 
-      {/* Suffix Input */}
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Certificate Code Suffix
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={suffix}
-            onChange={(e) => setSuffix(e.target.value.toUpperCase())}
-            placeholder="XXXX"
-            className="flex-1 px-4 py-3 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:border-primary-blue font-mono uppercase"
-            maxLength={10}
-            required
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setSuffix(generateCode(4))}
-            title="Generate Random Suffix"
-          >
-            Random
-          </Button>
-        </div>
-      </div>
+      <Field label="Recipient name" htmlFor="recipient" required hint="Exactly as printed on the certificate.">
+        <input id="recipient" value={recipient} onChange={(e) => setRecipient(e.target.value)} required className={field} />
+      </Field>
 
-      {/* Recipient Name */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Recipient Name</label>
-        <input
-          type="text"
-          value={recipientName}
-          onChange={(e) => setRecipientName(e.target.value)}
-          placeholder="Enter recipient's full name"
-          className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-lg focus:outline-none focus:border-primary-blue"
-          required
-        />
-      </div>
-
-      {/* File Upload */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Certificate File</label>
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-            ${file
-              ? 'border-success bg-success/5'
-              : 'border-border-default hover:border-primary-blue hover:bg-primary-blue/5'
-            }
-          `}
+      <Field label="Certificate file" htmlFor="certfile" required hint="PDF, PNG or JPG, up to 10 MB.">
+        <label
+          htmlFor="certfile"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            pickFile(e.dataTransfer.files?.[0]);
+          }}
+          className={cn('flex min-h-[96px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-5 text-center', file ? 'border-teal bg-teal-bg' : 'border-border-subtle hover:border-text-muted')}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-
+          <input ref={fileRef} id="certfile" type="file" accept=".pdf,.png,.jpg,.jpeg" className="sr-only" onChange={(e) => pickFile(e.target.files?.[0])} />
           {file ? (
-            <div className="flex items-center justify-center gap-3">
-              {file.type === 'application/pdf' ? (
-                <FileText className="w-8 h-8 text-red-400" />
-              ) : (
-                <Image className="w-8 h-8 text-blue-400" />
-              )}
-              <div className="text-left">
-                <p className="font-medium">{file.name}</p>
-                <p className="text-sm text-text-tertiary">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                }}
-                className="p-1 hover:bg-bg-elevated rounded"
-              >
-                <X className="w-5 h-5 text-text-tertiary" />
-              </button>
-            </div>
+            <>
+              <span className="break-all font-semibold">{file.name}</span>
+              <span className="text-sm text-teal-soft">{(file.size / 1024 / 1024).toFixed(2)} MB · tap to change</span>
+            </>
           ) : (
             <>
-              <Upload className="w-10 h-10 text-text-tertiary mx-auto mb-3" />
-              <p className="text-text-secondary mb-1">
-                Click to upload or drag and drop
-              </p>
-              <p className="text-sm text-text-tertiary">
-                PDF, PNG, or JPG (max 10MB)
-              </p>
+              <span className="font-semibold">Drop the file here or tap to choose</span>
+              <span className="text-sm text-text-muted">PDF or image</span>
             </>
           )}
-        </div>
-      </div>
+        </label>
+      </Field>
 
-      {/* Error Message */}
-      {error && (
-        <div className="flex items-center gap-2 p-4 bg-error/10 border border-error/20 rounded-lg text-error">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Preview Code */}
-      {prefix && suffix && (
-        <div className="p-4 bg-bg-elevated rounded-lg">
-          <div className="text-sm text-text-tertiary mb-1">Preview verification code:</div>
-          <code className="font-mono text-accent-cyan">{prefix}-{suffix}</code>
-        </div>
-      )}
-
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        className="w-full"
-        disabled={uploading || !competitionId || !prefix || !suffix || !recipientName || !file}
-      >
-        {uploading ? (
-          <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <Upload className="w-5 h-5 mr-2" />
-            Upload Certificate
-          </>
-        )}
-      </Button>
+      <FormMessage error={error} />
+      <button type="submit" disabled={busy} className={buttonClasses({ variant: 'primary', size: 'lg', className: 'w-full sm:w-auto sm:self-start' })}>
+        {busy ? 'Uploading…' : 'Issue certificate'}
+      </button>
     </form>
   );
 }
