@@ -1,4 +1,7 @@
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createPublicClient } from '@/lib/supabase/public';
 import { higherIsBetter } from '@/lib/leaderboard';
 import { domainFromTags, type Domain } from '@/lib/ui/phase';
 
@@ -26,9 +29,14 @@ export interface PracticeSummary {
   yourRank: number | null;
 }
 
-/** Every live practice problem, with board stats and (optionally) the viewer's standing. */
-export async function getPracticeSummaries(supabase: SupabaseClient, userId?: string | null): Promise<PracticeSummary[]> {
-  const [{ data: problems }, { data: counts }, { data: best }] = await Promise.all([
+export const PRACTICE_TAG = 'practice';
+
+// Public practice data (same for every visitor), cached for 60s; the viewer's
+// own standing is derived from it per request.
+const practiceRaw = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const [{ data: problems }, { data: counts }, { data: best }] = await Promise.all([
     supabase
       .from('practice_problems')
       .select('id, title, description, scoring_metric, difficulty, daily_submission_limit, created_at, practice_problem_tags(practice_tags(id, name, slug))')
@@ -41,7 +49,16 @@ export async function getPracticeSummaries(supabase: SupabaseClient, userId?: st
       .eq('is_best_score', true)
       .eq('validation_status', 'valid')
       .not('score', 'is', null),
-  ]);
+    ]);
+    return { problems: problems ?? [], counts: counts ?? [], best: best ?? [] };
+  },
+  ['practice-summaries-v1'],
+  { revalidate: 60, tags: [PRACTICE_TAG] }
+);
+
+/** Every live practice problem, with board stats and (optionally) the viewer's standing. */
+export async function getPracticeSummaries(_supabase?: SupabaseClient, userId?: string | null): Promise<PracticeSummary[]> {
+  const { problems, counts, best } = await practiceRaw();
 
   const countMap = new Map<string, { participant_count: number; valid_submission_count: number }>();
   for (const c of (counts ?? []) as { problem_id: string; participant_count: number; valid_submission_count: number }[]) {
@@ -84,4 +101,46 @@ export async function getPracticeSummaries(supabase: SupabaseClient, userId?: st
       yourRank: yourIdx >= 0 ? yourIdx + 1 : null,
     };
   });
+}
+
+/** One practice problem by id (cached; shared by generateMetadata and the page). */
+export const getPracticeProblem = cache((id: string) =>
+  unstable_cache(
+    async () => {
+      const { data } = await createPublicClient()
+        .from('practice_problems')
+        .select('id, title, description, problem_statement, scoring_metric, dataset_url, sample_submission_url, daily_submission_limit, total_submission_limit, max_file_size_mb, difficulty, practice_problem_tags(practice_tags(id, name, slug))')
+        .eq('id', id)
+        .is('deleted_at', null)
+        .maybeSingle();
+      return data as Record<string, any> | null;
+    },
+    ['practice-by-id-v1', id],
+    { revalidate: 60, tags: [PRACTICE_TAG] }
+  )()
+);
+
+/** Top-100 board (best valid score per person) and counts for one problem, cached for 60s. */
+export function getPracticeBoard(id: string, higherBetter: boolean) {
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
+      const [{ data }, { data: counts }] = await Promise.all([
+        supabase
+          .from('practice_submissions')
+          .select('user_id, score, submitted_at, users(full_name)')
+          .eq('problem_id', id)
+          .eq('is_best_score', true)
+          .eq('validation_status', 'valid')
+          .not('score', 'is', null)
+          .order('score', { ascending: !higherBetter })
+          .order('submitted_at', { ascending: true })
+          .limit(100),
+        supabase.from('practice_problem_submission_counts').select('participant_count, valid_submission_count').eq('problem_id', id).maybeSingle(),
+      ]);
+      return { rows: (data ?? []) as any[], counts: counts as { participant_count: number; valid_submission_count: number } | null };
+    },
+    ['practice-board-v1', id, String(higherBetter)],
+    { revalidate: 60, tags: [PRACTICE_TAG] }
+  )();
 }

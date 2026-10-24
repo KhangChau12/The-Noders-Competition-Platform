@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PRACTICE_TAG } from '@/lib/data/practice';
 
 const db = (supabase: any) => supabase as any;
 
@@ -30,6 +31,7 @@ export async function createTag(formData: FormData) {
     return { error: insertError.message };
   }
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice/tags');
   revalidatePath('/admin/practice');
   revalidatePath('/practice');
@@ -55,6 +57,7 @@ export async function updateTag(id: string, formData: FormData) {
     return { error: updateError.message };
   }
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice/tags');
   revalidatePath('/practice');
   return { success: true };
@@ -68,6 +71,7 @@ export async function deleteTag(id: string) {
 
   if (deleteError) return { error: deleteError.message };
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice/tags');
   revalidatePath('/practice');
   return { success: true };

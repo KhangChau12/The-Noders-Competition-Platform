@@ -10,13 +10,14 @@ import ContestLeaderboard, { type LbRow } from './ContestLeaderboard';
 import { SCORING_METRIC_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import { getCompetitionPhase, getNextDeadline, type CompetitionPhase } from '@/lib/utils/competition';
 import { rankContest, metricDecimals } from '@/lib/leaderboard';
-import { splitTitle } from '@/lib/data/competitions';
+import { splitTitle, getCompetitionById, getBoard } from '@/lib/data/competitions';
 import { PHASE_UI } from '@/lib/ui/phase';
 import { vnRange, vnDate, vnDay, vnTime, vnDateTime, shortCountdown, vnDayStart } from '@/lib/ui/dates';
 import { validationSummary } from '@/lib/ui/validation';
 import { cn } from '@/lib/utils/cn';
 import { plainText } from '@/lib/ui/text';
 import SectionNav from '@/components/ui/SectionNav';
+import InfoTip from '@/components/ui/InfoTip';
 
 interface PageProps {
   params: { id: string };
@@ -25,35 +26,61 @@ interface PageProps {
 type Registration = { id: string; status: 'pending' | 'approved' | 'rejected'; team_id: string | null; team_name?: string | null };
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const supabase = await createClient();
-  const { data } = (await supabase.from('competitions').select('title, description').eq('id', params.id).maybeSingle()) as { data: { title: string; description?: string | null } | null };
+  const data = await getCompetitionById(params.id);
   return {
     title: data ? `${data.title} – The Noders Platform` : 'The Noders Platform',
     description: data?.description ? plainText(data.description).slice(0, 160) : undefined,
   };
 }
 
+/** The viewer's registration (any status; approved wins), quota and own submissions. Runs alongside the public board fetch. */
+async function loadViewer(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, competition: any, now: Date) {
+  const id = competition.id as string;
+  const isTeam = competition.participation_type === 'team';
+
+  let registration: Registration | null = null;
+  if (isTeam) {
+    const { data: memberships } = await supabase.from('team_members').select('team_id').eq('user_id', userId);
+    const teamIds = ((memberships ?? []) as { team_id: string }[]).map((m) => m.team_id);
+    if (teamIds.length) {
+      const { data: regs } = (await supabase.from('registrations').select('id, status, team_id, teams(name)').eq('competition_id', id).in('team_id', teamIds)) as { data: any[] | null };
+      const pick = (regs ?? []).sort((a, b) => rankStatus(a.status) - rankStatus(b.status))[0];
+      if (pick) registration = { id: pick.id, status: pick.status, team_id: pick.team_id, team_name: (Array.isArray(pick.teams) ? pick.teams[0] : pick.teams)?.name ?? null };
+    }
+  } else {
+    const { data: reg } = (await supabase.from('registrations').select('id, status, team_id').eq('competition_id', id).eq('user_id', userId).maybeSingle()) as { data: Registration | null };
+    registration = reg;
+  }
+  if (!registration) return { registration, quota: { daily: 0, total: 0 }, mySubs: null as any[] | null };
+
+  // Quota counts valid + pending (daily resets at midnight Vietnam time); fetched with the viewer's submissions.
+  const [col, val] = isTeam ? ['team_id', registration.team_id as string] : ['user_id', userId];
+  const counted = ['valid', 'pending'];
+  const [{ count: total }, { count: daily }, { data: mySubs }] = await Promise.all([
+    supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id).eq(col, val).in('validation_status', counted),
+    supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id).eq(col, val).in('validation_status', counted).gte('submitted_at', vnDayStart(now).toISOString()),
+    supabase
+      .from('submissions')
+      .select('id, file_name, phase, score, validation_status, validation_errors, is_best_score, submitted_at, submitter:users!submissions_submitted_by_fkey(full_name)')
+      .eq('competition_id', id)
+      .eq(col, val)
+      .order('submitted_at', { ascending: false })
+      .limit(50),
+  ]);
+  return { registration, quota: { daily: daily ?? 0, total: total ?? 0 }, mySubs: (mySubs as any[] | null) ?? null };
+}
+
 export default async function CompetitionDetailPage({ params }: PageProps) {
   const { id } = params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: competition } = (await supabase
-    .from('competitions')
-    .select(
-      'id, title, description, problem_statement, competition_type, participation_type, registration_start, registration_end, public_test_start, public_test_end, private_test_start, private_test_end, daily_submission_limit, total_submission_limit, max_file_size_mb, min_team_size, max_team_size, scoring_metric, dataset_url, sample_submission_url'
-    )
-    .eq('id', id)
-    .is('deleted_at', null)
-    .maybeSingle()) as { data: any };
-
+  // Contest (cached, shared with generateMetadata) and the session load together.
+  const [competition, { data: { user } }] = await Promise.all([getCompetitionById(id), supabase.auth.getUser()]);
   if (!competition) notFound();
 
   const now = new Date();
-  const phase = getCompetitionPhase(competition, now);
-  const deadline = getNextDeadline(competition, phase);
+  const phase = getCompetitionPhase(competition as any, now);
+  const deadline = getNextDeadline(competition as any, phase);
   const isTeam = competition.participation_type === 'team';
   const fourPhase = competition.competition_type === '4-phase';
   const privateStarted = !!competition.private_test_start && now >= new Date(competition.private_test_start);
@@ -62,75 +89,20 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
   const dec = metricDecimals(competition.scoring_metric);
   const { code, name } = splitTitle(competition.title);
 
-  // ── The viewer's registration (any status; approved wins) ──
-  let registration: Registration | null = null;
-  if (user) {
-    if (isTeam) {
-      const { data: memberships } = await supabase.from('team_members').select('team_id').eq('user_id', user.id);
-      const teamIds = ((memberships ?? []) as { team_id: string }[]).map((m) => m.team_id);
-      if (teamIds.length) {
-        const { data: regs } = (await supabase
-          .from('registrations')
-          .select('id, status, team_id, teams(name)')
-          .eq('competition_id', id)
-          .in('team_id', teamIds)) as { data: any[] | null };
-        const pick = (regs ?? []).sort((a, b) => rankStatus(a.status) - rankStatus(b.status))[0];
-        if (pick) registration = { id: pick.id, status: pick.status, team_id: pick.team_id, team_name: (Array.isArray(pick.teams) ? pick.teams[0] : pick.teams)?.name ?? null };
-      }
-    } else {
-      const { data: reg } = (await supabase.from('registrations').select('id, status, team_id').eq('competition_id', id).eq('user_id', user.id).maybeSingle()) as {
-        data: Registration | null;
-      };
-      registration = reg;
-    }
-  }
+  // Public board (cached) and the viewer's own data in parallel.
+  const [board, viewer] = await Promise.all([getBoard(id, ended), user ? loadViewer(supabase, user.id, competition, now) : Promise.resolve(null)]);
+  const registration = viewer?.registration ?? null;
+  const quota = viewer?.quota ?? { daily: 0, total: 0 };
+  const mySubs = { data: viewer?.mySubs ?? null };
   const approved = registration?.status === 'approved';
-
-  // ── Quota (daily resets at midnight Vietnam time) ──
-  let quota = { daily: 0, total: 0 };
-  if (approved) {
-    const [col, val] = isTeam ? ['team_id', registration!.team_id as string] : ['user_id', user!.id];
-    const [{ count: total }, { count: daily }] = await Promise.all([
-      supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id).eq(col, val).in('validation_status', ['valid', 'pending']),
-      supabase
-        .from('submissions')
-        .select('id', { count: 'exact', head: true })
-        .eq('competition_id', id)
-        .eq(col, val)
-        .in('validation_status', ['valid', 'pending'])
-        .gte('submitted_at', vnDayStart(now).toISOString()),
-    ]);
-    quota = { daily: daily ?? 0, total: total ?? 0 };
-  }
   const dailyLimit = competition.daily_submission_limit ?? 5;
   const totalLimit = competition.total_submission_limit ?? 50;
   const running = phase === 'public_test' || phase === 'private_test';
   const canSubmit = approved && running && quota.daily < dailyLimit && quota.total < totalLimit;
-
-  // ── Board data, participants, the viewer's own submissions ──
-  const [{ data: subRows }, { data: pc }, { count: allSubs }, mySubs] = await Promise.all([
-    supabase
-      .from('submissions')
-      .select(
-        'score, submitted_at, phase, user_id, team_id, submitted_by, users!submissions_user_id_fkey(full_name), teams!submissions_team_id_fkey(name), submitter:users!submissions_submitted_by_fkey(full_name)'
-      )
-      .eq('competition_id', id)
-      .eq('validation_status', 'valid'),
-    supabase.from('competition_participant_counts').select('participant_count').eq('competition_id', id).maybeSingle(),
-    supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('competition_id', id),
-    registration && user
-      ? supabase
-          .from('submissions')
-          .select('id, file_name, phase, score, validation_status, validation_errors, is_best_score, submitted_at, submitter:users!submissions_submitted_by_fkey(full_name)')
-          .eq('competition_id', id)
-          .eq(isTeam ? 'team_id' : 'user_id', isTeam ? (registration.team_id as string) : user.id)
-          .order('submitted_at', { ascending: false })
-          .limit(50)
-      : Promise.resolve({ data: null }),
-  ]);
+  const allSubs = board.submissions;
 
   const one = (v: any) => (Array.isArray(v) ? v[0] ?? null : v);
-  const rows: LbRow[] = ((subRows ?? []) as any[]).map((r) => ({
+  const rows: LbRow[] = board.rows.map((r: any) => ({
     score: r.score,
     submitted_at: r.submitted_at,
     phase: r.phase,
@@ -141,7 +113,7 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
     team_name: one(r.teams)?.name ?? null,
     submitter_name: one(r.submitter)?.full_name ?? null,
   }));
-  const participants = (pc as { participant_count: number } | null)?.participant_count ?? 0;
+  const participants = board.participants;
   const teamsSubmitted = isTeam ? new Set(rows.map((r) => r.team_id).filter(Boolean)).size : null;
 
   const standings = ended ? rankContest(rows, (r) => (isTeam ? r.team_id : r.user_id), competition.scoring_metric, fourPhase) : [];
@@ -282,8 +254,14 @@ export default async function CompetitionDetailPage({ params }: PageProps) {
 
       {/* ── Leaderboard ── */}
       <section data-reveal id="leaderboard" aria-labelledby="lh" className="shell scroll-mt-32 pt-16 sm:pt-20">
-        <h2 id="lh" className="h-section">
-          {ended && fourPhase ? 'Final leaderboard' : running ? 'Leaderboard' : 'Leaderboard'}
+        <h2 id="lh" className="h-section flex items-center gap-2.5">
+          {ended && fourPhase ? 'Final leaderboard' : 'Leaderboard'}
+          {running && (
+            <InfoTip label="How often the leaderboard updates">
+              <span className="mb-1 block font-semibold text-text-primary">Did you know?</span>
+              The leaderboard refreshes about once a minute, so a new score can take up to a minute to appear here. Don’t worry if your name isn’t on it yet — your result is already saved under My submissions.
+            </InfoTip>
+          )}
         </h2>
         <p className="mb-6 mt-1.5 text-text-tertiary">
           {ended ? (fourPhase ? 'Ranked by the average of public and private scores.' : 'Ranked by best public score.') : running ? 'Provisional until the contest ends.' : 'Scores appear here once the public test opens.'}

@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PRACTICE_TAG } from '@/lib/data/practice';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -98,6 +99,7 @@ export async function updatePracticeProblem(id: string, formData: FormData) {
     }
   }
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice');
   revalidatePath(`/admin/practice/${id}/edit`);
   revalidatePath(`/practice/${id}`);
@@ -117,6 +119,7 @@ export async function deletePracticeProblem(id: string) {
 
   if (deleteError) return { error: deleteError.message };
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice');
   revalidatePath('/practice');
   return { success: true };

@@ -23,6 +23,8 @@ interface HeaderProps {
   invitations: number;
   /** Pending registrations (admins only). */
   adminPending: number;
+  /** Session still loading (streamed): show a neutral placeholder instead of sign-in buttons. */
+  pending?: boolean;
 }
 
 export interface NavItem {
@@ -36,7 +38,7 @@ export function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
-export default function Header({ user, invitations, adminPending }: HeaderProps) {
+export default function Header({ user, invitations, adminPending, pending = false }: HeaderProps) {
   const pathname = usePathname() ?? '/';
   const inAdmin = pathname.startsWith('/admin');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -133,7 +135,12 @@ export default function Header({ user, invitations, adminPending }: HeaderProps)
               </Link>
             )}
 
-            {user ? (
+            {pending ? (
+              <span aria-hidden className="flex items-center gap-2.5">
+                <span className="block h-9 w-9 animate-shimmer rounded-full bg-white/[0.08]" />
+                <span className="block h-4 w-24 animate-shimmer rounded bg-white/[0.08]" />
+              </span>
+            ) : user ? (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"

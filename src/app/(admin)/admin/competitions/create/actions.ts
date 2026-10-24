@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 export async function createCompetition(formData: FormData) {
   const supabase = await createClient();
@@ -265,6 +266,7 @@ export async function createCompetition(formData: FormData) {
     return { error: `Unexpected error during file upload: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath('/admin/competitions');
   revalidatePath('/competitions');
   revalidatePath('/');

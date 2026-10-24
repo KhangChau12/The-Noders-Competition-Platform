@@ -3,7 +3,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { buttonClasses } from '@/components/ui/Button';
 import { BandFacts, SectionHead } from '@/components/ui/PageBand';
-import { getCompetitionSummaries, getPodium, pickSpotlight, splitTitle, type CompetitionSummary, type PodiumEntry } from '@/lib/data/competitions';
+import { getCompetitionSummaries, getTotalParticipants, getPodium, pickSpotlight, splitTitle, type CompetitionSummary, type PodiumEntry } from '@/lib/data/competitions';
 import { getPracticeSummaries, type PracticeSummary } from '@/lib/data/practice';
 import { getNextDeadline } from '@/lib/utils/competition';
 import { PHASE_UI, DOMAIN_UI, prettyTag } from '@/lib/ui/phase';
@@ -16,24 +16,20 @@ import { podiumName } from '@/lib/ui/text';
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const [competitions, problems, totals] = await Promise.all([
-    getCompetitionSummaries(supabase),
-    getPracticeSummaries(supabase, user?.id),
-    supabase.from('total_participants_count').select('total_count').maybeSingle(),
-  ]);
+  // Public data is cached; the session check runs alongside it.
+  const [{ data: { user } }, competitions, totalCount] = await Promise.all([supabase.auth.getUser(), getCompetitionSummaries(), getTotalParticipants()]);
 
   const spotlight = pickSpotlight(competitions);
   const ended = competitions.filter((c) => c.phase === 'ended');
   const latestEnded = ended[0] ?? null;
-  const podium = latestEnded ? await getPodium(supabase, latestEnded) : [];
-  const mine = user ? await getMyThings(supabase, user.id) : null;
+  const [problems, podium, mine] = await Promise.all([
+    getPracticeSummaries(undefined, user?.id),
+    latestEnded ? getPodium(undefined, latestEnded) : Promise.resolve([] as PodiumEntry[]),
+    user ? getMyThings(supabase, user.id) : Promise.resolve(null),
+  ]);
 
   const totalSubmissions = competitions.reduce((s, c) => s + c.submissions, 0);
-  const totalParticipants = (totals.data as { total_count: number } | null)?.total_count ?? competitions.reduce((s, c) => s + c.participants, 0);
+  const totalParticipants = totalCount ?? competitions.reduce((s, c) => s + c.participants, 0);
 
   return (
     <>

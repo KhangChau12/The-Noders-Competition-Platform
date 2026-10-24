@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 async function reviewRegistration(registrationId: string, status: 'approved' | 'rejected') {
   const supabase = await createClient();
@@ -24,6 +25,7 @@ async function reviewRegistration(registrationId: string, status: 'approved' | '
 
   if (error) return { error: error.message };
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath('/admin/dashboard');
   revalidatePath('/dashboard');
   if (reg?.competition_id) revalidatePath(`/competitions/${reg.competition_id}`);

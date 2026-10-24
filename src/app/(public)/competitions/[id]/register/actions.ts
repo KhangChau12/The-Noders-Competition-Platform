@@ -1,8 +1,9 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { ACTIVE_REGISTRATION_STATUSES } from '@/lib/constants';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 export async function registerForCompetition(
   competitionId: string,
@@ -181,6 +182,7 @@ export async function registerForCompetition(
       return { error: regError.message };
     }
 
+    revalidateTag(CONTEST_TAG);
     revalidatePath(`/competitions/${competitionId}`);
     revalidatePath('/dashboard');
     revalidatePath('/teams');
@@ -213,6 +215,7 @@ export async function registerForCompetition(
     return { error: regError.message };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath(`/competitions/${competitionId}`);
   revalidatePath('/dashboard');
 

@@ -9,14 +9,11 @@ export default async function HeaderWithAuth() {
 
   if (!authUser) return <Header user={null} invitations={0} adminPending={0} />;
 
-  const { data: profile, error } = (await supabase
-    .from('users')
-    .select('id, email, full_name, avatar_url, role')
-    .eq('id', authUser.id)
-    .maybeSingle()) as {
-    data: { id: string; email: string; full_name: string | null; avatar_url: string | null; role: string } | null;
-    error: unknown;
-  };
+  // Profile and pending invitations are independent: fetch them together.
+  const [{ data: profile, error }, { count: invitations }] = (await Promise.all([
+    supabase.from('users').select('id, email, full_name, avatar_url, role').eq('id', authUser.id).maybeSingle(),
+    supabase.from('team_invitations').select('id', { count: 'exact', head: true }).eq('user_id', authUser.id).eq('status', 'pending'),
+  ])) as [{ data: { id: string; email: string; full_name: string | null; avatar_url: string | null; role: string } | null; error: unknown }, { count: number | null }];
 
   if (!profile && !error) {
     // Profile row missing (user created before the trigger existed): create it once.
@@ -37,17 +34,8 @@ export default async function HeaderWithAuth() {
     role: profile?.role === 'admin' ? 'admin' : 'user',
   };
 
-  // Things waiting for this person: drive the amber dot and the admin badge.
-  const [{ count: invitations }, adminRes] = await Promise.all([
-    supabase
-      .from('team_invitations')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', authUser.id)
-      .eq('status', 'pending'),
-    user.role === 'admin'
-      ? supabase.from('registrations').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-      : Promise.resolve({ count: 0 }),
-  ]);
+  // Admins also see how many registrations wait for review.
+  const adminRes = user.role === 'admin' ? await supabase.from('registrations').select('id', { count: 'exact', head: true }).eq('status', 'pending') : { count: 0 };
 
   return <Header user={user} invitations={invitations ?? 0} adminPending={adminRes.count ?? 0} />;
 }

@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 export async function deleteCompetition(competitionId: string) {
   const supabase = await createClient();
@@ -54,6 +55,7 @@ export async function deleteCompetition(competitionId: string) {
   }
 
   // Revalidate paths
+  revalidateTag(CONTEST_TAG);
   revalidatePath('/admin/competitions');
   revalidatePath('/competitions');
   revalidatePath('/dashboard');

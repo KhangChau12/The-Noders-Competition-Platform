@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 const VALID_METRICS = ['f1_score', 'accuracy', 'precision', 'recall', 'mae', 'rmse'];
 
@@ -91,6 +92,7 @@ export async function updateCompetition(id: string, formData: FormData) {
     return { error: error.message || 'Failed to update competition' };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath('/admin/competitions');
   revalidatePath('/competitions');
   revalidatePath(`/competitions/${id}`);
@@ -122,6 +124,7 @@ export async function uploadAnswerKey(competitionId: string, formData: FormData)
   });
   if (insertError) return { error: `Saved the file but not its record: ${insertError.message}` };
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath(`/admin/competitions/${competitionId}/edit`);
   revalidatePath('/admin/dashboard');
   revalidatePath('/admin/competitions');

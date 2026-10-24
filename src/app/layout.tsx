@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro, JetBrains_Mono, Shrikhand } from 'next/font/google';
+import { Suspense } from 'react';
 import HeaderWithAuth from '@/components/layout/HeaderWithAuth';
+import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
 import MotionProvider from '@/components/ui/MotionProvider';
@@ -56,7 +58,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <MotionProvider />
         <ToastProvider>
-          <HeaderWithAuth />
+          {/* The header shell paints immediately; the account area streams in once the session is read. */}
+          <Suspense fallback={<Header user={null} invitations={0} adminPending={0} pending />}>
+            <HeaderWithAuth />
+          </Suspense>
           <main id="main-content" className="flex-1">
             {children}
           </main>

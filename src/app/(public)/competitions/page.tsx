@@ -15,16 +15,12 @@ export const metadata = { title: 'Competitions – The Noders Platform' };
 
 export default async function CompetitionsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const competitions = await getCompetitionSummaries(supabase);
+  const [{ data: { user } }, competitions] = await Promise.all([supabase.auth.getUser(), getCompetitionSummaries()]);
   const live = competitions.filter((c) => c.phase !== 'ended');
   const ended = competitions.filter((c) => c.phase === 'ended');
 
   const [podiums, myRegs] = await Promise.all([
-    Promise.all(ended.map((c) => getPodium(supabase, c))),
+    Promise.all(ended.map((c) => getPodium(undefined, c))),
     user ? getMyRegistrationStatuses(supabase, user.id) : Promise.resolve(new Map<string, string>()),
   ]);
 

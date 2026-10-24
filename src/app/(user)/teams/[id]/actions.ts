@@ -1,10 +1,11 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { validateMemberAddition } from '../_lib/validateMemberAddition';
 import { verifyTeamLeader } from '../_lib/teamUtils';
 import { ACTIVE_REGISTRATION_STATUSES } from '@/lib/constants';
+import { CONTEST_TAG } from '@/lib/data/competitions';
 
 /**
  * Add a member to a team by email
@@ -61,6 +62,7 @@ export async function addTeamMember(teamId: string, email: string) {
     return { error: insertError.message };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath(`/teams/${teamId}`);
   return { success: true, message: `${targetUser.email} added to team` };
 }
@@ -143,6 +145,7 @@ export async function removeTeamMember(teamId: string, memberId: string) {
     return { error: deleteError.message };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath(`/teams/${teamId}`);
   return { success: true, message: 'Member removed from team' };
 }
@@ -205,6 +208,7 @@ export async function updateTeam(
     return { error: updateError.message };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath(`/teams/${teamId}`);
   revalidatePath('/teams');
   return { success: true, message: 'Team updated successfully' };
@@ -250,6 +254,7 @@ export async function deleteTeam(teamId: string) {
     return { error: deleteError.message };
   }
 
+  revalidateTag(CONTEST_TAG);
   revalidatePath('/teams');
   return { success: true, redirect: '/teams' };
 }

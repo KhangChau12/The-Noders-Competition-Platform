@@ -1,8 +1,10 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { CONTEST_TAG } from '@/lib/data/competitions';
+import { PRACTICE_TAG } from '@/lib/data/practice';
 
 const ProfileSchema = z.object({
   full_name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name must not exceed 80 characters'),
@@ -26,6 +28,8 @@ export async function updateProfile(input: { full_name: string; bio: string }) {
     .eq('id', user.id);
   if (error) return { error: error.message };
 
+  revalidateTag(CONTEST_TAG);
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/profile');
   revalidatePath('/dashboard');
   revalidatePath('/', 'layout');

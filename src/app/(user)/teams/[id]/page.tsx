@@ -108,7 +108,7 @@ export default async function TeamDetailPage({ params }: { params: { id: string 
             </section>
 
             {isLeader && (
-              <section data-reveal aria-label="Invitations" className="flex flex-col gap-4">
+              <section data-reveal id="invite" aria-label="Invitations" className="flex scroll-mt-[100px] flex-col gap-4">
                 <InviteCard teamId={team.id} full={full} />
                 {(invites ?? []).length > 0 && (
                   <div className="rounded-[18px] bg-amber-bg p-6">

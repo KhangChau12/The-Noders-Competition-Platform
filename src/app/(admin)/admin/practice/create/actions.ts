@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PRACTICE_TAG } from '@/lib/data/practice';
 
 const db = (supabase: any) => supabase as any;
 
@@ -107,6 +108,7 @@ export async function createPracticeProblem(formData: FormData) {
     await db(supabase).from('practice_problem_tags').insert(tagRows);
   }
 
+  revalidateTag(PRACTICE_TAG);
   revalidatePath('/admin/practice');
   revalidatePath('/practice');
   revalidatePath('/');

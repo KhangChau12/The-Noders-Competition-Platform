@@ -8,13 +8,14 @@ import { Markdown } from '@/components/ui/Markdown';
 import { Badge } from '@/components/ui/Badge';
 import { SCORING_METRIC_INFO, metricShortName, metricArrow } from '@/lib/constants';
 import { metricDecimals, higherIsBetter } from '@/lib/leaderboard';
-import { getPracticeSummaries } from '@/lib/data/practice';
+import { getPracticeSummaries, getPracticeProblem, getPracticeBoard } from '@/lib/data/practice';
 import { DOMAIN_UI, domainFromTags, prettyTag, type Domain } from '@/lib/ui/phase';
 import { vnDayStart, vnDateTime } from '@/lib/ui/dates';
 import { validationSummary } from '@/lib/ui/validation';
 import { cn } from '@/lib/utils/cn';
 import { plainText } from '@/lib/ui/text';
 import SectionNav from '@/components/ui/SectionNav';
+import InfoTip from '@/components/ui/InfoTip';
 
 interface Props {
   params: { id: string };
@@ -25,8 +26,7 @@ const SOFT: Record<Domain, string> = { nlp: 'text-violet-soft', cv: 'text-amber-
 const TONE: Record<Domain, 'violet' | 'amber' | 'teal' | 'blue'> = { nlp: 'violet', cv: 'amber', tabular: 'teal', other: 'blue' };
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const supabase = await createClient();
-  const { data } = (await supabase.from('practice_problems').select('title, description').eq('id', params.id).maybeSingle()) as { data: { title: string; description?: string | null } | null };
+  const data = await getPracticeProblem(params.id);
   return {
     title: data ? `${data.title} – The Noders Platform` : 'The Noders Platform',
     description: data?.description ? plainText(data.description).slice(0, 160) : undefined,
@@ -36,18 +36,8 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function PracticeProblemPage({ params }: Props) {
   const { id } = params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: problem } = (await supabase
-    .from('practice_problems')
-    .select(
-      'id, title, description, problem_statement, scoring_metric, dataset_url, sample_submission_url, daily_submission_limit, total_submission_limit, max_file_size_mb, difficulty, practice_problem_tags(practice_tags(id, name, slug))'
-    )
-    .eq('id', id)
-    .is('deleted_at', null)
-    .maybeSingle()) as { data: any };
+  // Problem (cached, shared with generateMetadata) and the session load together.
+  const [problem, { data: { user } }] = await Promise.all([getPracticeProblem(id), supabase.auth.getUser()]);
 
   if (!problem) notFound();
 
@@ -58,17 +48,8 @@ export default async function PracticeProblemPage({ params }: Props) {
   const dec = metricDecimals(problem.scoring_metric);
   const metricInfo = SCORING_METRIC_INFO[problem.scoring_metric as keyof typeof SCORING_METRIC_INFO];
 
-  const [{ data: boardRaw }, { data: mineRaw }, { data: counts }, { count: todayCount }, others] = await Promise.all([
-    supabase
-      .from('practice_submissions')
-      .select('user_id, score, submitted_at, users(full_name)')
-      .eq('problem_id', id)
-      .eq('is_best_score', true)
-      .eq('validation_status', 'valid')
-      .not('score', 'is', null)
-      .order('score', { ascending: !hib })
-      .order('submitted_at', { ascending: true })
-      .limit(100),
+  const [publicBoard, { data: mineRaw }, { count: todayCount }, others] = await Promise.all([
+    getPracticeBoard(id, hib),
     user
       ? supabase
           .from('practice_submissions')
@@ -78,7 +59,6 @@ export default async function PracticeProblemPage({ params }: Props) {
           .order('submitted_at', { ascending: false })
           .limit(50)
       : Promise.resolve({ data: [] as any[] }),
-    supabase.from('practice_problem_submission_counts').select('participant_count, valid_submission_count').eq('problem_id', id).maybeSingle(),
     user
       ? supabase
           .from('practice_submissions')
@@ -88,8 +68,10 @@ export default async function PracticeProblemPage({ params }: Props) {
           .eq('validation_status', 'valid')
           .gte('submitted_at', vnDayStart().toISOString())
       : Promise.resolve({ count: 0 }),
-    getPracticeSummaries(supabase, user?.id),
+    getPracticeSummaries(undefined, user?.id),
   ]);
+  const boardRaw = publicBoard.rows;
+  const counts = publicBoard.counts;
 
   const board = ((boardRaw ?? []) as any[]).map((r, i) => ({
     rank: i + 1,
@@ -244,7 +226,13 @@ export default async function PracticeProblemPage({ params }: Props) {
       <section data-reveal className="shell pt-16 sm:pt-20">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-6">
           <div id="board" className="min-w-0 flex-1 scroll-mt-32">
-            <h2 className="h-section mb-5">Leaderboard</h2>
+            <h2 className="h-section mb-5 flex items-center gap-2.5">
+              Leaderboard
+              <InfoTip label="How often the leaderboard updates">
+              <span className="mb-1 block font-semibold text-text-primary">Did you know?</span>
+              The leaderboard refreshes about once a minute, so a new score can take up to a minute to appear here. Don’t worry if your name isn’t on it yet — your result is already saved under My submissions.
+              </InfoTip>
+            </h2>
             <div className="overflow-hidden rounded-2xl bg-bg-surface">
               <ol>
                 {board.map((b) => {
